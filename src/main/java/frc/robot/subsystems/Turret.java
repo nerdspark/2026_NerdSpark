@@ -29,10 +29,12 @@ public class Turret implements Subsystem {
 
     private Supplier<Pose2d> pose;
     private Supplier<DriverStation.Alliance> alliance;
+    private Supplier<Boolean> aimTurret;
 
-    public Turret(Supplier<Pose2d> robotPose, Supplier<DriverStation.Alliance> driverAlliance) {
+    public Turret(Supplier<Pose2d> robotPose, Supplier<DriverStation.Alliance> driverAlliance, Supplier<Boolean> aimTurret) {
         pose = robotPose;
         alliance = driverAlliance;
+        this.aimTurret = aimTurret;
 
         spinMotor = new TalonFX(0);
         hoodMotor = new TalonFX(0);
@@ -105,12 +107,14 @@ public class Turret implements Subsystem {
     * Aims the turret only.
     * Turret is only +90 to -90.
     *
-    * @param neededAngle the field-relative target angle minus the chassis heading in degrees
+    * @param neededAngle the field-centric target angle minus the chassis heading in degrees
     */
     private void aimTurret(double neededAngle) {
         double motorRotations = spinMotor.getPosition().getValueAsDouble();
         double turretDegrees = (motorRotations / turretConstants.spinOverrallRatio) * 360;
         normalize180(turretDegrees);
+
+        neededAngle -= turretConstants.turretOffset;
 
         boolean turretOK;
         if (neededAngle > 90) {
@@ -131,12 +135,13 @@ public class Turret implements Subsystem {
     /**
      * Aims the chassis and the turret
      * 
-     * @param neededAngle the field-relative target angle
+     * @param neededAngle the field-centric target angle
      * @param chassisAngle the current heading of the chassis
      * @return the target chassis rotation in degrees
      */
     public double aimChassis(double neededAngle, double chassisAngle) {
         double turretRel = neededAngle - chassisAngle;
+        turretRel -= turretConstants.turretOffset;
         
         // aimTurret(turretRel);
 
@@ -156,35 +161,39 @@ public class Turret implements Subsystem {
 
     @Override
     public void periodic() {
-        Pose2d currPose = pose.get();
+        if (aimTurret.get()) {
+            Pose2d currPose = pose.get();
 
-        if (alliance.get() == DriverStation.Alliance.Blue) {
-            if (currPose.getX() <= 4.5) {
-                double xError = Math.abs(field.blueHub.getX() - currPose.getX());
-                double yError = Math.abs(field.blueHub.getY() - currPose.getY());
-                double hubDegrees = normalize180(Math.toDegrees(Math.atan(yError/xError)));
-                
-                aimTurret(hubDegrees - normalize180(currPose.getRotation().getDegrees()));
-                aimHood(Math.pow(yError, 2) + Math.pow(xError, 2));
+            if (alliance.get() == DriverStation.Alliance.Blue) {
+                if (currPose.getX() <= 4.5) {
+                    double xError = Math.abs(field.blueHub.getX() - currPose.getX());
+                    double yError = Math.abs(field.blueHub.getY() - currPose.getY());
+                    double hubDegrees = normalize180(Math.toDegrees(Math.atan(yError/xError)));
+                    
+                    aimTurret(hubDegrees - normalize180(currPose.getRotation().getDegrees()));
+                    aimHood(Math.pow(yError, 2) + Math.pow(xError, 2));
+                } else {
+                    hoodZero();
+                }
             } else {
-                hoodZero();
+                if (currPose.getX() >= 12) {
+                    double xError = Math.abs(field.redHub.getX() - currPose.getX());
+                    double yError = Math.abs(field.redHub.getY() - currPose.getY());
+                    double hubDegrees = normalize180(Math.toDegrees(Math.atan(yError/xError)));
+                    
+                    aimTurret(hubDegrees - normalize180(currPose.getRotation().getDegrees()));
+                    aimHood(Math.pow(yError, 2) + Math.pow(xError, 2));
+                } else {
+                    hoodZero();
+                }
             }
+
+            spinMotor.setControl(spinPose);
+            hoodMotor.setControl(hoodPose);
+            shootMotor.setControl(shootVelocity);
         } else {
-            if (currPose.getX() >= 12) {
-                double xError = Math.abs(field.redHub.getX() - currPose.getX());
-                double yError = Math.abs(field.redHub.getY() - currPose.getY());
-                double hubDegrees = normalize180(Math.toDegrees(Math.atan(yError/xError)));
-                
-                aimTurret(hubDegrees - normalize180(currPose.getRotation().getDegrees()));
-                aimHood(Math.pow(yError, 2) + Math.pow(xError, 2));
-            } else {
-                hoodZero();
-            }
+            hoodZero();
         }
-
-        spinMotor.setControl(spinPose);
-        hoodMotor.setControl(hoodPose);
-        shootMotor.setControl(shootVelocity);
     }
 
     private static double normalize180(double degrees) {
