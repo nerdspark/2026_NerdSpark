@@ -345,4 +345,23 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public Optional<Pose2d> samplePoseAt(double timestampSeconds) {
         return super.samplePoseAt(Utils.fpgaToCurrentTime(timestampSeconds));
     }
+    
+    public ChassisSpeeds getCurrentRobotChassisSpeeds() {
+        SignalLogger.writeDoubleArray("Odometry", new double[] {
+            this.getState().Pose.getX(),
+            this.getState().Pose.getY(),
+            this.getState().Pose.getRotation().getDegrees()
+        });
+
+        
+
+        return this.getState().Speeds;
+        // return kinematics.toChassisSpeeds(getState().ModuleStates);
+    }
+    private String getFomattedPose() {
+        var pose = this.getState().Pose;
+        return String.format(
+                "(%.3f, %.3f) %.2f degrees",
+                pose.getX(), pose.getY(), pose.getRotation().getDegrees());
+    }
 }
