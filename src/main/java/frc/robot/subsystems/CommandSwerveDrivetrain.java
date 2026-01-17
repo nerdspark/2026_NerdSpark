@@ -14,6 +14,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -299,5 +300,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     @Override
     public Optional<Pose2d> samplePoseAt(double timestampSeconds) {
         return super.samplePoseAt(Utils.fpgaToCurrentTime(timestampSeconds));
+    }
+    
+    public ChassisSpeeds getCurrentRobotChassisSpeeds() {
+        SignalLogger.writeDoubleArray("Odometry", new double[] {
+            this.getState().Pose.getX(),
+            this.getState().Pose.getY(),
+            this.getState().Pose.getRotation().getDegrees()
+        });
+
+        
+
+        return this.getState().Speeds;
+        // return kinematics.toChassisSpeeds(getState().ModuleStates);
+    }
+    private String getFomattedPose() {
+        var pose = this.getState().Pose;
+        return String.format(
+                "(%.3f, %.3f) %.2f degrees",
+                pose.getX(), pose.getY(), pose.getRotation().getDegrees());
     }
 }
