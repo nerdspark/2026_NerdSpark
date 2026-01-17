@@ -40,7 +40,7 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
     private final CommandSwerveDrivetrain driveTrain;
     public Vision visionFront;
     public Vision visionBack;
-    private static Notifier allNotifier;
+    // private static Notifier allNotifier;
 
     Pose2d robotPose2d = new Pose2d();
     StructPublisher<Pose2d> publisher;
@@ -58,77 +58,17 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
     
         public PoseEstimatorSubsystem(CommandSwerveDrivetrain driveTrain) {
             this.driveTrain = driveTrain;
-            if(USE_VISION) {
-    
-                this.visionFront = new Vision(kCameraNameFront, kRobotToCamFront, driveTrain);
-                this.visionBack = new Vision(kCameraNameBack, kRobotToCamBack, driveTrain);
-    
-                allNotifier = new Notifier(() -> {
-                    visionFront.run();
-                    visionBack.run();
-                });
-    
-                allNotifier.setName("runAll");
-                allNotifier.startPeriodic(0.02);
 
-                publisher = NetworkTableInstance.getDefault()
-                .getStructTopic("Robot Pose AdvScope", Pose2d.struct).publish();
-              
-        }        
-
+            this.visionBack = new Vision(driveTrain::addVisionMeasurement, kCameraNameBack, kRobotToCamBack);
+            this.visionFront = new Vision(driveTrain::addVisionMeasurement, kCameraNameFront, kRobotToCamFront);
     }
 
     @Override
     public void periodic() {
         // Update pose estimator with drivetrain sensors
         if(USE_VISION) {
-             Optional<EstimatedRobotPose> visionEstFront  = visionFront.getEstimatedRobotPose();
-            visionEstFront.ifPresent(
-                est -> {
-                    // Change our trust in the measurement based on the tags we can see
-                    var estStdDevs = visionFront.getEstimationStdDevs();
-                    SignalLogger.writeBoolean("front refreshed", true);
-
-                    // printMatrixValues(estStdDevs);
-                    driveTrain.addVisionMeasurement(
-                            est.estimatedPose.toPose2d(), Utils.fpgaToCurrentTime(est.timestampSeconds), estStdDevs);
-
-                });
-
-            Optional<EstimatedRobotPose> visionEstBack  = visionBack.getEstimatedRobotPose();
-
-            visionEstBack = visionBack.getEstimatedRobotPose();
-            visionEstBack.ifPresent(
-                est -> {
-                // Change our trust in the measurement based on the tags we can see
-                var estStdDevs = visionBack.getEstimationStdDevs();               
-                SignalLogger.writeBoolean("front refreshed", true);
-
-                driveTrain.addVisionMeasurement(
-                        est.estimatedPose.toPose2d(), Utils.fpgaToCurrentTime(est.timestampSeconds), estStdDevs);
-
-                });
-
-            if(Robot.isSimulation() ) {
-                 visionFront.simulationPeriodic(getCurrentPose());
-                // SmartDashboard.putData("Debug Field Front", visionFront.getSimDebugField());
-                 visionBack.simulationPeriodic(getCurrentPose());
-                // SmartDashboard.putData("Debug Field Back", visionBack.getSimDebugField());
-    
-            }
-
-            if(visionEstFront.isPresent() && Constants.Vision.DOGLOG_ENABLED) {
-               DogLog.log("PoseEstimator/VisionEst", visionEstFront.get().estimatedPose.toPose2d());
-            }
-
-            if(visionEstBack.isPresent() && Constants.Vision.DOGLOG_ENABLED) {
-                DogLog.log("PoseEstimator/VisionEst", visionEstBack.get().estimatedPose.toPose2d());
-             }
-
-             
-        }
-        else {
-            if (allNotifier != null) allNotifier.close();
+            visionFront.periodic();
+            visionBack.periodic();
         }
 
         if (getCurrentPose() != null) {
