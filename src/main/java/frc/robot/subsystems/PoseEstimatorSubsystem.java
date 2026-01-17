@@ -1,10 +1,14 @@
 package frc.robot.subsystems;
 
 import static frc.robot.Constants.Vision.USE_VISION;
-import static frc.robot.Constants.Vision.kCameraNameBack;
-import static frc.robot.Constants.Vision.kCameraNameFront;
-import static frc.robot.Constants.Vision.kRobotToCamBack;
-import static frc.robot.Constants.Vision.kRobotToCamFront;
+import static frc.robot.Constants.Vision.kCameraNameBackLeft;
+import static frc.robot.Constants.Vision.kCameraNameBackRight;
+import static frc.robot.Constants.Vision.kCameraNameFrontLeft;
+import static frc.robot.Constants.Vision.kCameraNameFrontRight;
+import static frc.robot.Constants.Vision.kRobotToCamBackLeft;
+import static frc.robot.Constants.Vision.kRobotToCamBackRight;
+import static frc.robot.Constants.Vision.kRobotToCamFrontLeft;
+import static frc.robot.Constants.Vision.kRobotToCamFrontRight;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,8 +42,10 @@ import frc.robot.Robot;
 public class PoseEstimatorSubsystem extends SubsystemBase {
 
     private final CommandSwerveDrivetrain driveTrain;
-    public Vision visionFront;
-    public Vision visionBack;
+    public Vision visionFrontRight;
+    public Vision visionFrontLeft;
+    public Vision visionBackRight;
+    public Vision visionBackLeft;
     // private static Notifier allNotifier;
 
     Pose2d robotPose2d = new Pose2d();
@@ -59,9 +65,11 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
         public PoseEstimatorSubsystem(CommandSwerveDrivetrain driveTrain) {
             this.driveTrain = driveTrain;
 
-            this.visionBack = new Vision(driveTrain::addVisionMeasurement, kCameraNameBack, kRobotToCamBack);
-            this.visionFront = new Vision(driveTrain::addVisionMeasurement, kCameraNameFront, kRobotToCamFront);
-            
+            this.visionFrontRight = new Vision(driveTrain::addVisionMeasurement, kCameraNameFrontRight, kRobotToCamFrontRight);
+            this.visionFrontLeft = new Vision(driveTrain::addVisionMeasurement, kCameraNameFrontLeft, kRobotToCamFrontLeft);
+            this.visionBackRight = new Vision(driveTrain::addVisionMeasurement, kCameraNameBackRight, kRobotToCamBackRight);
+            this.visionBackLeft = new Vision(driveTrain::addVisionMeasurement, kCameraNameBackLeft, kRobotToCamBackLeft);
+
               publisher = NetworkTableInstance.getDefault()
                 .getStructTopic("Robot Pose AdvScope", Pose2d.struct).publish();
     }
@@ -70,15 +78,20 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
     public void periodic() {
         // Update pose estimator with drivetrain sensors
         if(USE_VISION) {
-            visionFront.periodic();
-            visionBack.periodic();
+            visionFrontRight.periodic();
+            visionFrontLeft.periodic();
+            visionBackRight.periodic();
+            visionBackLeft.periodic();
+
 
         }
 
             if(Robot.isSimulation() ) {
-                 visionFront.simulationPeriodic(getCurrentPose());
-                 visionBack.simulationPeriodic(getCurrentPose());
-   
+                 visionFrontRight.simulationPeriodic(getCurrentPose());
+                 visionFrontLeft.simulationPeriodic(getCurrentPose());
+                 visionBackRight.simulationPeriodic(getCurrentPose());
+                 visionBackLeft.simulationPeriodic(getCurrentPose());
+
             }
 
         if (getCurrentPose() != null) {
