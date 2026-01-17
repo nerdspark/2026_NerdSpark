@@ -59,19 +59,19 @@ public static class Vision {
 
         public static final boolean USE_VISION = true;
 
-        public static final String kCameraNameFront = "LeftCamera";
+        public static final String kCameraNameFront = "FrontCamera";
         public static final Transform3d kRobotToCamFront =
                 new Transform3d(new Translation3d(Units.inchesToMeters(14 - 5.03), Units.inchesToMeters((12 - 5.56)), Units.inchesToMeters(17.00)), 
                 new Rotation3d(Math.toRadians(-0), Math.toRadians(20), Math.toRadians(15))); //TODO: determine XYZ
 
-        public static final String kCameraNameBack = "RightCamera";
+        public static final String kCameraNameBack = "BackCamera";
         public static final Transform3d kRobotToCamBack =
                 new Transform3d(new Translation3d(Units.inchesToMeters(14 - 5.03), -Units.inchesToMeters((12 - 5.56)), Units.inchesToMeters(17.00)), 
                 new Rotation3d(Math.toRadians(-0), Math.toRadians(20), Math.toRadians(-15))); //TODO: determine XYZ
 
         // The layout of the AprilTags on the field
         public static final AprilTagFieldLayout kTagLayout =
-                AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+                AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
 
         //Do not change these. Actual values will be calculated by the vision system.
         public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
@@ -95,16 +95,14 @@ public static class Vision {
         public static final double VELOCITY_TOLERANCE_X = 4;
         public static final double VELOCITY_TOLERANCE_Y = 4;
         public static final double VELOCITY_TOLERANCE_OMEGA = 5;
-        public static final double kPXController = 10; //2.5
-        public static final double kIXController = 0.01d ; //0.01d
-        public static final double kDXController = 0d;
-        public static final double kIzoneX = 1.0d;
-        public static final double kIzoneY = 1.0d;
-        public static final double kPThetaController = 0.5; //2
+
+        public static final double kPXController = 15; //2.5
+        public static final double kIXController = 0.0 ; //0.01d
+        public static final double kDXController = 0.1d;
+    
+        public static final double kPThetaController = 7; //2
         public static final double kIThetaController = 0.0;
         public static final double kDThetaController = 0.0; //0.0041
-        public static final double IZone = 1.0d;
-        // public static final double autoTurnCeiling = 5.0;
 
         public static final double kPoseAmbiguityThreshold = 0.2;
         public static final double kSingleTagDistanceThreshold = 2.0;

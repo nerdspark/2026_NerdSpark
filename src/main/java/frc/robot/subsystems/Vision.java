@@ -42,6 +42,7 @@ import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
@@ -62,6 +63,7 @@ public class Vision {
     private VisionSystemSim visionSim;
     /**
      * @param estConsumer Lamba that will accept a pose estimate and pass it to your desired {@link
+     * 
      *     edu.wpi.first.math.estimator.SwerveDrivePoseEstimator}
      */
     public Vision(EstimateConsumer estConsumer, String cameraName, Transform3d robotToCam) {
@@ -168,21 +170,32 @@ public class Vision {
                 if (numTags == 1 && avgDist > Constants.Vision.kSingleTagDistanceThreshold)
                     estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
                 else if (numTags == 1 && avgDist < Constants.Vision.kSingleTagDistanceThreshold) {
-                    double xydeviations = kXYStdDev * Math.pow(avgDist, 2) / numTags ;
-                        double thetadeviations = kThetaStdDev * Math.pow(avgDist, 2) / numTags ;
-                        estStdDevs = VecBuilder.fill(xydeviations, xydeviations, thetadeviations);
-                        if (Constants.Vision.DOGLOG_ENABLED){
-                        DogLog.log("Vision"+camera.getName()+"/PoseAmbiguity", targets.get(0).getPoseAmbiguity());
-                        DogLog.log("Vision"+camera.getName()+"/estStdDevs", estStdDevs);
+
+                    if(estimatedPose.get().strategy == PoseStrategy.PNP_DISTANCE_TRIG_SOLVE || 
+                          (estimatedPose.get().strategy == PoseStrategy.LOWEST_AMBIGUITY && targets.get(0).getPoseAmbiguity() < kPoseAmbiguityThreshold)) {
+                        double xydeviations = kXYStdDev * Math.pow(avgDist, 2) / numTags ;
+                            double thetadeviations = kThetaStdDev * Math.pow(avgDist, 2) / numTags ;
+                            estStdDevs = VecBuilder.fill(xydeviations, xydeviations, thetadeviations);
+                            if (Constants.Vision.DOGLOG_ENABLED){
+                            DogLog.log("Vision"+camera.getName()+"/PoseAmbiguity", targets.get(0).getPoseAmbiguity());
+                            DogLog.log("Vision"+camera.getName()+"/estStdDevs", estStdDevs);
                         }
+                    }else{
+                        estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+                    }
                 }
                 else {
-                    estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
-                } 
+
+                     double xydeviations = kXYStdDev * Math.pow(avgDist, 2) / numTags ;
+                     double thetadeviations = kThetaStdDev * Math.pow(avgDist, 2) / numTags ;
+                     estStdDevs = VecBuilder.fill(xydeviations, xydeviations, thetadeviations);                } 
+               }
+
                 curStdDevs = estStdDevs;
+        
             }
         }
-    }
+    
 
     /**
      * Returns the latest standard deviations of the estimated pose from {@link

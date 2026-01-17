@@ -61,6 +61,9 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
 
             this.visionBack = new Vision(driveTrain::addVisionMeasurement, kCameraNameBack, kRobotToCamBack);
             this.visionFront = new Vision(driveTrain::addVisionMeasurement, kCameraNameFront, kRobotToCamFront);
+            
+              publisher = NetworkTableInstance.getDefault()
+                .getStructTopic("Robot Pose AdvScope", Pose2d.struct).publish();
     }
 
     @Override
@@ -69,7 +72,14 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
         if(USE_VISION) {
             visionFront.periodic();
             visionBack.periodic();
+
         }
+
+            if(Robot.isSimulation() ) {
+                 visionFront.simulationPeriodic(getCurrentPose());
+                 visionBack.simulationPeriodic(getCurrentPose());
+   
+            }
 
         if (getCurrentPose() != null) {
             field.setRobotPose(getCurrentPose());
