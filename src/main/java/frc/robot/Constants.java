@@ -5,9 +5,9 @@ import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 
 public class Constants {
     public final class turretConstants {
-        public static final double spinOverrallRatio = 20;
+        public static final double spinRatio = 20;
         public static final double hoodStow = 0.0;
-        public static final double turretOffset = 90;
+        public static final double turretOffset = 0;
         
         public static InterpolatingTreeMap<Double, double[]> turretMap =  new InterpolatingTreeMap<>(
             // inverseInterpolator for Double keys

@@ -4,24 +4,30 @@ import static edu.wpi.first.units.Units.Amps;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Constants.field;
 import frc.robot.Constants.turretConstants;
 
 public class Turret implements Subsystem {
+    private static final double TWO_PI = 2.0 * Math.PI;
+    
     private TalonFX spinMotor, hoodMotor, shootMotor;
+    private CANcoder spinCancoder1, spinCancoder2;
 
     private VelocityVoltage shootVelocity = new VelocityVoltage(0);
     private PositionVoltage hoodPose = new PositionVoltage(0);
@@ -39,6 +45,9 @@ public class Turret implements Subsystem {
         spinMotor = new TalonFX(0);
         hoodMotor = new TalonFX(0);
         shootMotor = new TalonFX(0);
+
+        spinCancoder1 = new CANcoder(0);
+        spinCancoder2 = new CANcoder(0);
 
         TalonFXConfiguration spinConfig = new TalonFXConfiguration()
             .withSlot0(new Slot0Configs()
@@ -74,15 +83,25 @@ public class Turret implements Subsystem {
                 .withStatorCurrentLimitEnable(true)
             )
         ;
+        CANcoderConfiguration spinCancoder1Config = new CANcoderConfiguration()
+            .withMagnetSensor(new MagnetSensorConfigs()
+                .withMagnetOffset(0)
+                .withSensorDirection(SensorDirectionValue.Clockwise_Positive)
+            )
+        ;
+        CANcoderConfiguration spinCancoder2Config = new CANcoderConfiguration()
+            .withMagnetSensor(new MagnetSensorConfigs()
+                .withMagnetOffset(0)
+                .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
+            )
+        ;
 
         spinMotor.getConfigurator().apply(spinConfig);
         hoodMotor.getConfigurator().apply(hoodConfig);
         shootMotor.getConfigurator().apply(shootConfig);
-    }
-    
-    // Moves the indexer for ball transfer and checks wheel speed
-    public void shoot() {
-        
+
+        spinCancoder1.getConfigurator().apply(spinCancoder1Config);
+        spinCancoder2.getConfigurator().apply(spinCancoder2Config);
     }
 
     /** 
@@ -105,58 +124,40 @@ public class Turret implements Subsystem {
 
     /**
     * Aims the turret only.
-    * Turret is only +90 to -90.
     *
-    * @param neededAngle the field-centric target angle minus the chassis heading in degrees
+    * @param neededAngle the field-centric target angle minus the chassis heading in radians
     */
     private void aimTurret(double neededAngle) {
-        double motorRotations = spinMotor.getPosition().getValueAsDouble();
-        double turretDegrees = (motorRotations / turretConstants.spinOverrallRatio) * 360;
-        normalize180(turretDegrees);
+        double turretAngle = turretAngleRad(spinCancoder1.getAbsolutePosition().getValueAsDouble(), 
+            spinCancoder1.getAbsolutePosition().getValueAsDouble(), 0, 0
+        );
 
         neededAngle -= turretConstants.turretOffset;
 
-        boolean turretOK;
-        if (neededAngle > 90) {
-            neededAngle = 90;
-            turretOK = false;
-        } else if (neededAngle < -90) {
-            neededAngle = -90;
-            turretOK = false;
-        } else {
-            turretOK = true;
-        }
-        SmartDashboard.putBoolean("Turret Within Limit?", turretOK);
+        neededAngle = normalizeRadians(neededAngle);
 
-        double error = neededAngle - turretDegrees;
-        spinPose.Position = error / 4.0;
-    }
+        // Compute angular error
+        double error = neededAngle - turretAngle;
 
-    /**
-     * Aims the chassis and the turret
-     * 
-     * @param neededAngle the field-centric target angle
-     * @param chassisAngle the current heading of the chassis
-     * @return the target chassis rotation in degrees
-     */
-    public double aimChassis(double neededAngle, double chassisAngle) {
-        double turretRel = neededAngle - chassisAngle;
-        turretRel -= turretConstants.turretOffset;
-        
-        // aimTurret(turretRel);
-
-        normalize180(turretRel);
-
-        double chassisRotation = 0.0;
-
-        // If target is outside turret limits, compute chassis rotation
-        if (turretRel > 90.0) {
-            chassisRotation = turretRel - 85.0;
-        } else if (turretRel < -90.0) {
-            chassisRotation = turretRel + 85.0;
+        // Find the shortest path
+        double shortError = error;
+        if (shortError > Math.PI) {
+            shortError -= TWO_PI;
+        } else if (shortError < -Math.PI) {
+            shortError += TWO_PI;
         }
 
-        return chassisRotation + chassisAngle;
+        // Does the short path cross the wrap?
+        boolean shortPathCrossesWrap =
+            Math.abs(turretAngle) > Math.PI / 2.0 &&
+            Math.abs(neededAngle) > Math.PI / 2.0 &&
+            Math.signum(turretAngle) != Math.signum(neededAngle);
+
+        // Select legal error
+        double chosenError = shortPathCrossesWrap ? error : shortError;
+
+        // Command motor
+        spinPose.Position = (chosenError / TWO_PI) * turretConstants.spinRatio;
     }
 
     @Override
@@ -168,9 +169,9 @@ public class Turret implements Subsystem {
                 if (currPose.getX() <= 4.5) {
                     double xError = Math.abs(field.blueHub.getX() - currPose.getX());
                     double yError = Math.abs(field.blueHub.getY() - currPose.getY());
-                    double hubDegrees = normalize180(Math.toDegrees(Math.atan(yError/xError)));
+                    double hubDegrees = Math.atan2(yError, xError);
                     
-                    aimTurret(hubDegrees - normalize180(currPose.getRotation().getDegrees()));
+                    aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
                     aimHood(Math.pow(yError, 2) + Math.pow(xError, 2));
                 } else {
                     hoodZero();
@@ -179,9 +180,9 @@ public class Turret implements Subsystem {
                 if (currPose.getX() >= 12) {
                     double xError = Math.abs(field.redHub.getX() - currPose.getX());
                     double yError = Math.abs(field.redHub.getY() - currPose.getY());
-                    double hubDegrees = normalize180(Math.toDegrees(Math.atan(yError/xError)));
+                    double hubDegrees = Math.atan2(yError, xError);
                     
-                    aimTurret(hubDegrees - normalize180(currPose.getRotation().getDegrees()));
+                    aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
                     aimHood(Math.pow(yError, 2) + Math.pow(xError, 2));
                 } else {
                     hoodZero();
@@ -196,13 +197,46 @@ public class Turret implements Subsystem {
         }
     }
 
-    private static double normalize180(double degrees) {
-        degrees %= 360.0;        // wrap within -360..360
-        if (degrees > 180.0) {
-            degrees -= 360.0;    // move into -180..180
-        } else if (degrees < -180.0) {
-            degrees += 360.0;    // move into -180..180
+    public static double turretAngleRad(
+        double a,   // encoder A rotations
+        double b,   // encoder B rotations
+        double GA,  // encoder A rotations per turret rotation
+        double GB   // encoder B rotations per turret rotation
+    ) {
+        // Normalize encoders to [0, 1)
+        double aN = ((a % 1.0) + 1.0) % 1.0;
+        double bN = ((b % 1.0) + 1.0) % 1.0;
+
+        double bestT = 0.0;
+        double bestError = Double.MAX_VALUE;
+
+        // Search over physically possible turret turns
+        for (int k = -4; k <= 4; k++) {
+            double T = (aN + k) / GA;
+
+            double bPred = (GB * T) % 1.0;
+            if (bPred < 0) bPred += 1.0;
+
+            double error = Math.abs(bPred - bN);
+            error = Math.min(error, 1.0 - error);
+
+            if (error < bestError) {
+                bestError = error;
+                bestT = T;
+            }
         }
-        return degrees;
+
+        // Convert turret rotations to radians
+        double theta = bestT * 2.0 * Math.PI;
+
+        // Wrap to [-pi, pi]
+        return Math.atan2(Math.sin(theta), Math.cos(theta));
+    }
+
+    // Normalizes to [-pi, pi]
+    private double normalizeRadians(double angle) {
+        while (angle > Math.PI) angle -= 2.0 * Math.PI;
+        while (angle < -Math.PI) angle += 2.0 * Math.PI;
+        return angle;
     }
 }

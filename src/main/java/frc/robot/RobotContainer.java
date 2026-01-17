@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -18,19 +19,21 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.commands.AimChassisCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Turret;
 
 public class RobotContainer {
+    private SlewRateLimiter xLimiter = new SlewRateLimiter(50);
+    private SlewRateLimiter yLimiter = new SlewRateLimiter(50);
+    private SlewRateLimiter zLimiter = new SlewRateLimiter(100);
+
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.8).in(RadiansPerSecond); // 0.8 of a rotation per second max angular velocity
+    private double MaxAngularRate = RotationsPerSecond.of(1).in(RadiansPerSecond); // 1 rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.08).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
@@ -40,15 +43,17 @@ public class RobotContainer {
 
     private final SendableChooser<Command> autoChooser;
 
-    private final Turret turret = new Turret(
-        () -> drivetrain.getState().Pose, 
-        () -> DriverStation.getAlliance().orElse(Alliance.Red),
-        () -> true
-    );
+    private final Turret turret;
 
     public RobotContainer() {
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser", autoChooser);
+
+        turret = new Turret(
+            () -> drivetrain.getState().Pose, 
+            () -> DriverStation.getAlliance().orElse(Alliance.Red),
+            () -> true
+        );
 
         configureDefaultCommands();
         // configureSysid();
@@ -59,9 +64,6 @@ public class RobotContainer {
     private void configureBindings() {
         // Reset the field-centric heading on left bumper press.
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-
-        // Rotate chassis to allow turret to shoot
-        joystick.rightBumper().whileTrue(new AimChassisCommand(turret, drivetrain));
     }
 
     private void configureDefaultCommands() {
@@ -70,9 +72,12 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getRightY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getRightX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(joystick.getLeftX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive//.withVelocityX(xLimiter.calculate(-joystick.getRightY() * MaxSpeed)) // Drive forward with negative Y (forward)
+                //     .withVelocityY(yLimiter.calculate(-joystick.getRightX() * MaxSpeed)) // Drive left with negative X (left)
+                //     .withRotationalRate(zLimiter.calculate(joystick.getLeftX() * MaxAngularRate)) // Drive counterclockwise with negative X (left)
+                    .withVelocityX(-joystick.getRightY() * MaxSpeed) 
+                    .withVelocityY(-joystick.getRightX() * MaxSpeed) 
+                    .withRotationalRate(joystick.getLeftX() * MaxAngularRate)
             )
         );
 
