@@ -61,22 +61,22 @@ public static class Vision {
 
         public static final String kCameraNameFrontRight = "FrontRightCamera";
         public static final Transform3d kRobotToCamFrontRight =
-                new Transform3d(new Translation3d(Units.inchesToMeters(11.5), Units.inchesToMeters((-9)), Units.inchesToMeters(12.5)), 
+                new Transform3d(new Translation3d(Units.inchesToMeters(11.5), -Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
                 new Rotation3d(Math.toRadians(0), Math.toRadians(-10), Math.toRadians(0))); //TODO: determine XYZ
 
         public static final String kCameraNameFrontLeft = "FrontLeftCamera";
         public static final Transform3d kRobotToCamFrontLeft =
-                new Transform3d(new Translation3d(Units.inchesToMeters(11.5), -Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
+                new Transform3d(new Translation3d(Units.inchesToMeters(11.5), Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
                 new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(55))); //TODO: determine XYZ
 
         public static final String kCameraNameBackRight = "BackRightCamera";
         public static final Transform3d kRobotToCamBackRight =
-                new Transform3d(new Translation3d(Units.inchesToMeters(-11.5), -Units.inchesToMeters((-9)), Units.inchesToMeters(12.5)), 
+                new Transform3d(new Translation3d(-Units.inchesToMeters(11.5), -Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
                 new Rotation3d(Math.toRadians(0), Math.toRadians(-10), Math.toRadians(180))); //TODO: determine XYZ
 
         public static final String kCameraNameBackLeft = "BackLeftCamera";
         public static final Transform3d kRobotToCamBackLeft =
-                new Transform3d(new Translation3d(Units.inchesToMeters(-11.5), -Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
+                new Transform3d(new Translation3d(-Units.inchesToMeters(11.5), Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
                 new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(125))); //TODO: determine XYZ
         // The layout of the AprilTags on the field
         public static final AprilTagFieldLayout kTagLayout =
