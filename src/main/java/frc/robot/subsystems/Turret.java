@@ -18,6 +18,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Constants.field;
@@ -34,11 +36,15 @@ public class Turret implements Subsystem {
     private PositionVoltage spinPose = new PositionVoltage(0);
 
     private Supplier<Pose2d> pose;
+    private Supplier<ChassisSpeeds> speed;
     private Supplier<DriverStation.Alliance> alliance;
     private Supplier<Boolean> aimTurret;
 
-    public Turret(Supplier<Pose2d> robotPose, Supplier<DriverStation.Alliance> driverAlliance, Supplier<Boolean> aimTurret) {
+    private double turretAngle;
+
+    public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<DriverStation.Alliance> driverAlliance, Supplier<Boolean> aimTurret) {
         pose = robotPose;
+        speed = speeds;
         alliance = driverAlliance;
         this.aimTurret = aimTurret;
 
@@ -106,6 +112,7 @@ public class Turret implements Subsystem {
 
     /** 
      * Aims the hood of the turret and sets the wheel speed
+     * If hood is not tight then look into chassis velocity based correction for hood
      * 
      * @param distance the distance to the center of the hub
     */
@@ -113,7 +120,16 @@ public class Turret implements Subsystem {
         double[] map = turretConstants.turretMap.get(distance);
 
         hoodPose.Position = map[0];
-        shootVelocity.Velocity = map[1];
+
+        double robotHeading = pose.get().getRotation().getRadians();
+        double shooterFOA = robotHeading + turretConstants.turretOffset + turretAngle;
+        ChassisSpeeds robotFOS = ChassisSpeeds.fromRobotRelativeSpeeds(speed.get(), new Rotation2d(robotHeading));
+        double robotSpeed = Math.hypot(robotFOS.vxMetersPerSecond, robotFOS.vyMetersPerSecond);
+        double robotVelAngle = Math.atan2(robotFOS.vyMetersPerSecond, robotFOS.vxMetersPerSecond);
+        double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
+        double deltaMotorRPS = (vParallel / (2.0 * Math.PI * turretConstants.shooterWheelRadius)) * turretConstants.shooterRatio;
+
+        shootVelocity.Velocity = map[1] - deltaMotorRPS;
     }
 
     // When we are out of shooting range stop wheels and send hood to stow
@@ -128,9 +144,34 @@ public class Turret implements Subsystem {
     * @param neededAngle the field-centric target angle minus the chassis heading in radians
     */
     private void aimTurret(double neededAngle) {
-        double turretAngle = turretAngleRad(spinCancoder1.getAbsolutePosition().getValueAsDouble(), 
-            spinCancoder1.getAbsolutePosition().getValueAsDouble(), 0, 0
-        );
+        // Normalize encoders to [0, 1)
+        double aN = ((spinCancoder1.getAbsolutePosition().getValueAsDouble() % 1.0) + 1.0) % 1.0;
+        double bN = ((spinCancoder2.getAbsolutePosition().getValueAsDouble() % 1.0) + 1.0) % 1.0;
+
+        double bestT = 0.0;
+        double bestError = Double.MAX_VALUE;
+
+        // Search over physically possible turret turns
+        for (int k = -4; k <= 4; k++) {
+            double T = (aN + k) / turretConstants.spinCancoder1Ratio;
+
+            double bPred = (turretConstants.spinCancoder2Ratio * T) % 1.0;
+            if (bPred < 0) bPred += 1.0;
+
+            double error = Math.abs(bPred - bN);
+            error = Math.min(error, 1.0 - error);
+
+            if (error < bestError) {
+                bestError = error;
+                bestT = T;
+            }
+        }
+
+        // Convert turret rotations to radians
+        double theta = bestT * 2.0 * Math.PI;
+
+        // Wrap to [-pi, pi]
+        turretAngle = Math.atan2(Math.sin(theta), Math.cos(theta));
 
         neededAngle -= turretConstants.turretOffset;
 
@@ -172,7 +213,7 @@ public class Turret implements Subsystem {
                     double hubDegrees = Math.atan2(yError, xError);
                     
                     aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
-                    aimHood(Math.pow(yError, 2) + Math.pow(xError, 2));
+                    aimHood(Math.hypot(yError, xError));
                 } else {
                     hoodZero();
                 }
@@ -183,54 +224,18 @@ public class Turret implements Subsystem {
                     double hubDegrees = Math.atan2(yError, xError);
                     
                     aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
-                    aimHood(Math.pow(yError, 2) + Math.pow(xError, 2));
+                    aimHood(Math.hypot(yError, xError));
                 } else {
                     hoodZero();
                 }
             }
-
-            spinMotor.setControl(spinPose);
-            hoodMotor.setControl(hoodPose);
-            shootMotor.setControl(shootVelocity);
         } else {
             hoodZero();
         }
-    }
-
-    public static double turretAngleRad(
-        double a,   // encoder A rotations
-        double b,   // encoder B rotations
-        double GA,  // encoder A rotations per turret rotation
-        double GB   // encoder B rotations per turret rotation
-    ) {
-        // Normalize encoders to [0, 1)
-        double aN = ((a % 1.0) + 1.0) % 1.0;
-        double bN = ((b % 1.0) + 1.0) % 1.0;
-
-        double bestT = 0.0;
-        double bestError = Double.MAX_VALUE;
-
-        // Search over physically possible turret turns
-        for (int k = -4; k <= 4; k++) {
-            double T = (aN + k) / GA;
-
-            double bPred = (GB * T) % 1.0;
-            if (bPred < 0) bPred += 1.0;
-
-            double error = Math.abs(bPred - bN);
-            error = Math.min(error, 1.0 - error);
-
-            if (error < bestError) {
-                bestError = error;
-                bestT = T;
-            }
-        }
-
-        // Convert turret rotations to radians
-        double theta = bestT * 2.0 * Math.PI;
-
-        // Wrap to [-pi, pi]
-        return Math.atan2(Math.sin(theta), Math.cos(theta));
+        
+        spinMotor.setControl(spinPose);
+        hoodMotor.setControl(hoodPose);
+        shootMotor.setControl(shootVelocity);
     }
 
     // Normalizes to [-pi, pi]
