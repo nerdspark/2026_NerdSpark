@@ -1,1 +1,0 @@
-Simply move the touchboard folder thats in this folder into your robots subsystem folder (should be /subsystem/touchboard/). See readme.md for more setup guide.
