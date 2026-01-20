@@ -3,40 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.3644128113879015,
-        "y": 7.300415183867142
+        "x": 7.721,
+        "y": 4.707
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.795990510083038,
-        "y": 7.225100830367736
+        "x": 6.774472123368921,
+        "y": 5.568185053380782
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.732040332147095,
-        "y": 5.52514827995255
+        "x": 2.750533807829182,
+        "y": 4.95491103202847
       },
       "prevControl": {
-        "x": 7.7535587188612105,
-        "y": 8.032040332147098
+        "x": 2.750533807829182,
+        "y": 5.944756820877816
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": null
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.40497335701598447,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0,
-      "maxWaypointRelativePos": 0,
+      "minWaypointRelativePos": 0.4206974128233974,
+      "maxWaypointRelativePos": 0.6501687289088792,
       "constraints": {
-        "maxVelocity": 3.0,
-        "maxAcceleration": 3.0,
+        "maxVelocity": 2.0,
+        "maxAcceleration": 2.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
@@ -45,7 +50,14 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "shooter_spin",
+      "waypointRelativePos": 0.11923509561305615,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
@@ -56,13 +68,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -91.27303002005677
+    "rotation": 0.0
   },
   "reversed": false,
-  "folder": "left_auton_neutral",
+  "folder": "left_auton_neutralx2",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }
