@@ -25,32 +25,22 @@ public class Indexer implements Subsystem {
     private TalonFX conveyorMotor, passThroughMotor;
     
 
-    public Indexer(Supplier<Pose2d> robotPose, Supplier<DriverStation.Alliance> driverAlliance, Supplier<Boolean> aimTurret) {
+    public Indexer() {
         // pose = robotPose;
         // alliance = driverAlliance;
         // this.aimTurret = aimTurret;
 
-        conveyorMotor = new TalonFX(0);
-        passThroughMotor = new TalonFX(0);
+        conveyorMotor = new TalonFX(0); //TODO add these in Later
+        passThroughMotor = new TalonFX(0); // TODO add these in later
         
 
         TalonFXConfiguration conveyorConfig = new TalonFXConfiguration()
-            .withSlot0(new Slot0Configs()
-                .withKP(0)
-                .withKI(0)
-                .withKD(0)
-            )
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(Amps.of(40))
                 .withStatorCurrentLimitEnable(true)
             )
         ;
         TalonFXConfiguration passThroughConfig = new TalonFXConfiguration()
-            .withSlot0(new Slot0Configs()
-                .withKP(0)
-                .withKI(0)
-                .withKD(0)
-            )
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(Amps.of(40))
                 .withStatorCurrentLimitEnable(true)
