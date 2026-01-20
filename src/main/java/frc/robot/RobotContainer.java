@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.commands.AimChassisCommand;
 import frc.robot.commands.TuneTurretCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -26,32 +25,33 @@ import frc.robot.subsystems.Turret;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.8).in(RadiansPerSecond); // 0.8 of a rotation per second max angular velocity
+    private double MaxAngularRate = RotationsPerSecond.of(1).in(RadiansPerSecond); // 1 rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.08).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController joystick = new CommandXboxController(0);
 
-    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     private final SendableChooser<Command> autoChooser;
 
-    private final Turret turret = new Turret(
-        () -> drivetrain.getState().Pose, 
-        () -> DriverStation.getAlliance().orElse(Alliance.Red),
-        () -> true
-    );
+    private final Turret turret;
 
     public RobotContainer() {
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser", autoChooser);
 
-        turret.setDefaultCommand(new TuneTurretCommand(turret));
+        turret = new Turret(
+            () -> drivetrain.getState().Pose, 
+            () -> drivetrain.getState().Speeds,
+            () -> DriverStation.getAlliance().orElse(Alliance.Red),
+            () -> true
+        );
+
         configureDefaultCommands();
         // configureSysid();
 
@@ -61,12 +61,6 @@ public class RobotContainer {
     private void configureBindings() {
         // Reset the field-centric heading on left bumper press.
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-
-        // Rotate chassis to allow turret to shoot
-        joystick.rightBumper().whileTrue(new AimChassisCommand(turret, drivetrain));
-
-        // Manual turret PID tuning
-        joystick.leftBumper().whileTrue(new TuneTurretCommand(turret));
     }
 
     private void configureDefaultCommands() {
