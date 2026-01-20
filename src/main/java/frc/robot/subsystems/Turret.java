@@ -23,7 +23,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Constants.field;
-import frc.robot.Constants.turretConstants;
+import frc.robot.Constants.TurretConstants;
 
 public class Turret implements Subsystem {
     private static final double TWO_PI = 2.0 * Math.PI;
@@ -117,24 +117,24 @@ public class Turret implements Subsystem {
      * @param distance the distance to the center of the hub
     */
     private void aimHood(double distance) {
-        double[] map = turretConstants.turretMap.get(distance);
+        double[] map = TurretConstants.shooterMap.get(distance);
 
         hoodPose.Position = map[0];
 
         double robotHeading = pose.get().getRotation().getRadians();
-        double shooterFOA = robotHeading + turretConstants.turretOffset + turretAngle;
-        ChassisSpeeds robotFOS = ChassisSpeeds.fromRobotRelativeSpeeds(speed.get(), new Rotation2d(robotHeading));
+        double shooterFOA = robotHeading + TurretConstants.turretOffset + turretAngle;
+        ChassisSpeeds robotFOS = ChassisSpeeds.fromRobotRelativeSpeeds(speed.get(), pose.get().getRotation());
         double robotSpeed = Math.hypot(robotFOS.vxMetersPerSecond, robotFOS.vyMetersPerSecond);
         double robotVelAngle = Math.atan2(robotFOS.vyMetersPerSecond, robotFOS.vxMetersPerSecond);
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
-        double deltaMotorRPS = (vParallel / (2.0 * Math.PI * turretConstants.shooterWheelRadius)) * turretConstants.shooterRatio;
+        double deltaMotorRPS = (vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius)) * TurretConstants.shooterRatio;
 
         shootVelocity.Velocity = map[1] - deltaMotorRPS;
     }
 
     // When we are out of shooting range stop wheels and send hood to stow
     private void hoodZero() {
-        hoodPose.Position = turretConstants.hoodStow;
+        hoodPose.Position = TurretConstants.hoodStow;
         shootVelocity.Velocity = 0;
     }
 
@@ -153,9 +153,9 @@ public class Turret implements Subsystem {
 
         // Search over physically possible turret turns
         for (int k = -4; k <= 4; k++) {
-            double T = (aN + k) / turretConstants.spinCancoder1Ratio;
+            double T = (aN + k) / TurretConstants.spinCancoder1Ratio;
 
-            double bPred = (turretConstants.spinCancoder2Ratio * T) % 1.0;
+            double bPred = (TurretConstants.spinCancoder2Ratio * T) % 1.0;
             if (bPred < 0) bPred += 1.0;
 
             double error = Math.abs(bPred - bN);
@@ -173,7 +173,7 @@ public class Turret implements Subsystem {
         // Wrap to [-pi, pi]
         turretAngle = Math.atan2(Math.sin(theta), Math.cos(theta));
 
-        neededAngle -= turretConstants.turretOffset;
+        neededAngle -= TurretConstants.turretOffset;
 
         neededAngle = normalizeRadians(neededAngle);
 
@@ -198,7 +198,7 @@ public class Turret implements Subsystem {
         double chosenError = shortPathCrossesWrap ? error : shortError;
 
         // Command motor
-        spinPose.Position = (chosenError / TWO_PI) * turretConstants.spinRatio;
+        spinPose.Position = (chosenError / TWO_PI) * TurretConstants.spinRatio;
     }
 
     @Override
@@ -208,24 +208,28 @@ public class Turret implements Subsystem {
 
             if (alliance.get() == DriverStation.Alliance.Blue) {
                 if (currPose.getX() <= 4.5) {
-                    double xError = Math.abs(field.blueHub.getX() - currPose.getX());
-                    double yError = Math.abs(field.blueHub.getY() - currPose.getY());
+                    double xError = field.blueHub.getX() - currPose.getX();
+                    double yError = field.blueHub.getY() - currPose.getY();
                     double hubDegrees = Math.atan2(yError, xError);
                     
                     aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
                     aimHood(Math.hypot(yError, xError));
                 } else {
+                    // Add passing here if needed
+                    
                     hoodZero();
                 }
             } else {
                 if (currPose.getX() >= 12) {
-                    double xError = Math.abs(field.redHub.getX() - currPose.getX());
-                    double yError = Math.abs(field.redHub.getY() - currPose.getY());
+                    double xError = field.redHub.getX() - currPose.getX();
+                    double yError = field.redHub.getY() - currPose.getY();
                     double hubDegrees = Math.atan2(yError, xError);
                     
                     aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
                     aimHood(Math.hypot(yError, xError));
                 } else {
+                    // Adding passing here if needed
+                    
                     hoodZero();
                 }
             }
