@@ -125,6 +125,27 @@ public static class Vision {
 
     public static final String pigeonCanBus = "canivore1";
 
+    public enum AutoDrivePoses {
+        LEFT(new Pose2d(1, 1, Rotation2d.fromDegrees(0)), 2.4397e6),
+        CENTER(new Pose2d(3, 3, Rotation2d.fromDegrees(0)), 2.4397e6),
+        RIGHT(new Pose2d(1, 1, Rotation2d.fromDegrees(0)), 2.4397e6),
+        CLIMB_LEFT(new Pose2d(1, 1, Rotation2d.fromDegrees(0)), 2.4397e6), //RELATIVE TO DRIVER STATION
+        CLIMB_RIGHT(new Pose2d(1, 1, Rotation2d.fromDegrees(0)), 2.4397e6);   //RELATIVE TO DRIVER STATION
+
+
+        private final Pose2d pose;   // in kilograms
+        private final double hoodAngle; // in meters
+        AutoDrivePoses(Pose2d pose, double hoodAngle) {
+        this.pose = pose;
+        this.hoodAngle = hoodAngle;
+         }
+
+         public Pose2d getPose() {
+            return this.pose;
+         }
+
+    }
+
 
 //         for (int i = 0; i < FieldConstants.Reef.branchPositions.size(); i++) {
 //           for (FieldConstants.ReefHeight height : FieldConstants.ReefHeight.values()) {
@@ -133,5 +154,9 @@ public static class Vision {
 //         }
 //       }
 //     }
+
+
   
+
+
 }

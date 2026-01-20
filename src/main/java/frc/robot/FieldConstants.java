@@ -1,4 +1,4 @@
-// Copyright (c) 2025 FRC 6328
+// Copyright (c) 2025-2026 Littleton Robotics
 // http://github.com/Mechanical-Advantage
 //
 // Use of this source code is governed by an MIT-style
@@ -7,240 +7,332 @@
 
 package frc.robot;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.AnalogOutput;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import dev.doglog.DogLog;
-
+import edu.wpi.first.wpilibj.Filesystem;
+import java.io.IOException;
+import java.nio.file.Path;
+// import lombok.Getter;
+// import lombok.RequiredArgsConstructor;
 
 /**
- * Contains various field dimensions and useful reference points. All units are in meters and poses
- * have a blue alliance origin.
+ * Contains information for location of field element and other useful reference points.
+ *
+ * <p>NOTE: All constants are defined relative to the field coordinate system, and from the
+ * perspective of the blue alliance station
  */
 public class FieldConstants {
-  public static final double fieldLength = Units.inchesToMeters(690.876);
-  public static final double fieldWidth = Units.inchesToMeters(317);
-  public static final double startingLineX =
-      Units.inchesToMeters(299.438); // Measured from the inside of starting line
-  public static final double algaeDiameter = Units.inchesToMeters(16);
+//   public static final FieldType fieldType = FieldType.WELDED;
 
-  public static class Processor {
-    public static final Pose2d centerFace =
-        new Pose2d(Units.inchesToMeters(235.726), 0, Rotation2d.fromDegrees(90));
+  // AprilTag related constants
+  public static final int aprilTagCount = Constants.Vision.kTagLayout.getTags().size();
+  public static final double aprilTagWidth = Units.inchesToMeters(6.5);
+  public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.OFFICIAL;
+
+  // Field dimensions
+  public static final double fieldLength = Constants.Vision.kTagLayout.getFieldLength();
+  public static final double fieldWidth = Constants.Vision.kTagLayout.getFieldWidth();
+
+  /**
+   * Officially defined and relevant vertical lines found on the field (defined by X-axis offset)
+   */
+  public static class LinesVertical {
+    public static final double center = fieldLength / 2.0;
+    public static final double starting =
+        Constants.Vision.kTagLayout.getTagPose(26).get().getX();
+    public static final double allianceZone = starting;
+    public static final double hubCenter =
+        Constants.Vision.kTagLayout.getTagPose(26).get().getX() + Hub.width / 2.0;
+    public static final double neutralZoneNear = center - Units.inchesToMeters(120);
+    public static final double neutralZoneFar = center + Units.inchesToMeters(120);
+    public static final double oppHubCenter =
+        Constants.Vision.kTagLayout.getTagPose(4).get().getX() + Hub.width / 2.0;
+    public static final double oppAllianceZone =
+        Constants.Vision.kTagLayout.getTagPose(10).get().getX();
   }
 
-  public static class Barge {
-    public static final Translation2d farCage =
-        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(286.779));
-    public static final Translation2d middleCage =
-        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(242.855));
-    public static final Translation2d closeCage =
-        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(199.947));
+  /**
+   * Officially defined and relevant horizontal lines found on the field (defined by Y-axis offset)
+   *
+   * <p>NOTE: The field element start and end are always left to right from the perspective of the
+   * alliance station
+   */
+  public static class LinesHorizontal {
 
-    // Measured from floor to bottom of cage
-    public static final double deepHeight = Units.inchesToMeters(3.125);
-    public static final double shallowHeight = Units.inchesToMeters(30.125);
+    public static final double center = fieldWidth / 2.0;
+
+    // Right of hub
+    public static final double rightBumpStart = Hub.nearRightCorner.getY();
+    public static final double rightBumpEnd = rightBumpStart - RightBump.width;
+    public static final double rightTrenchOpenStart = rightBumpEnd - Units.inchesToMeters(12.0);
+    public static final double rightTrenchOpenEnd = 0;
+
+    // Left of hub
+    public static final double leftBumpEnd = Hub.nearLeftCorner.getY();
+    public static final double leftBumpStart = leftBumpEnd + LeftBump.width;
+    public static final double leftTrenchOpenEnd = leftBumpStart + Units.inchesToMeters(12.0);
+    public static final double leftTrenchOpenStart = fieldWidth;
   }
 
-  public static class CoralStation {
-    public static final double stationLength = Units.inchesToMeters(79.750);
+  /** Hub related constants */
+  public static class Hub {
 
-    public static final Pose2d leftCenterFace =
-        new Pose2d(
-            Units.inchesToMeters(33.526),
-            Units.inchesToMeters(291.176),
-            Rotation2d.fromDegrees(90 - 144.011));
-    public static final Pose2d rightCenterFace =
-        new Pose2d(
-            Units.inchesToMeters(33.526),
-            Units.inchesToMeters(25.824),
-            Rotation2d.fromDegrees(144.011 - 90));
-    public static final Pose2d leftOutsideFace =
-            new Pose2d(
-                Units.inchesToMeters(33.526),
-                Units.inchesToMeters(291.176),
-                Rotation2d.fromDegrees(90 - 144.011)).plus(new Transform2d(stationLength*0.4, 0, Rotation2d.fromDegrees(45))); // TODO: check coordinate system and tune before integrating
-    public static final Pose2d rightOutsideFace =
-            new Pose2d(
-                Units.inchesToMeters(33.526),
-                Units.inchesToMeters(25.824),
-                Rotation2d.fromDegrees(144.011 - 90)).plus(new Transform2d(stationLength*0.4, 0, Rotation2d.fromDegrees(-45)));
-    public static final Pose2d leftInsideFace =
-                new Pose2d(
-                    Units.inchesToMeters(33.526),
-                    Units.inchesToMeters(291.176),
-                    Rotation2d.fromDegrees(90 - 144.011)).plus(new Transform2d(stationLength*0.4, 0, Rotation2d.fromDegrees(45)));
-    public static final Pose2d rightInsideFace =
-                new Pose2d(
-                    Units.inchesToMeters(33.526),
-                    Units.inchesToMeters(25.824),
-                    Rotation2d.fromDegrees(144.011 - 90)).plus(new Transform2d(stationLength*0.4, 0, Rotation2d.fromDegrees(-45)));
+    // Dimensions
+    public static final double width = Units.inchesToMeters(47.0);
+    public static final double height =
+        Units.inchesToMeters(72.0); // includes the catcher at the top
+    public static final double innerWidth = Units.inchesToMeters(41.7);
+    public static final double innerHeight = Units.inchesToMeters(56.5);
+
+    // Relevant reference points on alliance side
+    public static final Translation3d topCenterPoint =
+        new Translation3d(
+            Constants.Vision.kTagLayout.getTagPose(26).get().getX() + width / 2.0,
+            fieldWidth / 2.0,
+            height);
+    public static final Translation3d innerCenterPoint =
+        new Translation3d(
+            Constants.Vision.kTagLayout.getTagPose(26).get().getX() + width / 2.0,
+            fieldWidth / 2.0,
+            innerHeight);
+
+    public static final Translation2d nearLeftCorner =
+        new Translation2d(topCenterPoint.getX() - width / 2.0, fieldWidth / 2.0 + width / 2.0);
+    public static final Translation2d nearRightCorner =
+        new Translation2d(topCenterPoint.getX() - width / 2.0, fieldWidth / 2.0 - width / 2.0);
+    public static final Translation2d farLeftCorner =
+        new Translation2d(topCenterPoint.getX() + width / 2.0, fieldWidth / 2.0 + width / 2.0);
+    public static final Translation2d farRightCorner =
+        new Translation2d(topCenterPoint.getX() + width / 2.0, fieldWidth / 2.0 - width / 2.0);
+
+    // Relevant reference points on the opposite side
+    public static final Translation3d oppTopCenterPoint =
+        new Translation3d(
+            Constants.Vision.kTagLayout.getTagPose(4).get().getX() + width / 2.0,
+            fieldWidth / 2.0,
+            height);
+    public static final Translation2d oppNearLeftCorner =
+        new Translation2d(oppTopCenterPoint.getX() - width / 2.0, fieldWidth / 2.0 + width / 2.0);
+    public static final Translation2d oppNearRightCorner =
+        new Translation2d(oppTopCenterPoint.getX() - width / 2.0, fieldWidth / 2.0 - width / 2.0);
+    public static final Translation2d oppFarLeftCorner =
+        new Translation2d(oppTopCenterPoint.getX() + width / 2.0, fieldWidth / 2.0 + width / 2.0);
+    public static final Translation2d oppFarRightCorner =
+        new Translation2d(oppTopCenterPoint.getX() + width / 2.0, fieldWidth / 2.0 - width / 2.0);
+
+    // Hub faces
+    public static final Pose2d nearFace =
+        Constants.Vision.kTagLayout.getTagPose(26).get().toPose2d();
+    public static final Pose2d farFace =
+        Constants.Vision.kTagLayout.getTagPose(20).get().toPose2d();
+    public static final Pose2d rightFace =
+        Constants.Vision.kTagLayout.getTagPose(18).get().toPose2d();
+    public static final Pose2d leftFace =
+        Constants.Vision.kTagLayout.getTagPose(21).get().toPose2d();
   }
 
-  public static class Reef {
-    public static final double faceLength = Units.inchesToMeters(36.792600);
-    public static final Translation2d center =
-        new Translation2d(Units.inchesToMeters(176.746), fieldWidth / 2.0);
-    public static final double faceToZoneLine =
-        Units.inchesToMeters(12); // Side of the reef to the inside of the reef zone line
+  /** Left Bump related constants */
+  public static class LeftBump {
 
-    public static final Pose2d[] centerFaces =
-        new Pose2d[6]; // Starting facing the driver station in clockwise order
-    public static final List<Map<ReefLevel, Pose3d>> branchPositions =
-        new ArrayList<>(); // Starting at the right branch facing the driver station in clockwise
-    public static final List<Map<ReefLevel, Pose2d>> branchPositions2d = new ArrayList<>();
-    public static final List<Pose2d> algaePositions =
-        new ArrayList<>(); // Starting at the right branch facing the driver station in clockwise
+    // Dimensions
+    public static final double width = Units.inchesToMeters(73.0);
+    public static final double height = Units.inchesToMeters(6.513);
+    public static final double depth = Units.inchesToMeters(44.4);
 
-    static {
-      // Initialize faces
-    //   var aprilTagLayout = AprilTagLayoutType.OFFICIAL.getLayout();
-    AprilTagFieldLayout  aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
+    // Relevant reference points on alliance side
+    public static final Translation2d nearLeftCorner =
+        new Translation2d(LinesVertical.hubCenter - width / 2, Units.inchesToMeters(255));
+    public static final Translation2d nearRightCorner = Hub.nearLeftCorner;
+    public static final Translation2d farLeftCorner =
+        new Translation2d(LinesVertical.hubCenter + width / 2, Units.inchesToMeters(255));
+    public static final Translation2d farRightCorner = Hub.farLeftCorner;
 
-      centerFaces[0] = aprilTagLayout.getTagPose(18).get().toPose2d();
-      centerFaces[1] = aprilTagLayout.getTagPose(19).get().toPose2d();
-      centerFaces[2] = aprilTagLayout.getTagPose(20).get().toPose2d();
-      centerFaces[3] = aprilTagLayout.getTagPose(21).get().toPose2d();
-      centerFaces[4] = aprilTagLayout.getTagPose(22).get().toPose2d();
-      centerFaces[5] = aprilTagLayout.getTagPose(17).get().toPose2d();
+    // Relevant reference points on opposing side
+    public static final Translation2d oppNearLeftCorner =
+        new Translation2d(LinesVertical.hubCenter - width / 2, Units.inchesToMeters(255));
+    public static final Translation2d oppNearRightCorner = Hub.oppNearLeftCorner;
+    public static final Translation2d oppFarLeftCorner =
+        new Translation2d(LinesVertical.hubCenter + width / 2, Units.inchesToMeters(255));
+    public static final Translation2d oppFarRightCorner = Hub.oppFarLeftCorner;
+  }
 
-      // Initialize branch positions
-      for (int face = 0; face < 6; face++) {
-        Map<ReefLevel, Pose3d> fillRight = new HashMap<>();
-        Map<ReefLevel, Pose3d> fillLeft = new HashMap<>();
-        Map<ReefLevel, Pose2d> fillRight2d = new HashMap<>();
-        Map<ReefLevel, Pose2d> fillLeft2d = new HashMap<>();
-        for (var level : ReefLevel.values()) {
-          Pose2d poseDirection = new Pose2d(center, Rotation2d.fromDegrees(180 - (60 * face)));
-          double adjustX = Units.inchesToMeters(30.738);
-          double adjustY = Units.inchesToMeters(6.469);
+  /** Right Bump related constants */
+  public static class RightBump {
+    // Dimensions
+    public static final double width = Units.inchesToMeters(73.0);
+    public static final double height = Units.inchesToMeters(6.513);
+    public static final double depth = Units.inchesToMeters(44.4);
 
-          var rightBranchPose =
-              new Pose3d(
-                  new Translation3d(
-                      poseDirection
-                          .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
-                          .getX(),
-                      poseDirection
-                          .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
-                          .getY(),
-                      level.height),
-                  new Rotation3d(
-                      0,
-                      Units.degreesToRadians(level.pitch),
-                      poseDirection.getRotation().getRadians()));
-          var leftBranchPose =
-              new Pose3d(
-                  new Translation3d(
-                      poseDirection
-                          .transformBy(new Transform2d(adjustX, -adjustY, new Rotation2d()))
-                          .getX(),
-                      poseDirection
-                          .transformBy(new Transform2d(adjustX, -adjustY, new Rotation2d()))
-                          .getY(),
-                      level.height),
-                  new Rotation3d(
-                      0,
-                      Units.degreesToRadians(level.pitch),
-                      poseDirection.getRotation().getRadians()));
-            var algaePose =
-                      new Pose2d(
-                          new Translation2d(
-                              poseDirection
-                                  .transformBy(new Transform2d(adjustX, 0, new Rotation2d()))
-                                  .getX(),
-                              poseDirection
-                                  .transformBy(new Transform2d(adjustX, 0, new Rotation2d()))
-                                  .getY()), 
-                          new Rotation2d(
-                              poseDirection.getRotation().getRadians()));        
+    // Relevant reference points on alliance side
+    public static final Translation2d nearLeftCorner =
+        new Translation2d(LinesVertical.hubCenter + width / 2, Units.inchesToMeters(255));
+    public static final Translation2d nearRightCorner = Hub.nearLeftCorner;
+    public static final Translation2d farLeftCorner =
+        new Translation2d(LinesVertical.hubCenter - width / 2, Units.inchesToMeters(255));
+    public static final Translation2d farRightCorner = Hub.farLeftCorner;
 
-          fillRight.put(level, rightBranchPose);
-          fillLeft.put(level, leftBranchPose);
-          fillRight2d.put(level, rightBranchPose.toPose2d());
-          fillLeft2d.put(level, leftBranchPose.toPose2d());
-          algaePositions.add(algaePose);
-        }
-        branchPositions.add(fillRight);
-        branchPositions.add(fillLeft);
-        branchPositions2d.add(fillRight2d);
-        branchPositions2d.add(fillLeft2d);
-      }
-   }
-  
-    //   for(int i = 0; i < branchPositions.size(); i++) {
-    //       for (var level : ReefHeight.values()) {
-    //           DogLog.log("Reef Branch Positions "+i, String.format(
-    //             "(%.3f, %.3f) %.2f degrees",
-    //             branchPositions.get(i).get(level).toPose2d().getX(),
-    //             branchPositions.get(i).get(level).toPose2d().getY(),
-    //             branchPositions.get(i).get(level).toPose2d().getRotation().getDegrees())
-    //             );
+    // Relevant reference points on opposing side
+    public static final Translation2d oppNearLeftCorner =
+        new Translation2d(LinesVertical.hubCenter + width / 2, Units.inchesToMeters(255));
+    public static final Translation2d oppNearRightCorner = Hub.oppNearLeftCorner;
+    public static final Translation2d oppFarLeftCorner =
+        new Translation2d(LinesVertical.hubCenter - width / 2, Units.inchesToMeters(255));
+    public static final Translation2d oppFarRightCorner = Hub.oppFarLeftCorner;
+  }
+
+  /** Left Trench related constants */
+  public static class LeftTrench {
+    // Dimensions
+    public static final double width = Units.inchesToMeters(65.65);
+    public static final double depth = Units.inchesToMeters(47.0);
+    public static final double height = Units.inchesToMeters(40.25);
+    public static final double openingWidth = Units.inchesToMeters(50.34);
+    public static final double openingHeight = Units.inchesToMeters(22.25);
+
+    // Relevant reference points on alliance side
+    public static final Translation3d openingTopLeft =
+        new Translation3d(LinesVertical.hubCenter, fieldWidth, openingHeight);
+    public static final Translation3d openingTopRight =
+        new Translation3d(LinesVertical.hubCenter, fieldWidth - openingWidth, openingHeight);
+
+    // Relevant reference points on opposing side
+    public static final Translation3d oppOpeningTopLeft =
+        new Translation3d(LinesVertical.oppHubCenter, fieldWidth, openingHeight);
+    public static final Translation3d oppOpeningTopRight =
+        new Translation3d(LinesVertical.oppHubCenter, fieldWidth - openingWidth, openingHeight);
+  }
+
+  public static class RightTrench {
+
+    // Dimensions
+    public static final double width = Units.inchesToMeters(65.65);
+    public static final double depth = Units.inchesToMeters(47.0);
+    public static final double height = Units.inchesToMeters(40.25);
+    public static final double openingWidth = Units.inchesToMeters(50.34);
+    public static final double openingHeight = Units.inchesToMeters(22.25);
+
+    // Relevant reference points on alliance side
+    public static final Translation3d openingTopLeft =
+        new Translation3d(LinesVertical.hubCenter, openingWidth, openingHeight);
+    public static final Translation3d openingTopRight =
+        new Translation3d(LinesVertical.hubCenter, 0, openingHeight);
+
+    // Relevant reference points on opposing side
+    public static final Translation3d oppOpeningTopLeft =
+        new Translation3d(LinesVertical.oppHubCenter, openingWidth, openingHeight);
+    public static final Translation3d oppOpeningTopRight =
+        new Translation3d(LinesVertical.oppHubCenter, 0, openingHeight);
+  }
+
+  /** Tower related constants */
+  public static class Tower {
+    // Dimensions
+    public static final double width = Units.inchesToMeters(49.25);
+    public static final double depth = Units.inchesToMeters(45.0);
+    public static final double height = Units.inchesToMeters(78.25);
+    public static final double innerOpeningWidth = Units.inchesToMeters(32.250);
+    public static final double frontFaceX = Units.inchesToMeters(43.51);
+
+    public static final double uprightHeight = Units.inchesToMeters(72.1);
+
+    // Rung heights from the floor
+    public static final double lowRungHeight = Units.inchesToMeters(27.0);
+    public static final double midRungHeight = Units.inchesToMeters(45.0);
+    public static final double highRungHeight = Units.inchesToMeters(63.0);
+
+    // Relevant reference points on alliance side
+    public static final Translation2d centerPoint =
+        new Translation2d(
+            frontFaceX, Constants.Vision.kTagLayout.getTagPose(31).get().getY());
+    public static final Translation2d leftUpright =
+        new Translation2d(
+            frontFaceX,
+            (Constants.Vision.kTagLayout.getTagPose(31).get().getY())
+                + innerOpeningWidth / 2
+                + Units.inchesToMeters(0.75));
+    public static final Translation2d rightUpright =
+        new Translation2d(
+            frontFaceX,
+            (Constants.Vision.kTagLayout.getTagPose(31).get().getY())
+                - innerOpeningWidth / 2
+                - Units.inchesToMeters(0.75));
+
+    // Relevant reference points on opposing side
+    public static final Translation2d oppCenterPoint =
+        new Translation2d(
+            fieldLength - frontFaceX,
+           Constants.Vision.kTagLayout.getTagPose(15).get().getY());
+    public static final Translation2d oppLeftUpright =
+        new Translation2d(
+            fieldLength - frontFaceX,
+            (Constants.Vision.kTagLayout.getTagPose(15).get().getY())
+                + innerOpeningWidth / 2
+                + Units.inchesToMeters(0.75));
+    public static final Translation2d oppRightUpright =
+        new Translation2d(
+            fieldLength - frontFaceX,
+            (Constants.Vision.kTagLayout.getTagPose(15).get().getY())
+                - innerOpeningWidth / 2
+                - Units.inchesToMeters(0.75));
+  }
+
+  public static class Depot {
+    // Dimensions
+    public static final double width = Units.inchesToMeters(42.0);
+    public static final double depth = Units.inchesToMeters(27.0);
+    public static final double height = Units.inchesToMeters(1.125);
+    public static final double distanceFromCenterY = Units.inchesToMeters(75.93);
+
+    // Relevant reference points on alliance side
+    public static final Translation3d depotCenter =
+        new Translation3d(depth, (fieldWidth / 2) + distanceFromCenterY, height);
+    public static final Translation3d leftCorner =
+        new Translation3d(depth, (fieldWidth / 2) + distanceFromCenterY + (width / 2), height);
+    public static final Translation3d rightCorner =
+        new Translation3d(depth, (fieldWidth / 2) + distanceFromCenterY - (width / 2), height);
+  }
+
+  public static class Outpost {
+    // Dimensions
+    public static final double width = Units.inchesToMeters(31.8);
+    public static final double openingDistanceFromFloor = Units.inchesToMeters(28.1);
+    public static final double height = Units.inchesToMeters(7.0);
+
+    // Relevant reference points on alliance side
+    public static final Translation2d centerPoint =
+        new Translation2d(0, Constants.Vision.kTagLayout.getTagPose(29).get().getY());
+  }
+
+//   @RequiredArgsConstructor
+//   public enum FieldType {
+//     ANDYMARK("andymark"),
+//     WELDED("welded");
+
+//     @Getter private final String jsonFolder;
+//   }
+
+  public enum AprilTagLayoutType {
+    OFFICIAL("2026-official"),
+    NONE("2026-none");
+
+    private final String name;
+    private volatile AprilTagFieldLayout layout;
+    private volatile String layoutString;
+
+    AprilTagLayoutType(String name) {
+      this.name = name;
+    }
+
+
+    // public String getLayoutString() {
+    //   if (layoutString == null) {
+    //     getLayout();
     //   }
+    //   return layoutString;
     // }
-    
-  
-}
-
-  public static class StagingPositions {
-    // Measured from the center of the ice cream
-    public static final Pose2d leftIceCream =
-        new Pose2d(Units.inchesToMeters(48), Units.inchesToMeters(230.5), new Rotation2d());
-    public static final Pose2d middleIceCream =
-        new Pose2d(Units.inchesToMeters(48), Units.inchesToMeters(158.5), new Rotation2d());
-    public static final Pose2d rightIceCream =
-        new Pose2d(Units.inchesToMeters(48), Units.inchesToMeters(86.5), new Rotation2d());
   }
-
- 
-
-  public enum ReefLevel {
-    // L1Inside(0,Units.inchesToMeters(25.0), 0),
-    L1Top(0,Units.inchesToMeters(25.0), 0),
-    L1(1,Units.inchesToMeters(25.0), 0),
-    L2(2,Units.inchesToMeters(31.875 - Math.cos(Math.toRadians(35.0)) * 0.625), -35),
-    L3(3,Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35),
-    L4(4,Units.inchesToMeters(72), -90);
-
-
-
-    ReefLevel(int level, double height, double pitch) {
-      this.height = height;
-      this.pitch = pitch; // Degrees
-      this.level = level ;
-
-    }
-
-    public static ReefLevel fromLevel(int level) {
-      return Arrays.stream(values())
-          .filter(reefLevel -> reefLevel.ordinal() == level)
-          .findFirst()
-          .orElse(L1);
-    }
-
-    public final double height;
-    public final double pitch;
-    public final int level;
-
-  }
-
-  public enum CoralStations {   
-    LEFT(0),
-    RIGHT(1);
-
-    CoralStations(int side) {
-      this.side = side;
-    }
-    public final int side;
-
-  }
-
 }
