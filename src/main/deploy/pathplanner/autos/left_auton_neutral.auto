@@ -1,0 +1,43 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "left_auton_neutral1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "left_auton_neutral2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shooter_shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "left_auton_neutral3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "climb_auton"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "left_autons",
+  "choreoAuto": false
+}
