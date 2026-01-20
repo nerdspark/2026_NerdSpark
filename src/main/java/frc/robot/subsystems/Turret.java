@@ -28,6 +28,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
@@ -133,7 +134,7 @@ public class Turret extends SubsystemBase {
 
         if (RobotBase.isSimulation()) {
             DCMotor motorModel = DCMotor.getKrakenX60Foc(turretSimConstants.motorCount);
-            double gearing = 1.0 / turretConstants.spinOverrallRatio;
+            double gearing = 1.0 / turretConstants.spinRatio;
             spinSim = new DCMotorSim(
                 LinearSystemId.createDCMotorSystem(motorModel, turretSimConstants.turretJ, gearing),
                 motorModel
@@ -157,7 +158,7 @@ public class Turret extends SubsystemBase {
         hoodPose.Position = map[0];
 
         double robotHeading = pose.get().getRotation().getRadians();
-        double shooterFOA = robotHeading + turretConstants.turretOffset + turretAngle;
+        double shooterFOA = robotHeading + Math.toRadians(turretConstants.turretOffset) + turretAngle;
         ChassisSpeeds robotFOS = ChassisSpeeds.fromRobotRelativeSpeeds(speed.get(), new Rotation2d(robotHeading));
         double robotSpeed = Math.hypot(robotFOS.vxMetersPerSecond, robotFOS.vyMetersPerSecond);
         double robotVelAngle = Math.atan2(robotFOS.vyMetersPerSecond, robotFOS.vxMetersPerSecond);
@@ -208,46 +209,29 @@ public class Turret extends SubsystemBase {
         // Wrap to [-pi, pi]
         turretAngle = Math.atan2(Math.sin(theta), Math.cos(theta));
 
-        neededAngle -= turretConstants.turretOffset;
+        double adjustedAngle = normalizeRadians(neededAngle - Math.toRadians(turretConstants.turretOffset));
 
-        neededAngle = normalizeRadians(neededAngle);
-
-        // Compute angular error
-        double error = neededAngle - turretAngle;
-
-        // Find the shortest path
-        double shortError = error;
-        if (shortError > Math.PI) {
-            shortError -= TWO_PI;
-        } else if (shortError < -Math.PI) {
-            shortError += TWO_PI;
-        }
-
-        // Does the short path cross the wrap?
-        boolean shortPathCrossesWrap =
-            Math.abs(turretAngle) > Math.PI / 2.0 &&
-            Math.abs(neededAngle) > Math.PI / 2.0 &&
-            Math.signum(turretAngle) != Math.signum(neededAngle);
-
-        // Select legal error
-        double chosenError = shortPathCrossesWrap ? error : shortError;
-
-        // Command motor
-        spinPose.Position = (chosenError / TWO_PI) * turretConstants.spinRatio;
+        double minRad = Math.toRadians(turretConstants.turretMinDegrees);
+        double maxRad = Math.toRadians(turretConstants.turretMaxDegrees);
         boolean turretOK;
-        if (neededAngle > turretConstants.turretMaxDegrees) {
-            neededAngle = turretConstants.turretMaxDegrees;
+        if (adjustedAngle > maxRad) {
+            adjustedAngle = maxRad;
             turretOK = false;
-        } else if (neededAngle < turretConstants.turretMinDegrees) {
-            neededAngle = turretConstants.turretMinDegrees;
+        } else if (adjustedAngle < minRad) {
+            adjustedAngle = minRad;
             turretOK = false;
         } else {
             turretOK = true;
         }
         SmartDashboard.putBoolean(turretTelemetryConstants.withinLimitKey, turretOK);
 
-        double error = neededAngle - turretDegrees;
-        spinPose.Position = error * turretConstants.turretAimErrorScale;
+        double error = adjustedAngle - turretAngle;
+        if (error > Math.PI) {
+            error -= TWO_PI;
+        } else if (error < -Math.PI) {
+            error += TWO_PI;
+        }
+        spinPose.Position = (error / TWO_PI) * turretConstants.spinRatio;
     }
 
     /**
@@ -263,7 +247,7 @@ public class Turret extends SubsystemBase {
         
         // aimTurret(turretRel);
 
-        normalize180(turretRel);
+        turretRel = normalize180(turretRel);
 
         double chassisRotation = 0.0;
 
@@ -362,7 +346,7 @@ public class Turret extends SubsystemBase {
             spinMotorVoltageSignal
         );
         double motorRotations = spinPositionSignal.getValueAsDouble();
-        double turretDegrees = normalize180((motorRotations / turretConstants.spinOverrallRatio) * 360.0);
+        double turretDegrees = normalize180((motorRotations / turretConstants.spinRatio) * 360.0);
 
         SmartDashboard.putNumber(turretTelemetryConstants.angleDegKey, turretDegrees);
         SmartDashboard.putNumber(turretTelemetryConstants.spinSetpointRotKey, spinPose.Position);
@@ -383,19 +367,25 @@ public class Turret extends SubsystemBase {
 
         double turretRotations = spinSim.getAngularPositionRotations();
         double turretRps = spinSim.getAngularVelocityRPM() / 60.0;
-        double rotorRotations = turretRotations * turretConstants.spinOverrallRatio;
-        double rotorRps = turretRps * turretConstants.spinOverrallRatio;
+        double rotorRotations = turretRotations * turretConstants.spinRatio;
+        double rotorRps = turretRps * turretConstants.spinRatio;
 
         spinSimState.setRawRotorPosition(rotorRotations);
         spinSimState.setRotorVelocity(rotorRps);
     }
 
     private static double degreesToMotorRotations(double turretDegrees) {
-        return (turretDegrees / 360.0) * turretConstants.spinOverrallRatio;
-        
-        spinMotor.setControl(spinPose);
-        hoodMotor.setControl(hoodPose);
-        shootMotor.setControl(shootVelocity);
+        return (turretDegrees / 360.0) * turretConstants.spinRatio;
+    }
+
+    private static double normalize180(double degrees) {
+        degrees %= 360.0;        // wrap within -360..360
+        if (degrees > 180.0) {
+            degrees -= 360.0;    // move into -180..180
+        } else if (degrees < -180.0) {
+            degrees += 360.0;    // move into -180..180
+        }
+        return degrees;
     }
 
     // Normalizes to [-pi, pi]

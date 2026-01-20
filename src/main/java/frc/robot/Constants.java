@@ -28,7 +28,6 @@ public class Constants {
         public static final double shooterWheelRadius = 0.0508; // in meters
 
         public static final double hoodStow = 0.0;
-        public static final double turretOffset = 90;
         public static final double turretMinDegrees = -90.0;
         public static final double turretMaxDegrees = 90.0;
         public static final double turretAimErrorScale = 0.25;

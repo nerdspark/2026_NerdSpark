@@ -51,6 +51,7 @@ public class RobotContainer {
             () -> DriverStation.getAlliance().orElse(Alliance.Red),
             () -> true
         );
+        turret.setDefaultCommand(new TuneTurretCommand(turret));
 
         configureDefaultCommands();
         // configureSysid();
