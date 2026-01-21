@@ -3,7 +3,7 @@ html {
     height: 100%;
     margin: 0px;
     padding: 0px;
-    background-color: rgb(128, 32, 32);
+    background-color: rgb(0, 255, 47);
     overflow: hidden;
 
 }
@@ -47,7 +47,7 @@ body {
 
 .fullScreen {
     /* margin-left: auto; */
-    background-color: rgb(128, 32, 32);
+    background-color: rgb(72, 255, 0);
     color: white;
     border: none;
     font-size: 6vh;
@@ -71,7 +71,7 @@ body {
 }
 
 .currentTab {
-    background-color: rgb(128, 32, 32);
+    background-color: rgb(30, 255, 0);
     color: white;
     padding-inline: 2vw;
     border: none;
@@ -108,7 +108,7 @@ body {
 .actionButton {
     width: 20vmin;
     height: 20vmin;
-    background-color: rgba(43, 0, 255, 0.247);
+    background-color: rgb(0, 255, 0);
     border: none;
     border-radius: 3vh;
     color: white;
@@ -125,8 +125,8 @@ body {
 .toggleButton {
     width: 20vmin;
     height: 20vmin;
-    background-color: rgba(255, 115, 0, 0);
-    border: rgb(255, 115, 0) dashed 0.5vmin;
+    background-color: rgba(2555, 255, 0, 0);
+    border: rgb(0, 255, 0) dashed 0.5vmin;
     border-radius: 3vh;
     color: white;
     font-size: 4vmin;
@@ -142,8 +142,8 @@ body {
 .optGroupButton {
     width: 20vmin;
     height: 20vmin;
-    background-color: rgba(255, 115, 0, 0);
-    border: rgb(255, 115, 0) dashed 0.5vmin;
+    background-color: rgb(0, 255, 0);
+    border: rgb(0, 255, 0) dashed 0.5vmin;
     border-radius: 3vh;
     color: white;
     font-size: 4vmin;

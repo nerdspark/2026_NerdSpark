@@ -37,14 +37,14 @@ SOFTWARE. -->
 <body>
 
     <div class="tabNav">
-        <!-- Insert tab buttons after this or between existing buttons after here -->
+        <!-- Insert tab buttons after this or between existing buttons after here -
         <div class="tab currentTab" data-page=".autonomus"><i>Pose-Plotter</i></div>
 
         <div class="tab tabConnection" data-page=".jukeBox">Jukebox</div>
 
         <div class="tab tabConnection" data-page=".uiTestTab" data-displaytype="flex">Ui Test</div>
-        <!-- Comment out when done testing-->
-
+        Comment out when done testing-->
+        <div class="tab telementry" data-page=".telementry">Telementry</div>
         <!-- Insert tab buttons before this or between existing buttons before here -->
 
 
@@ -234,7 +234,11 @@ SOFTWARE. -->
         </div>
     </div>
 
-
+<div class="telementry page">
+  
+    <input class="numberTextInput" type="number" value="data-robotFileName"> <!-- value must match data-value -->
+    
+</div>
 
     <div class="jukeBox pageF">
         <div class="songSelector">
@@ -335,7 +339,6 @@ SOFTWARE. -->
     </div>
 
     <!-- Insert tabs before this or between existing tabs before here -->
-
     <script src="./js/ui.js" type="module"></script>
     <script src="./js/autoBuilder.js" type="module"></script>
     <script src="./js/jukebox.js" type="module"></script>
