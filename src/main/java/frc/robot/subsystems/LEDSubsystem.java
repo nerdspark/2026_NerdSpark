@@ -25,32 +25,41 @@ public class LEDSubsystem extends SubsystemBase {
   //addressable LED
   // private final AddressableLED m_led = new AddressableLED(Constants.ledID);
   
- 
+  private int fuelAmount; //idk how were gonna do this but we can estimate
   private boolean intakeOn = false;
-    private boolean shooterOn = false;
-    private boolean lidClosed = false;
-    private boolean climbing = false;
+  private boolean shooterSpinning = false;
+  private boolean shooterReady = false;
+  private boolean shooterOn = false;
+  private boolean lidClosed = false;
+  private boolean climbing = false; 
+  private boolean climbDone = false;
+  
+  private RGBWColor red = new RGBWColor(255, 0, 0);
+  private Color yellow = new Color(255, 255, 0);
+  private Color green = new Color(0, 255, 0);
+  private Color cyan = new Color(0, 255, 255);
+  private Color blue = new Color(0, 0, 255);
+  private Color magenta = new Color(255, 0, 255);
+  private Color white = new Color(255, 255, 255);
+  private Color black = new Color(0, 0, 0);
 
-    private RGBWColor red = new RGBWColor(255, 0, 0);
-    private Color yellow = new Color(255, 255, 0);
-    private Color green = new Color(0, 255, 0);
-    private Color cyan = new Color(0, 255, 255);
-    private Color blue = new Color(0, 0, 255);
-    private Color magenta = new Color(255, 0, 255);
-    private Color white = new Color(255, 255, 255);
-    private Color black = new Color(0, 0, 0);
-
-   /** Creates a new LEDSubsystem. */
+   // Creates a new LEDSubsystem
   public LEDSubsystem() {
-    // actions: ready to aim - shooter angle spun up
-    // align for climb -/ distance to climb ig
-    // storage lid open/closed (storage full)
-    // shooter spinning
-    // distance to hub (?)
-    // blind opponent drivers :DD
+    /* Actions
+     * Empty: Red
+     * Intaking: Blinking Yellow
+     * Not intaking, but not holding optimal amount of fuel: Blinking Blue
+     * Full: Blue
+     * Spinning up shooter: Blinking green
+     * Ready to shoot: Green
+     * Shooting: Blinking cyan
+     * Climbing: Blinking Magenta
+     * Climbed: Magenta
+     */
+    
 
     //TODO find the method to set color
-    m_candle.   m_candle.setControl(new SolidColor(8, Constants.totalLEDs-1));
+    m_candle.setControl(new SolidColor(8, Constants.totalLEDs-1));
     m_candle.setControl(new ColorFlowAnimation(0, 0));
     m_candle.setControl(new StrobeAnimation(0, Constants.totalLEDs-1));
 
@@ -78,8 +87,33 @@ m_led.setData(m_ledBuffer);
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    
-    if(intakeOn && !shooterOn) {
+    if(climbing) { //climbing
+      //blinking magenta
+    } else if(climbDone) {
+      //magenta
+    } else {
+
+      if(fuelAmount < 20) { //low fuel
+        //red
+      } else if(fuelAmount < 50) { //mid fuel
+        //blinking blue
+      } else { //full
+        //blue
+      }
+
+      if(intakeOn && !shooterOn) { //intaking
+        //blinking yellow
+      }
+
+      if(shooterSpinning) { //shooter spinning
+        //blinking green
+      }
+      if(shooterReady) { //shooter ready
+        //green
+      }
+      if(shooterOn) { //shooting
+        //blinking cyan
+      }
 
     }
   }
