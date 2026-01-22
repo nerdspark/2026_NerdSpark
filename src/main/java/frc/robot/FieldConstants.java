@@ -99,6 +99,7 @@ public class FieldConstants {
             Constants.Vision.kTagLayout.getTagPose(26).get().getX() + width / 2.0,
             fieldWidth / 2.0,
             innerHeight);
+    public static final Translation2d innerCenterPoint2D = innerCenterPoint.toTranslation2d();
 
     public static final Translation2d nearLeftCorner =
         new Translation2d(topCenterPoint.getX() - width / 2.0, fieldWidth / 2.0 + width / 2.0);

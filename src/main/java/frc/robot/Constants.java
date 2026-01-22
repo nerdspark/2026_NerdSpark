@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Rotation;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -126,12 +128,13 @@ public static class Vision {
     public static final String pigeonCanBus = "canivore1";
 
     public enum AutoDrivePoses {
-        LEFT(new Pose2d(1, 1, Rotation2d.fromDegrees(0)), 2.4397e6),
-        CENTER(new Pose2d(3, 3, Rotation2d.fromDegrees(0)), 2.4397e6),
-        RIGHT(new Pose2d(1, 1, Rotation2d.fromDegrees(0)), 2.4397e6),
-        CLIMB_LEFT(new Pose2d(1, 1, Rotation2d.fromDegrees(0)), 2.4397e6), //RELATIVE TO DRIVER STATION
-        CLIMB_RIGHT(new Pose2d(1, 1, Rotation2d.fromDegrees(0)), 2.4397e6);   //RELATIVE TO DRIVER STATION
-
+        LEFT(new Pose2d(FieldConstants.Hub.innerCenterPoint2D.plus(new Translation2d(Units.inchesToMeters(-96), Units.inchesToMeters(-72))), Rotation2d.fromDegrees(0)), 2.4397e6),
+        CENTER(new Pose2d(FieldConstants.Hub.innerCenterPoint2D.plus(new Translation2d(Units.inchesToMeters(-96), 0)), Rotation2d.fromDegrees(0)), 2.4397e6),
+        RIGHT(new Pose2d(FieldConstants.Hub.innerCenterPoint2D.plus(new Translation2d(Units.inchesToMeters(-96), Units.inchesToMeters(72))), Rotation2d.fromDegrees(0)), 2.4397e6),
+        // CLIMB_LEFT(new Pose2d(FieldConstants.Tower.leftUpright.getX() + Units.inchesToMeters(13), FieldConstants.Tower.leftUpright.getY(), Rotation2d.fromDegrees(180)), 2.4397e6), //RELATIVE TO DRIVER STATION
+        // CLIMB_RIGHT(new Pose2d(FieldConstants.Tower.rightUpright.getX() + Units.inchesToMeters(13), FieldConstants.Tower.rightUpright.getY(), Rotation2d.fromDegrees(180)), 2.4397e6);   //RELATIVE TO DRIVER STATION
+        CLIMB_LEFT(new Pose2d(FieldConstants.Tower.leftUpright.plus(new Translation2d(Units.inchesToMeters(13), 0)), Rotation2d.fromDegrees(180)), 2.4397e6),  //RELATIVE TO DRIVER STATION
+        CLIMB_RIGHT(new Pose2d(FieldConstants.Tower.rightUpright.plus(new Translation2d(Units.inchesToMeters(13), 0)), Rotation2d.fromDegrees(180)), 2.4397e6);   //RELATIVE TO DRIVER STATION
 
         private final Pose2d pose;   // in kilograms
         private final double hoodAngle; // in meters
