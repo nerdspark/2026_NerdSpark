@@ -134,9 +134,11 @@ public static class Vision {
 //       }
 //     }
 
+public static final int testJoystickID = 0;
 public static final int ledID = 0;
+public static final int ledFramerate = 2; //fps
 public static final int totalLEDs = 100;
 
-public static final int optimalCapacity = 50;
+
   
 }
