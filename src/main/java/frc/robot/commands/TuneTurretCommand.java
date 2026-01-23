@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants.hoodTuningConstants;
 import frc.robot.Constants.turretTuningConstants;
 import frc.robot.subsystems.Turret;
 
@@ -21,34 +22,67 @@ public class TuneTurretCommand extends Command {
         SmartDashboard.setDefaultNumber(turretTuningConstants.kIKey, turretTuningConstants.defaultKI);
         SmartDashboard.setDefaultNumber(turretTuningConstants.kDKey, turretTuningConstants.defaultKD);
         SmartDashboard.setDefaultNumber(turretTuningConstants.setpointDegKey, turretTuningConstants.defaultSetpointDeg);
+
+        SmartDashboard.setDefaultBoolean(hoodTuningConstants.enableKey, hoodTuningConstants.defaultEnable);
+        SmartDashboard.setDefaultBoolean(hoodTuningConstants.zeroKey, hoodTuningConstants.defaultZero);
+        SmartDashboard.setDefaultNumber(hoodTuningConstants.kPKey, hoodTuningConstants.defaultKP);
+        SmartDashboard.setDefaultNumber(hoodTuningConstants.kIKey, hoodTuningConstants.defaultKI);
+        SmartDashboard.setDefaultNumber(hoodTuningConstants.kDKey, hoodTuningConstants.defaultKD);
+        SmartDashboard.setDefaultNumber(hoodTuningConstants.setpointDegKey, hoodTuningConstants.defaultSetpointDeg);
     }
 
     @Override
     public void execute() {
-        boolean enabled = SmartDashboard.getBoolean(turretTuningConstants.enableKey, turretTuningConstants.defaultEnable);
+        boolean turretEnabled = SmartDashboard.getBoolean(turretTuningConstants.enableKey, turretTuningConstants.defaultEnable);
+        boolean hoodEnabled = SmartDashboard.getBoolean(hoodTuningConstants.enableKey, hoodTuningConstants.defaultEnable);
         if (SmartDashboard.getBoolean(turretTuningConstants.zeroKey, turretTuningConstants.defaultZero)) {
-            turret.zeroSimPosition();
+            turret.zeroSpinSimPosition();
             SmartDashboard.putBoolean(turretTuningConstants.zeroKey, false);
         }
-        SmartDashboard.putBoolean(turretTuningConstants.activeKey, enabled);
-        if (!enabled) {
-            turret.clearManualOverride();
+        if (SmartDashboard.getBoolean(hoodTuningConstants.zeroKey, hoodTuningConstants.defaultZero)) {
+            turret.zeroHoodSimPosition();
+            SmartDashboard.putBoolean(hoodTuningConstants.zeroKey, false);
+        }
+        SmartDashboard.putBoolean(turretTuningConstants.activeKey, turretEnabled);
+        SmartDashboard.putBoolean(hoodTuningConstants.activeKey, hoodEnabled);
+
+        if (!turretEnabled && !hoodEnabled) {
+            turret.clearManualSpinOverride();
+            turret.clearManualHoodOverride();
             return;
         }
 
-        double kP = SmartDashboard.getNumber(turretTuningConstants.kPKey, turretTuningConstants.defaultKP);
-        double kI = SmartDashboard.getNumber(turretTuningConstants.kIKey, turretTuningConstants.defaultKI);
-        double kD = SmartDashboard.getNumber(turretTuningConstants.kDKey, turretTuningConstants.defaultKD);
-        double setpointDeg = SmartDashboard.getNumber(turretTuningConstants.setpointDegKey, turretTuningConstants.defaultSetpointDeg);
+        if (turretEnabled) {
+            double kP = SmartDashboard.getNumber(turretTuningConstants.kPKey, turretTuningConstants.defaultKP);
+            double kI = SmartDashboard.getNumber(turretTuningConstants.kIKey, turretTuningConstants.defaultKI);
+            double kD = SmartDashboard.getNumber(turretTuningConstants.kDKey, turretTuningConstants.defaultKD);
+            double setpointDeg = SmartDashboard.getNumber(turretTuningConstants.setpointDegKey, turretTuningConstants.defaultSetpointDeg);
 
-        turret.setSpinPidGains(kP, kI, kD);
-        turret.setManualSetpointDegrees(setpointDeg);
+            turret.setSpinPidGains(kP, kI, kD);
+            turret.setManualSpinSetpointDegrees(setpointDeg);
+        } else {
+            turret.clearManualSpinOverride();
+        }
+
+        if (hoodEnabled) {
+            double kP = SmartDashboard.getNumber(hoodTuningConstants.kPKey, hoodTuningConstants.defaultKP);
+            double kI = SmartDashboard.getNumber(hoodTuningConstants.kIKey, hoodTuningConstants.defaultKI);
+            double kD = SmartDashboard.getNumber(hoodTuningConstants.kDKey, hoodTuningConstants.defaultKD);
+            double setpointDeg = SmartDashboard.getNumber(hoodTuningConstants.setpointDegKey, hoodTuningConstants.defaultSetpointDeg);
+
+            turret.setHoodPidGains(kP, kI, kD);
+            turret.setManualHoodSetpointDegrees(setpointDeg);
+        } else {
+            turret.clearManualHoodOverride();
+        }
     }
 
     @Override
     public void end(boolean interrupted) {
         SmartDashboard.putBoolean(turretTuningConstants.activeKey, false);
-        turret.clearManualOverride();
+        SmartDashboard.putBoolean(hoodTuningConstants.activeKey, false);
+        turret.clearManualSpinOverride();
+        turret.clearManualHoodOverride();
     }
 
     @Override

@@ -52,16 +52,26 @@ public class Turret extends SubsystemBase {
     private Supplier<ChassisSpeeds> speed;
     private Supplier<DriverStation.Alliance> alliance;
     private Supplier<Boolean> aimTurret;
-    private boolean manualOverride = false;
-    private double manualSetpointDeg = 0.0;
+    private boolean manualSpinOverride = false;
+    private boolean manualHoodOverride = false;
+    private double manualSpinSetpointDeg = 0.0;
+    private double manualHoodSetpointDeg = 0.0;
     private double lastSpinKp = Double.NaN;
     private double lastSpinKi = Double.NaN;
     private double lastSpinKd = Double.NaN;
+    private double lastHoodKp = Double.NaN;
+    private double lastHoodKi = Double.NaN;
+    private double lastHoodKd = Double.NaN;
     private DCMotorSim spinSim;
     private TalonFXSimState spinSimState;
+    private DCMotorSim hoodSim;
+    private TalonFXSimState hoodSimState;
     private StatusSignal<Angle> spinPositionSignal;
     private StatusSignal<Double> spinClosedLoopOutputSignal;
     private StatusSignal<Voltage> spinMotorVoltageSignal;
+    private StatusSignal<Angle> hoodPositionSignal;
+    private StatusSignal<Double> hoodClosedLoopOutputSignal;
+    private StatusSignal<Voltage> hoodMotorVoltageSignal;
 
     private double turretAngle;
 
@@ -131,6 +141,9 @@ public class Turret extends SubsystemBase {
         spinPositionSignal = spinMotor.getPosition();
         spinClosedLoopOutputSignal = spinMotor.getClosedLoopOutput();
         spinMotorVoltageSignal = spinMotor.getMotorVoltage();
+        hoodPositionSignal = hoodMotor.getPosition();
+        hoodClosedLoopOutputSignal = hoodMotor.getClosedLoopOutput();
+        hoodMotorVoltageSignal = hoodMotor.getMotorVoltage();
 
         if (RobotBase.isSimulation()) {
             DCMotor motorModel = DCMotor.getKrakenX60Foc(turretSimConstants.motorCount);
@@ -140,6 +153,13 @@ public class Turret extends SubsystemBase {
                 motorModel
             );
             spinSimState = spinMotor.getSimState();
+
+            double hoodGearing = 1.0 / turretConstants.hoodRatio;
+            hoodSim = new DCMotorSim(
+                LinearSystemId.createDCMotorSystem(motorModel, turretSimConstants.hoodJ, hoodGearing),
+                motorModel
+            );
+            hoodSimState = hoodMotor.getSimState();
         }
 
         spinCancoder1.getConfigurator().apply(spinCancoder1Config);
@@ -261,13 +281,22 @@ public class Turret extends SubsystemBase {
         return chassisRotation + chassisAngle;
     }
 
-    public void setManualSetpointDegrees(double degrees) {
-        manualSetpointDeg = degrees;
-        manualOverride = true;
+    public void setManualSpinSetpointDegrees(double degrees) {
+        manualSpinSetpointDeg = degrees;
+        manualSpinOverride = true;
     }
 
-    public void clearManualOverride() {
-        manualOverride = false;
+    public void clearManualSpinOverride() {
+        manualSpinOverride = false;
+    }
+
+    public void setManualHoodSetpointDegrees(double degrees) {
+        manualHoodSetpointDeg = degrees;
+        manualHoodOverride = true;
+    }
+
+    public void clearManualHoodOverride() {
+        manualHoodOverride = false;
     }
 
     public void setSpinPidGains(double kP, double kI, double kD) {
@@ -283,7 +312,20 @@ public class Turret extends SubsystemBase {
         }
     }
 
-    public void zeroSimPosition() {
+    public void setHoodPidGains(double kP, double kI, double kD) {
+        if (kP != lastHoodKp || kI != lastHoodKi || kD != lastHoodKd) {
+            Slot0Configs slot0 = new Slot0Configs()
+                .withKP(kP)
+                .withKI(kI)
+                .withKD(kD);
+            hoodMotor.getConfigurator().apply(slot0);
+            lastHoodKp = kP;
+            lastHoodKi = kI;
+            lastHoodKd = kD;
+        }
+    }
+
+    public void zeroSpinSimPosition() {
         if (spinSimState == null || spinSim == null) {
             return;
         }
@@ -292,13 +334,31 @@ public class Turret extends SubsystemBase {
         spinSimState.setRotorVelocity(0.0);
     }
 
+    public void zeroHoodSimPosition() {
+        if (hoodSimState == null || hoodSim == null) {
+            return;
+        }
+        hoodSim.setState(0.0, 0.0);
+        hoodSimState.setRawRotorPosition(0.0);
+        hoodSimState.setRotorVelocity(0.0);
+    }
+
     @Override
     public void periodic() {
-        if (manualOverride) {
-            double clamped = Math.max(turretConstants.turretMinDegrees,
-                Math.min(turretConstants.turretMaxDegrees, manualSetpointDeg));
-            spinPose.Position = degreesToMotorRotations(clamped);
-            hoodZero();
+        if (manualSpinOverride || manualHoodOverride) {
+            if (manualSpinOverride) {
+                double clamped = Math.max(turretConstants.turretMinDegrees,
+                    Math.min(turretConstants.turretMaxDegrees, manualSpinSetpointDeg));
+                spinPose.Position = degreesToSpinMotorRotations(clamped);
+            }
+            if (manualHoodOverride) {
+                double clamped = Math.max(turretConstants.hoodMinDegrees,
+                    Math.min(turretConstants.hoodMaxDegrees, manualHoodSetpointDeg));
+                hoodPose.Position = degreesToHoodMotorRotations(clamped);
+                shootVelocity.Velocity = 0;
+            } else {
+                hoodZero();
+            }
             spinMotor.setControl(spinPose);
             hoodMotor.setControl(hoodPose);
             shootMotor.setControl(shootVelocity);
@@ -343,39 +403,65 @@ public class Turret extends SubsystemBase {
         BaseStatusSignal.refreshAll(
             spinPositionSignal,
             spinClosedLoopOutputSignal,
-            spinMotorVoltageSignal
+            spinMotorVoltageSignal,
+            hoodPositionSignal,
+            hoodClosedLoopOutputSignal,
+            hoodMotorVoltageSignal
         );
         double motorRotations = spinPositionSignal.getValueAsDouble();
         double turretDegrees = normalize180((motorRotations / turretConstants.spinRatio) * 360.0);
+        double hoodRotations = hoodPositionSignal.getValueAsDouble();
+        double hoodDegrees = normalize180((hoodRotations / turretConstants.hoodRatio) * 360.0);
 
         SmartDashboard.putNumber(turretTelemetryConstants.angleDegKey, turretDegrees);
         SmartDashboard.putNumber(turretTelemetryConstants.spinSetpointRotKey, spinPose.Position);
         SmartDashboard.putNumber(turretTelemetryConstants.spinClosedLoopOutputKey, spinClosedLoopOutputSignal.getValueAsDouble());
         SmartDashboard.putNumber(turretTelemetryConstants.spinMotorVoltsKey, spinMotorVoltageSignal.getValueAsDouble());
+        SmartDashboard.putNumber(turretTelemetryConstants.hoodAngleDegKey, hoodDegrees);
+        SmartDashboard.putNumber(turretTelemetryConstants.hoodSetpointRotKey, hoodPose.Position);
+        SmartDashboard.putNumber(turretTelemetryConstants.hoodClosedLoopOutputKey, hoodClosedLoopOutputSignal.getValueAsDouble());
+        SmartDashboard.putNumber(turretTelemetryConstants.hoodMotorVoltsKey, hoodMotorVoltageSignal.getValueAsDouble());
     }
 
     @Override
     public void simulationPeriodic() {
-        if (spinSim == null || spinSimState == null) {
-            return;
+        if (spinSim != null && spinSimState != null) {
+            spinSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+            spinSim.setInputVoltage(spinSimState.getMotorVoltage());
+            spinSim.update(turretSimConstants.loopPeriodSeconds);
+
+            double turretRotations = spinSim.getAngularPositionRotations();
+            double turretRps = spinSim.getAngularVelocityRPM() / 60.0;
+            double rotorRotations = turretRotations * turretConstants.spinRatio;
+            double rotorRps = turretRps * turretConstants.spinRatio;
+
+            spinSimState.setRawRotorPosition(rotorRotations);
+            spinSimState.setRotorVelocity(rotorRps);
         }
 
-        spinSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+        if (hoodSim != null && hoodSimState != null) {
+            hoodSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
 
-        spinSim.setInputVoltage(spinSimState.getMotorVoltage());
-        spinSim.update(turretSimConstants.loopPeriodSeconds);
+            hoodSim.setInputVoltage(hoodSimState.getMotorVoltage());
+            hoodSim.update(turretSimConstants.loopPeriodSeconds);
 
-        double turretRotations = spinSim.getAngularPositionRotations();
-        double turretRps = spinSim.getAngularVelocityRPM() / 60.0;
-        double rotorRotations = turretRotations * turretConstants.spinRatio;
-        double rotorRps = turretRps * turretConstants.spinRatio;
+            double hoodRotations = hoodSim.getAngularPositionRotations();
+            double hoodRps = hoodSim.getAngularVelocityRPM() / 60.0;
+            double rotorRotations = hoodRotations * turretConstants.hoodRatio;
+            double rotorRps = hoodRps * turretConstants.hoodRatio;
 
-        spinSimState.setRawRotorPosition(rotorRotations);
-        spinSimState.setRotorVelocity(rotorRps);
+            hoodSimState.setRawRotorPosition(rotorRotations);
+            hoodSimState.setRotorVelocity(rotorRps);
+        }
     }
 
-    private static double degreesToMotorRotations(double turretDegrees) {
-        return (turretDegrees / 360.0) * turretConstants.spinRatio;
+    private static double degreesToSpinMotorRotations(double degrees) {
+        return (degrees / 360.0) * turretConstants.spinRatio;
+    }
+
+    private static double degreesToHoodMotorRotations(double degrees) {
+        return (degrees / 360.0) * turretConstants.hoodRatio;
     }
 
     private static double normalize180(double degrees) {

@@ -9,9 +9,9 @@ public class Constants {
         public static final int spinMotorId = 30;
         public static final int hoodMotorId = 31;
         public static final int shootMotorId = 32;
-        public static final double spinKp = 0.03;
+        public static final double spinKp = 0.02; // What currenty works in the sim might need to change in real life
         public static final double spinKi = 0.0;
-        public static final double spinKd = 0.01;
+        public static final double spinKd = 0.01; // What currenty works in the sim might need to change in real life
         public static final double hoodKp = 0.0;
         public static final double hoodKi = 0.0;
         public static final double hoodKd = 0.0;
@@ -22,6 +22,7 @@ public class Constants {
         public static final double hoodStatorCurrentLimit = 40.0;
         public static final double shootStatorCurrentLimit = 60.0;
         public static final double spinRatio = 20;
+        public static final double hoodRatio = 30;
         public static final double spinCancoder1Ratio = 10; // Turret gear teeth / encoder A gear teeth
         public static final double spinCancoder2Ratio = 11; // Turret gear teeth / encoder B gear teeth
         public static final double shooterRatio = 2;
@@ -30,6 +31,8 @@ public class Constants {
         public static final double hoodStow = 0.0;
         public static final double turretMinDegrees = -90.0;
         public static final double turretMaxDegrees = 90.0;
+        public static final double hoodMinDegrees = -90.0;
+        public static final double hoodMaxDegrees = 90.0;
         public static final double turretAimErrorScale = 0.25;
         public static final double chassisRotationBufferDegrees = 85.0;
         public static final double blueHubMaxX = 4.5;
@@ -62,6 +65,10 @@ public class Constants {
         public static final String spinSetpointRotKey = "Turret/SpinSetpointRot";
         public static final String spinClosedLoopOutputKey = "Turret/SpinClosedLoopOutput";
         public static final String spinMotorVoltsKey = "Turret/SpinMotorVolts";
+        public static final String hoodAngleDegKey = "Hood/AngleDeg";
+        public static final String hoodSetpointRotKey = "Hood/SetpointRot";
+        public static final String hoodClosedLoopOutputKey = "Hood/ClosedLoopOutput";
+        public static final String hoodMotorVoltsKey = "Hood/MotorVolts";
     }
 
     public final class turretTuningConstants {
@@ -80,9 +87,26 @@ public class Constants {
         public static final double defaultSetpointDeg = 0.0;
     }
 
+    public final class hoodTuningConstants {
+        public static final String enableKey = "HoodTune/Enable";
+        public static final String zeroKey = "HoodTune/Zero";
+        public static final String activeKey = "HoodTune/Active";
+        public static final String kPKey = "HoodTune/kP";
+        public static final String kIKey = "HoodTune/kI";
+        public static final String kDKey = "HoodTune/kD";
+        public static final String setpointDegKey = "HoodTune/SetpointDeg";
+        public static final boolean defaultEnable = false;
+        public static final boolean defaultZero = false;
+        public static final double defaultKP = 0.0;
+        public static final double defaultKI = 0.0;
+        public static final double defaultKD = 0.0;
+        public static final double defaultSetpointDeg = 0.0;
+    }
+
     public final class turretSimConstants {
         public static final double loopPeriodSeconds = 0.02;
         public static final double turretJ = 0.004;
+        public static final double hoodJ = 0.002;
         public static final int motorCount = 1;
     }
 
