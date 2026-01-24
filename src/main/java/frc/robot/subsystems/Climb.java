@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
@@ -57,13 +59,13 @@ public class Climb extends SubsystemBase {
       
       resetPosition();
   }
-  public void robotAngle(double position) {
+  public void robotAngle(Supplier<Double> position) {
     setPosition(position);
   }
 
-  public void setPosition (double position){
-    climbLeft.setControl(new PositionVoltage(position));
-    climbRight.setControl(new PositionVoltage(position));
+  public void setPosition (Supplier<Double> position){
+    climbLeft.setControl(new PositionVoltage(position.get().doubleValue()));
+    climbRight.setControl(new PositionVoltage(position.get().doubleValue()));
     // climbHook.setControl(new PositionVoltage(position));
 
   }
