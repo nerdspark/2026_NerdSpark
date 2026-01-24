@@ -7,43 +7,37 @@
         {
           "type": "path",
           "data": {
-            "pathName": "left_auton_neutralx2_1"
+            "pathName": "right_auton_neutral1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "left_auton_neutralx2_2"
+            "pathName": "right_auton_neutral2"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "shooter_shoot"
+            "name": "shoot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "left_auton_neutralx2_3"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": null
+            "pathName": "right_auton_neutral3"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "shooter_shoot"
+            "name": "climb"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "left_autons",
+  "folder": "right_autos",
   "choreoAuto": false
 }
