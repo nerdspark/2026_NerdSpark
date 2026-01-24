@@ -30,7 +30,8 @@ public class IndexerCommand extends Command {
 
     @Override
     public void execute() {
-        indexer.passThrough(isActive); //TODO might be a supplier needed
+        indexer.passThrough(isActive);
+        indexer.moveDrumMotors(isActive);
     }
 
     @Override
