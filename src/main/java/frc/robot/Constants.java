@@ -4,7 +4,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 
 public class Constants {
+
     public final class turretConstants {
+
         public static final double spinOverrallRatio = 20;
         public static final double hoodStow = 0.0;
         public static final double turretOffset = 90;
@@ -32,5 +34,10 @@ public class Constants {
     public final class field {
         public static final Translation2d blueHub = new Translation2d(4.615, 4.040); // May need to redo
         public static final Translation2d redHub = new Translation2d(11.915, 4.040); // May need to redo
+    }
+
+    public final class indexerConstants {
+
+        public final static double DRUM_MOTOR_SPEED = 1.0;
     }
 }

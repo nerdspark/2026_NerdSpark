@@ -15,10 +15,12 @@ public class IndexerCommand extends Command {
 
     Indexer indexer;
     Supplier<Boolean> isActive;
+    Supplier<Double> rollerSpeed;
 
-    public IndexerCommand(Indexer indexer, Supplier<Boolean> isActive) {
+    public IndexerCommand(Indexer indexer, Supplier<Boolean> isActive, Supplier<Double> rollerSpeed) {
         this.indexer = indexer;
         this.isActive = isActive;
+        this.rollerSpeed = rollerSpeed;
 
         addRequirements(indexer);
     }
@@ -30,7 +32,7 @@ public class IndexerCommand extends Command {
 
     @Override
     public void execute() {
-        indexer.passThrough(isActive);
+        indexer.passThrough(isActive, rollerSpeed);
         indexer.moveDrumMotors(isActive);
     }
 

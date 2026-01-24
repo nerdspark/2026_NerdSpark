@@ -18,25 +18,19 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Constants.field;
+import frc.robot.Constants.indexerConstants;
 import frc.robot.Constants.turretConstants;
 
 public class Indexer implements Subsystem {
 
-    private TalonFX conveyorMotor, passThroughMotor, rightDrumMotor, leftDrumMotor;
+    private TalonFX conveyorMotor, DrumMotor;
     
 
     public Indexer() {
-        // pose = robotPose;
-        // alliance = driverAlliance;
-        // this.aimTurret = aimTurret;
 
         conveyorMotor = new TalonFX(0); //TODO add these in Later
-        passThroughMotor = new TalonFX(1); // TODO add these in later
+        DrumMotor = new TalonFX(1); // TODO add these later
         
-        // drum motors:
-        rightDrumMotor = new TalonFX(2); // TODO add these later
-        leftDrumMotor = new TalonFX(3); // TODO add these later
-
         // indexer configs
         TalonFXConfiguration conveyorConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
@@ -45,45 +39,30 @@ public class Indexer implements Subsystem {
             )
         ;
 
-        TalonFXConfiguration passThroughConfig = new TalonFXConfiguration()
-            .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(Amps.of(40))
-                .withStatorCurrentLimitEnable(true)
-            )
-        ;
-
         // drum motor configs: 
-        TalonFXConfiguration rightDrumMotorConfig = new TalonFXConfiguration()
+        TalonFXConfiguration DrumMotorConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(Amps.of(40))
                 .withStatorCurrentLimitEnable(true)
             )
         ;
 
-        TalonFXConfiguration leftDrumMotorConfig = new TalonFXConfiguration()
-            .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(Amps.of(40))
-                .withStatorCurrentLimitEnable(true)
-            )
-        ;
+        
 
         conveyorMotor.getConfigurator().apply(conveyorConfig);
-        passThroughMotor.getConfigurator().apply(passThroughConfig);
 
         //set drum motor configs
-        rightDrumMotor.getConfigurator().apply(rightDrumMotorConfig);
-        leftDrumMotor.getConfigurator().apply(leftDrumMotorConfig);
+        DrumMotor.getConfigurator().apply(DrumMotorConfig);
+        
         
     }
     
     // Moves the the pass through motors and spins the conveyer belt.
-    public void passThrough(Supplier<Boolean> isActive) {
+    public void passThrough(Supplier<Boolean> isActive, Supplier<Double> rollerSpeed) {
         if(isActive.get()){
-            conveyorMotor.set(0.2);
-            passThroughMotor.set(0.2);
+            conveyorMotor.set(rollerSpeed.get());
         } else {
             conveyorMotor.set(0.0);
-            passThroughMotor.set(0.0);
         }
         
     }
@@ -91,11 +70,9 @@ public class Indexer implements Subsystem {
     // control the drum motors
     public void moveDrumMotors(Supplier<Boolean> isActive) {
         if(isActive.get()){
-            rightDrumMotor.set(0.2);
-            leftDrumMotor.set(-0.2); // TODO might need to be swapped
+            DrumMotor.set(indexerConstants.DRUM_MOTOR_SPEED);
         } else {
-            rightDrumMotor.set(0.0);
-            leftDrumMotor.set(0.0);
+            DrumMotor.set(0.0);
         }
     }
 
