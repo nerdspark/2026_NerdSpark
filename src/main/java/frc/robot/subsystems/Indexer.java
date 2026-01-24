@@ -54,9 +54,15 @@ public class Indexer implements Subsystem {
     }
     
     // Moves the the pass through motors and spins the conveyer belt.
-    public void passThrough() {
-        conveyorMotor.set(0.2);
-        passThroughMotor.set(0.2);
+    public void passThrough(Supplier<Boolean> isActive) {
+        if(isActive.get()){
+            conveyorMotor.set(0.2);
+            passThroughMotor.set(0.2);
+        } else {
+            conveyorMotor.set(0.0);
+            passThroughMotor.set(0.0);
+        }
+        
     }
 
 

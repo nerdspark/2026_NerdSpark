@@ -1,5 +1,7 @@
 package frc.robot.commands;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -12,9 +14,11 @@ import frc.robot.subsystems.Indexer;
 public class IndexerCommand extends Command {
 
     Indexer indexer;
+    Supplier<Boolean> isActive;
 
-    public IndexerCommand(Indexer indexer) {
+    public IndexerCommand(Indexer indexer, Supplier<Boolean> isActive) {
         this.indexer = indexer;
+        this.isActive = isActive;
 
         addRequirements(indexer);
     }
@@ -26,7 +30,7 @@ public class IndexerCommand extends Command {
 
     @Override
     public void execute() {
-        indexer.passThrough();
+        indexer.passThrough(isActive); //TODO might be a supplier needed
     }
 
     @Override
