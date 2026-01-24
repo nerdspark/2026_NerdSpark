@@ -16,60 +16,60 @@
     },
     {
       "anchor": {
-        "x": 8.722975115732801,
-        "y": 5.50172345197227
+        "x": 8.439006211180123,
+        "y": 5.391073646850044
       },
       "prevControl": {
-        "x": 8.722975115732801,
-        "y": 7.201667377141257
+        "x": 8.439006211180123,
+        "y": 7.091017572019031
       },
       "nextControl": {
-        "x": 8.722975115732801,
-        "y": 4.098747109772788
+        "x": 8.439006211180123,
+        "y": 3.9880973046505614
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 8.406273075810185,
-        "y": 2.166083984375
+        "x": 8.092945874001776,
+        "y": 2.123620230700975
       },
       "prevControl": {
-        "x": 8.840089916087965,
-        "y": 2.1219280960648144
+        "x": 8.526762714279556,
+        "y": 2.0794643423907893
       },
       "nextControl": {
-        "x": 7.627105606766808,
-        "y": 2.2453912600353445
+        "x": 7.3137784049583985,
+        "y": 2.2029275063613194
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.195824363417986,
-        "y": 6.304861979171344
+        "x": 6.934046140195209,
+        "y": 5.543984028393965
       },
       "prevControl": {
-        "x": 8.553794807442419,
-        "y": 6.243582907493599
+        "x": 8.292016584219642,
+        "y": 5.482704956716221
       },
       "nextControl": {
-        "x": 5.020703993047615,
-        "y": 6.403015335652826
+        "x": 4.758925769824837,
+        "y": 5.642137384875448
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.5187418258022451,
-        "y": 4.299213614009307
+        "x": 2.274,
+        "y": 4.594
       },
       "prevControl": {
-        "x": 2.488268663186504,
-        "y": 4.577927155675974
+        "x": 2.2498562555456965,
+        "y": 5.752899733806566
       },
       "nextControl": null,
       "isLocked": false,
@@ -86,16 +86,16 @@
       "rotationDegrees": -90.0
     },
     {
-      "waypointRelativePos": 1.7336516203703698,
-      "rotationDegrees": -79.7907641617907
-    },
-    {
       "waypointRelativePos": 2.258029513888891,
       "rotationDegrees": 94.01890741662014
     },
     {
       "waypointRelativePos": 2.7982494212963,
       "rotationDegrees": 90.0
+    },
+    {
+      "waypointRelativePos": 3.1299734748010577,
+      "rotationDegrees": 0.0
     }
   ],
   "constraintZones": [
@@ -143,18 +143,6 @@
     {
       "name": "intake_retract",
       "waypointRelativePos": 3.121901558073653,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
-      "name": "shoot",
-      "waypointRelativePos": 3.6581533286118986,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
-      "name": "climb",
-      "waypointRelativePos": 4.0,
       "endWaypointRelativePos": null,
       "command": null
     }
