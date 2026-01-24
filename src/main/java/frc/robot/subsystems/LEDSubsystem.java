@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
 
 public class LEDSubsystem extends SubsystemBase {
   private final CANdle m_candle = new CANdle(Constants.ledID, "rio");
@@ -96,68 +97,88 @@ public class LEDSubsystem extends SubsystemBase {
 
   }
 
-  public void updateLED() {
-    
-
-      if (climbing) { // climbing
-        m_candle.setControl(
-            new StrobeAnimation(0, 7)
-                .withSlot(Constants.ledID)
-                .withColor(kMagenta)
-                .withFrameRate(Constants.ledFramerate));
-
-      } else if (climbDone) {
-        m_candle.setControl(new SolidColor(0, 7).withColor(kMagenta));
-        
-
-      } else if (intakeOn) { // intaking
-
-        if (fuelFull) {
-          m_candle.setControl(new SolidColor(0, 7).withColor(kBlue));
-
-        } else {
-          m_candle.setControl(
-              new StrobeAnimation(0, 7)
-                  .withSlot(Constants.ledID)
-                  .withColor(kYellow)
-                  .withFrameRate(Constants.ledFramerate));
-        }
-
-      } else if (shooterOn) { // shooting
-        m_candle.setControl(
-            new StrobeAnimation(0, 7)
-                .withSlot(Constants.ledID)
-                .withColor(kCyan)
-                .withFrameRate(Constants.ledFramerate));
-
-      } else if (shooterReady) { // shooter ready
-        m_candle.setControl(new SolidColor(0, 7).withColor(kGreen));
-
-      } else if (shooterSpinning) { // shooter spinning
-        m_candle.setControl(
-            new StrobeAnimation(0, 7)
-                .withSlot(Constants.ledID)
-                .withColor(kGreen)
-                .withFrameRate(Constants.ledFramerate));
-
-      } else if (!fuelFull && !intakeOn && !shooterOn && !shooterSpinning) {
-        m_candle.setControl(new SolidColor(0, 7).withColor(kRed));
-
-      } else {
-        m_candle.setControl(new RainbowAnimation(0, 7)
-            .withSlot(Constants.ledID)
-            .withFrameRate(Constants.ledFramerate));
-      }
-
-    
+  public CANdle getCandle() {
+    return m_candle;
   }
+
+  public void solidColor(RGBWColor color) {
+    m_candle.setControl(new SolidColor(0, 7).withColor(color));
+  }
+
+  public void blinkColor(RGBWColor color) {
+    m_candle.setControl(
+        new StrobeAnimation(0, 7)
+            .withSlot(Constants.ledID)
+            .withColor(color)
+            .withFrameRate(Constants.ledFramerate));
+  }
+
+  public void rainbow() {
+    m_candle.setControl(new RainbowAnimation(0, 7)
+        .withSlot(Constants.ledID)
+        .withFrameRate(Constants.ledFramerate));
+  }
+
+  // public void updateLED() {
+  //     if (climbing) { // climbing
+  //       m_candle.setControl(
+  //           new StrobeAnimation(0, 7)
+  //               .withSlot(Constants.ledID)
+  //               .withColor(kMagenta)
+  //               .withFrameRate(Constants.ledFramerate));
+
+  //     } else if (climbDone) {
+  //       m_candle.setControl(new SolidColor(0, 7).withColor(kMagenta));
+
+  //     } else if (intakeOn) { // intaking
+
+  //       if (fuelFull) {
+  //         m_candle.setControl(new SolidColor(0, 7).withColor(kBlue));
+
+  //       } else {
+  //         m_candle.setControl(
+  //             new StrobeAnimation(0, 7)
+  //                 .withSlot(Constants.ledID)
+  //                 .withColor(kYellow)
+  //                 .withFrameRate(Constants.ledFramerate));
+  //       }
+
+  //     } else if (shooterOn) { // shooting
+  //       m_candle.setControl(
+  //           new StrobeAnimation(0, 7)
+  //               .withSlot(Constants.ledID)
+  //               .withColor(kCyan)
+  //               .withFrameRate(Constants.ledFramerate));
+
+  //     } else if (shooterReady) { // shooter ready
+  //       m_candle.setControl(new SolidColor(0, 7).withColor(kGreen));
+
+  //     } else if (shooterSpinning) { // shooter spinning
+  //       m_candle.setControl(
+  //           new StrobeAnimation(0, 7)
+  //               .withSlot(Constants.ledID)
+  //               .withColor(kGreen)
+  //               .withFrameRate(Constants.ledFramerate));
+
+  //     } else if (!fuelFull && !intakeOn && !shooterOn && !shooterSpinning) {
+  //       m_candle.setControl(new SolidColor(0, 7).withColor(kRed));
+
+  //     } else {
+  //       m_candle.setControl(new RainbowAnimation(0, 7)
+  //           .withSlot(Constants.ledID)
+  //           .withFrameRate(Constants.ledFramerate));
+  //     }
+
+    
+  // }
 
   @Override
   public void periodic() {
 
     // This method will be called once per scheduler run
+    // updateLED();
 
+    // climbing
 
-    
   }
 }
