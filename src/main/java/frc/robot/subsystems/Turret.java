@@ -20,10 +20,12 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -39,6 +41,17 @@ import frc.robot.Constants.turretTelemetryConstants;
 
 public class Turret extends SubsystemBase {
     private static final double TWO_PI = 2.0 * Math.PI;
+    private static final double GRAVITY = 9.80665;
+
+    private static final class ShotSolution {
+        private final double hoodDegrees;
+        private final double motorRps;
+
+        private ShotSolution(double hoodDegrees, double motorRps) {
+            this.hoodDegrees = hoodDegrees;
+            this.motorRps = motorRps;
+        }
+    }
 
     private final TalonFX spinMotor;
     private final TalonFX hoodMotor;
@@ -54,6 +67,7 @@ public class Turret extends SubsystemBase {
     private final Supplier<ChassisSpeeds> speed;
     private final Supplier<DriverStation.Alliance> alliance;
     private final Supplier<Boolean> aimTurret;
+    private final ArmFeedforward hoodFeedforward;
 
     private boolean manualSpinOverride = false;
     private boolean manualHoodOverride = false;
@@ -70,12 +84,16 @@ public class Turret extends SubsystemBase {
     private TalonFXSimState spinSimState;
     private DCMotorSim hoodSim;
     private TalonFXSimState hoodSimState;
+    private DCMotorSim shooterSim;
+    private TalonFXSimState shooterSimState;
     private StatusSignal<Angle> spinPositionSignal;
     private StatusSignal<Double> spinClosedLoopOutputSignal;
     private StatusSignal<Voltage> spinMotorVoltageSignal;
     private StatusSignal<Angle> hoodPositionSignal;
     private StatusSignal<Double> hoodClosedLoopOutputSignal;
     private StatusSignal<Voltage> hoodMotorVoltageSignal;
+    private StatusSignal<AngularVelocity> shootVelocitySignal;
+    private StatusSignal<Voltage> shootMotorVoltageSignal;
 
     private double turretAngle;
 
@@ -92,6 +110,12 @@ public class Turret extends SubsystemBase {
 
         spinCancoder1 = new CANcoder(0);
         spinCancoder2 = new CANcoder(0);
+        hoodFeedforward = new ArmFeedforward(
+            TurretConstants.hoodKsVolts,
+            TurretConstants.hoodKgVolts,
+            TurretConstants.hoodKvVolts,
+            TurretConstants.hoodKaVolts
+        );
 
         TalonFXConfiguration spinConfig = new TalonFXConfiguration()
             .withSlot0(new Slot0Configs()
@@ -144,6 +168,8 @@ public class Turret extends SubsystemBase {
         hoodPositionSignal = hoodMotor.getPosition();
         hoodClosedLoopOutputSignal = hoodMotor.getClosedLoopOutput();
         hoodMotorVoltageSignal = hoodMotor.getMotorVoltage();
+        shootVelocitySignal = shootMotor.getVelocity();
+        shootMotorVoltageSignal = shootMotor.getMotorVoltage();
 
         if (RobotBase.isSimulation()) {
             DCMotor motorModel = DCMotor.getKrakenX60Foc(turretSimConstants.motorCount);
@@ -160,6 +186,13 @@ public class Turret extends SubsystemBase {
                 motorModel
             );
             hoodSimState = hoodMotor.getSimState();
+
+            double shooterGearing = 1.0 / TurretConstants.shooterRatio;
+            shooterSim = new DCMotorSim(
+                LinearSystemId.createDCMotorSystem(motorModel, turretSimConstants.shooterJ, shooterGearing),
+                motorModel
+            );
+            shooterSimState = shootMotor.getSimState();
         }
 
         spinCancoder1.getConfigurator().apply(spinCancoder1Config);
@@ -172,9 +205,13 @@ public class Turret extends SubsystemBase {
      * @param distance the distance to the center of the hub
      */
     private void aimHood(double distance) {
-        double[] map = TurretConstants.shooterMap.get(distance);
+        ShotSolution solution = solveShotForDistance(distance);
+        if (solution == null) {
+            hoodZero();
+            return;
+        }
 
-        hoodPose.Position = map[0];
+        hoodPose.Position = degreesToHoodMotorRotations(solution.hoodDegrees);
 
         double robotHeading = pose.get().getRotation().getRadians();
         double shooterFOA = robotHeading + TurretConstants.turretOffset + turretAngle;
@@ -184,7 +221,7 @@ public class Turret extends SubsystemBase {
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
         double deltaMotorRPS = (vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius)) * TurretConstants.shooterRatio;
 
-        shootVelocity.Velocity = map[1] - deltaMotorRPS;
+        shootVelocity.Velocity = solution.motorRps - deltaMotorRPS;
     }
 
     // When we are out of shooting range stop wheels and send hood to stow.
@@ -334,6 +371,7 @@ public class Turret extends SubsystemBase {
             } else {
                 hoodZero();
             }
+            hoodPose.FeedForward = hoodFeedforward.calculate(getHoodSetpointRadians(), 0.0);
             spinMotor.setControl(spinPose);
             hoodMotor.setControl(hoodPose);
             shootMotor.setControl(shootVelocity);
@@ -373,6 +411,7 @@ public class Turret extends SubsystemBase {
             hoodZero();
         }
 
+        hoodPose.FeedForward = hoodFeedforward.calculate(getHoodSetpointRadians(), 0.0);
         spinMotor.setControl(spinPose);
         hoodMotor.setControl(hoodPose);
         shootMotor.setControl(shootVelocity);
@@ -386,12 +425,16 @@ public class Turret extends SubsystemBase {
             spinMotorVoltageSignal,
             hoodPositionSignal,
             hoodClosedLoopOutputSignal,
-            hoodMotorVoltageSignal
+            hoodMotorVoltageSignal,
+            shootVelocitySignal,
+            shootMotorVoltageSignal
         );
         double motorRotations = spinPositionSignal.getValueAsDouble();
         double turretDegrees = normalize180((motorRotations / TurretConstants.spinRatio) * 360.0);
         double hoodRotations = hoodPositionSignal.getValueAsDouble();
         double hoodDegrees = normalize180((hoodRotations / TurretConstants.hoodRatio) * 360.0);
+        double shooterMotorRps = shootVelocitySignal.getValueAsDouble();
+        double shooterWheelRps = shooterMotorRps / TurretConstants.shooterRatio;
 
         SmartDashboard.putNumber(turretTelemetryConstants.angleDegKey, turretDegrees);
         SmartDashboard.putNumber(turretTelemetryConstants.spinSetpointRotKey, spinPose.Position);
@@ -401,6 +444,10 @@ public class Turret extends SubsystemBase {
         SmartDashboard.putNumber(turretTelemetryConstants.hoodSetpointRotKey, hoodPose.Position);
         SmartDashboard.putNumber(turretTelemetryConstants.hoodClosedLoopOutputKey, hoodClosedLoopOutputSignal.getValueAsDouble());
         SmartDashboard.putNumber(turretTelemetryConstants.hoodMotorVoltsKey, hoodMotorVoltageSignal.getValueAsDouble());
+        SmartDashboard.putNumber(turretTelemetryConstants.shooterSetpointRpsKey, shootVelocity.Velocity / TurretConstants.shooterRatio);
+        SmartDashboard.putNumber(turretTelemetryConstants.shooterMotorRpsKey, shooterMotorRps);
+        SmartDashboard.putNumber(turretTelemetryConstants.shooterWheelRpsKey, shooterWheelRps);
+        SmartDashboard.putNumber(turretTelemetryConstants.shooterMotorVoltsKey, shootMotorVoltageSignal.getValueAsDouble());
     }
 
     @Override
@@ -428,6 +475,18 @@ public class Turret extends SubsystemBase {
             hoodSimState.setRawRotorPosition(hoodRotations * TurretConstants.hoodRatio);
             hoodSimState.setRotorVelocity(hoodRps * TurretConstants.hoodRatio);
         }
+
+        if (shooterSim != null && shooterSimState != null) {
+            shooterSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+            shooterSim.setInputVoltage(shooterSimState.getMotorVoltage());
+            shooterSim.update(turretSimConstants.loopPeriodSeconds);
+
+            double shooterRotations = shooterSim.getAngularPositionRotations();
+            double shooterRps = shooterSim.getAngularVelocityRPM() / 60.0;
+            shooterSimState.setRawRotorPosition(shooterRotations * TurretConstants.shooterRatio);
+            shooterSimState.setRotorVelocity(shooterRps * TurretConstants.shooterRatio);
+        }
     }
 
     private static double degreesToSpinMotorRotations(double degrees) {
@@ -436,6 +495,55 @@ public class Turret extends SubsystemBase {
 
     private static double degreesToHoodMotorRotations(double degrees) {
         return (degrees / 360.0) * TurretConstants.hoodRatio;
+    }
+
+    private double getHoodSetpointRadians() {
+        double hoodDegrees = (hoodPose.Position / TurretConstants.hoodRatio) * 360.0;
+        return Math.toRadians(hoodDegrees) + TurretConstants.hoodFeedforwardOffsetRad;
+    }
+
+    private ShotSolution solveShotForDistance(double distanceMeters) {
+        if (distanceMeters <= 0.0) {
+            return null;
+        }
+        double deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
+        double bestAngleDeg = Double.NaN;
+        double bestMotorRps = Double.POSITIVE_INFINITY;
+        double minAngle = TurretConstants.hoodMinDegrees;
+        double maxAngle = TurretConstants.hoodMaxDegrees;
+
+        for (double angleDeg = minAngle; angleDeg <= maxAngle; angleDeg += TurretConstants.shotAngleStepDeg) {
+            double angleRad = Math.toRadians(angleDeg);
+            double speedMps = solveBallisticSpeed(distanceMeters, angleRad, deltaHeight);
+            if (!Double.isFinite(speedMps)) {
+                continue;
+            }
+            double wheelRps = speedMps / (TWO_PI * TurretConstants.shooterWheelRadius);
+            double motorRps = wheelRps * TurretConstants.shooterRatio;
+            if (motorRps <= TurretConstants.shooterMaxMotorRps && motorRps < bestMotorRps) {
+                bestMotorRps = motorRps;
+                bestAngleDeg = angleDeg;
+            }
+        }
+
+        if (!Double.isFinite(bestAngleDeg)) {
+            return null;
+        }
+        return new ShotSolution(bestAngleDeg, bestMotorRps);
+    }
+
+    private static double solveBallisticSpeed(double distanceMeters, double angleRad, double deltaHeightMeters) {
+        double cos = Math.cos(angleRad);
+        if (Math.abs(cos) < 1e-6) {
+            return Double.NaN;
+        }
+        double tan = Math.tan(angleRad);
+        double denom = 2.0 * cos * cos * (distanceMeters * tan - deltaHeightMeters);
+        if (denom <= 0.0) {
+            return Double.NaN;
+        }
+        double numerator = GRAVITY * distanceMeters * distanceMeters;
+        return Math.sqrt(numerator / denom);
     }
 
     private static double normalize180(double degrees) {

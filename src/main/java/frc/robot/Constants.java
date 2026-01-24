@@ -9,14 +9,19 @@ public final class Constants {
         public static final int spinMotorId = 30;
         public static final int hoodMotorId = 31;
         public static final int shootMotorId = 32;
-        public static final double spinKp = 0.03; // What currently works in the sim might need to change in real life
+        public static final double spinKp = 0.0; // 0.02 What currently works in the sim might need to change in real life
         public static final double spinKi = 0.0;
-        public static final double spinKd = 0.01; // What currently works in the sim might need to change in real life
+        public static final double spinKd = 0.0; // 0.01 What currently works in the sim might need to change in real life
         public static final double spinStatorCurrentLimit = 40.0;
 
-        public static final double hoodKp = 0.0;
+        public static final double hoodKp = 0.0; // Keep for trim if needed
         public static final double hoodKi = 0.0;
         public static final double hoodKd = 0.0;
+        public static final double hoodKsVolts = 0.0;
+        public static final double hoodKgVolts = 0.0;
+        public static final double hoodKvVolts = 0.0;
+        public static final double hoodKaVolts = 0.0;
+        public static final double hoodFeedforwardOffsetRad = 0.0;
         public static final double hoodStatorCurrentLimit = 40.0;
 
         public static final double shootKp = 0.0;
@@ -29,6 +34,12 @@ public final class Constants {
         public static final double spinCancoder2Ratio = 200/17.0; // Turret gear teeth / encoder B gear teeth
         public static final double shooterRatio = 2;
         public static final double shooterWheelRadius = 0.0508; // in meters
+        public static final double shooterMaxMotorRps = 100.0;
+        public static final double shotAngleStepDeg = 0.5;
+        public static final double shooterMuzzleHeightMeters = 1.0;
+        public static final double targetHeightMeters = 2.64;
+        public static final double ballMassKg = 0.2268;
+        public static final double ballDiameterMeters = 0.1501;
 
         public static final double hoodStow = 0.0;
         public static final double turretMinDegrees = -90.0;
@@ -71,6 +82,10 @@ public final class Constants {
         public static final String hoodSetpointRotKey = "Hood/SetpointRot";
         public static final String hoodClosedLoopOutputKey = "Hood/ClosedLoopOutput";
         public static final String hoodMotorVoltsKey = "Hood/MotorVolts";
+        public static final String shooterSetpointRpsKey = "Shooter/SetpointRps";
+        public static final String shooterMotorRpsKey = "Shooter/MotorRps";
+        public static final String shooterWheelRpsKey = "Shooter/WheelRps";
+        public static final String shooterMotorVoltsKey = "Shooter/MotorVolts";
     }
 
     public static final class turretTuningConstants {
@@ -109,6 +124,7 @@ public final class Constants {
         public static final double loopPeriodSeconds = 0.02;
         public static final double turretJ = 0.004;
         public static final double hoodJ = 0.002;
+        public static final double shooterJ = 0.001;
         public static final int motorCount = 1;
     }
 
