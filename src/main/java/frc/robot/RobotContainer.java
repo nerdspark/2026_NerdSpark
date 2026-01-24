@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.commands.TuneTurretCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Turret;
@@ -49,9 +48,10 @@ public class RobotContainer {
             () -> drivetrain.getState().Pose, 
             () -> drivetrain.getState().Speeds,
             () -> DriverStation.getAlliance().orElse(Alliance.Red),
-            () -> true
+            () -> true,
+            () -> joystick.a().getAsBoolean()
         );
-        turret.setDefaultCommand(new TuneTurretCommand(turret));
+        // turret.setDefaultCommand(new TuneTurretCommand(turret));
 
         configureDefaultCommands();
         // configureSysid();

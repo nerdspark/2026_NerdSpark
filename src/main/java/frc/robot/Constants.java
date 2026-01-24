@@ -6,11 +6,11 @@ import edu.wpi.first.math.interpolation.InverseInterpolator;
 
 public final class Constants {
     public static final class TurretConstants {
-        public static final int spinMotorId = 30;
-        public static final double spinKp = 0.03;
+        public static final int spinMotorId = 25;
+        public static final double spinKp = 3;
         public static final double spinKi = 0.0;
-        public static final double spinKd = 0.01;
-        public static final double spinStatorCurrentLimit = 40.0;
+        public static final double spinKd = 0.08;
+        public static final double spinStatorCurrentLimit = 30.0;
         
         public static final int hoodMotorId = 31;
         public static final double hoodKp = 0.0;
@@ -23,16 +23,17 @@ public final class Constants {
         public static final double shootKi = 0.0;
         public static final double shootKd = 0.0;
         public static final double shootStatorCurrentLimit = 60.0;
-        
-        public static final double spinRatio = 10;
-        public static final double spinCancoder1Ratio = 200/19.0; // Turret gear teeth / encoder A gear teeth
-        public static final double spinCancoder2Ratio = 200/17.0; // Turret gear teeth / encoder B gear teeth
+
+        public static final double spinRatio = 210/21.0;
+        public static final double spinTeeth = 210;
+        public static final double spinCancoder1Teeth = 15;
+        public static final double spinCancoder2Teeth = 14; 
         public static final double shooterRatio = 2; // TODO
         public static final double shooterWheelRadius = 0.0508; // in meters TODO
 
         public static final double hoodStow = 0.0;
-        public static final double turretMinDegrees = -90.0;
-        public static final double turretMaxDegrees = 90.0;
+        public static final double turretMinDegrees = 0;
+        public static final double turretMaxDegrees = 360;
         public static final double turretAimErrorScale = 0.25;
         public static final double chassisRotationBufferDegrees = 85.0;
         public static final double blueHubMaxX = 4.5;
@@ -55,7 +56,7 @@ public final class Constants {
 
         // Add numbers to hash map here, Distance, [Hood Pose, Wheel Speed (motor RPS)]
         static {
-            // shooterMap.put(, new double[] {});
+            shooterMap.put(1.0, new double[] {0, 0});
         }
     }
 
