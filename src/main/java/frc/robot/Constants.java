@@ -134,4 +134,26 @@ public static class Vision {
 //       }
 //     }
   
+
+
+// Change these constants later
+  public static class ClimbConstants {
+    public static final int kLeftID = 0;
+    public static final int kRightID = 0;
+    public static final int kHookID = 0;
+    public static final double climbCurrentLimit = 0;
+    public static final double holdCurrentLimit = 0;
+    public static final double hookCurrentLimit = 0;
+    // public static final double ampTriggeredCurrentLimit = 2;
+    public static final double power = 0.20;
+    public static final double deployPosition = 0; // rot
+    public static final double climbedPosition = 0; // rot
+    public static final double rampRate = 0;
+    public static final double kP = 0;
+    public static final double kI = 0.0;
+    public static final double kD = 0.0;
+    public static final String canBus = "canivore1";
+    // public static final double servoOpenPosition = 1.0;
+    // public static final double servoCloseposition = 0.0;
+  }
 }
