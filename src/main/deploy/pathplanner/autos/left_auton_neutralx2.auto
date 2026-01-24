@@ -29,12 +29,6 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "left_auton_neutralx2_4"
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "shooter_shoot"
