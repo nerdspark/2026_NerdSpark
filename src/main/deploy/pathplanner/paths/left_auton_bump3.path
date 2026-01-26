@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.0,
-        "y": 0.3611268855368224
+        "x": 2.88,
+        "y": 5.562
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.82960958296362,
-        "y": 0.40136645962732825
+        "x": 1.88,
+        "y": 5.562
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.5995163690476186,
-        "y": 2.3514732142857144
+        "x": 1.4249627976190475,
+        "y": 4.087202380952381
       },
       "prevControl": {
-        "x": 1.5946205357142853,
-        "y": 1.8881770833333333
+        "x": 2.9714583333333335,
+        "y": 4.041525297619048
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,7 +48,7 @@
   "folder": "left_auton_bump",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }
