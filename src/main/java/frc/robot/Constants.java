@@ -152,6 +152,8 @@ public static class Vision {
     public static final double kP = 0;
     public static final double kI = 0.0;
     public static final double kD = 0.0;
+    public static final double kG = 0.0;
+    public static final double kS = 0.0;
     public static final String canBus = "canivore1";
     // public static final double servoOpenPosition = 1.0;
     // public static final double servoCloseposition = 0.0;
