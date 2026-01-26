@@ -51,7 +51,6 @@ public class RobotContainer {
             () -> true,
             () -> joystick.a().getAsBoolean()
         );
-        // turret.setDefaultCommand(new TuneTurretCommand(turret));
 
         configureDefaultCommands();
         // configureSysid();
