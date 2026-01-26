@@ -28,6 +28,20 @@ public class Climb extends SubsystemBase {
   private TalonFXConfiguration climbConfig = new TalonFXConfiguration();
   private boolean ampTriggered, ampTriggerStarted = false;
 
+
+//Start of CLimb Sequence
+//Taller Arm goes to 30 inches and hooks on first rung and Small Arm goes to highest position
+//Tall Arm pulls down until small arm then small arm hooks on first rung and Tall Arm lets go
+//Tall Arm goes to second rung position and hooks on second rung
+//Kicker Arm goes out and pushes robot back and allows clearance
+//Tall Arm pulls down until small arm then small arm hooks on second rung and Tall Arm lets go
+//Tall Arm goes to third rung position and hooks on third rung
+//Kicker Arm goes out and pushes robot back and allow clearance
+//Tall Arm pulls down until small arm then small arm hooks on third rung and Tall Arm lets go.
+
+
+
+
   /** Creates a new Climb. */
   public Climb() {
     climbLeft = new TalonFX(ClimbConstants.kLeftID, ClimbConstants.canBus);
