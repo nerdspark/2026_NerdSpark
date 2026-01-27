@@ -10,11 +10,18 @@ public final class Constants {
         public static final double spinTeeth = 210;
         public static final double spinCancoder1Teeth = 15;
         public static final double spinCancoder2Teeth = 14; 
-        public static final double shooterRatio = 2;
-        public static final double shooterWheelRadius = 0.0508; // in meters 
-        public static final double hoodStowPose = 0.0;
+
+        public static final double shooterRatio = 2; // TODO
+        public static final double shooterWheelRadius = 0.0508; // in meters TODO
+
+        public static final double hoodStowPose = 0.0; // TODO
+
+        // Hood pose from each drive to pose position
+        public static final double[] hoodMap = {0, 0, 0, 0};
+        // wheel speed from each drive to pose position
+        public static final double[] wheelMap = {0, 0, 0, 0};
         
-        public static InterpolatingTreeMap<Double, double[]> shooterMap =  new InterpolatingTreeMap<>(
+        public static InterpolatingTreeMap<Double, double[]> map =  new InterpolatingTreeMap<>(
             // inverseInterpolator for Double keys
             InverseInterpolator.forDouble(),
 
@@ -30,7 +37,7 @@ public final class Constants {
 
         // Add numbers to hash map here, Distance, [Hood Pose, Wheel Speed (motor RPS)]
         static {
-            shooterMap.put(1.0, new double[] {0, 0});
+            map.put(0.0, new double[] {0, 0});
         }
     }
 
@@ -47,6 +54,12 @@ public final class Constants {
         public static final double spinStatorCurrentLimit = 40.0;
         public static final double spinVelocity = 40;
         public static final double spinAccel = 9000;
+
+        public static final int spinCancoder1Id = 26;
+        public static final double spinCancoder1Offset = -0.241455078125;
+
+        public static final int spinCancoder2Id = 27;
+        public static final double spinCancoder2Offset = -0.10009765625;
         
         public static final int hoodMotorId = 28;
         public static final double hoodKp = 0.0;
@@ -65,12 +78,6 @@ public final class Constants {
         public static final double shootKv = 0.0;
         public static final double shootKa = 0.0;
         public static final double shootStatorCurrentLimit = 60.0;
-
-        public static final int spinCancoder1Id = 26;
-        public static final double spinCancoder1Offset = -0.241455078125;
-
-        public static final int spinCancoder2Id = 27;
-        public static final double spinCancoder2Offset = -0.10009765625;
     }
 
     public static final class Field {
@@ -80,8 +87,8 @@ public final class Constants {
         public static final double blueHubMaxX = 4.5;
         public static final double redHubMinX = 12.0;
 
-        public static final Translation2d leftPass = new Translation2d();
-        public static final Translation2d rightPass = new Translation2d();
+        public static final Translation2d leftPass = new Translation2d(); // TODO
+        public static final Translation2d rightPass = new Translation2d(); // TODO
     }
 
     public static final class TurretTelemetryConstants {

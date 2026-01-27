@@ -49,6 +49,7 @@ public class RobotContainer {
             () -> drivetrain.getState().Speeds,
             () -> DriverStation.getAlliance().orElse(Alliance.Red),
             () -> true,
+            () -> false, // add code knowing when driving to pose here
             () -> joystick.a().getAsBoolean()
         );
 
@@ -61,6 +62,10 @@ public class RobotContainer {
     private void configureBindings() {
         // Reset the field-centric heading on left bumper press.
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+    }
+
+    private void configureTriggers() {
+
     }
 
     private void configureDefaultCommands() {

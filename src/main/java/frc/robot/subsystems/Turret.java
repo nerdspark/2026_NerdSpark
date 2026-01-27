@@ -53,7 +53,8 @@ public class Turret extends SubsystemBase {
     private Supplier<ChassisSpeeds> speed;
     private Supplier<DriverStation.Alliance> alliance;
     private Supplier<Boolean> aimTurret;
-    Supplier<Boolean> joy;
+    private Supplier<Boolean> driveAndAim;
+    private Supplier<Boolean> joy;
 
     private boolean manualOverride = true;
     private double manualSetpointDeg = 0.0;
@@ -68,11 +69,12 @@ public class Turret extends SubsystemBase {
     private int index = 0;
 
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<DriverStation.Alliance> driverAlliance, 
-        Supplier<Boolean> aimTurret, Supplier<Boolean> joystick) {
+        Supplier<Boolean> aimTurret, Supplier<Boolean> driveAndAim, Supplier<Boolean> joystick) {
         pose = robotPose;
         speed = speeds;
         alliance = driverAlliance;
         this.aimTurret = aimTurret;
+        this.driveAndAim = driveAndAim;
         joy = joystick;
 
         canivore = new CANBus(TurretConfig.CANbus);
@@ -165,15 +167,15 @@ public class Turret extends SubsystemBase {
 
         spinMotor.setPosition(0);
     }
-
+    
     /** 
-     * Aims the hood of the turret and sets the wheel speed
+     * Aims the hood of the turret and spins wheels based on shooter map and chassis speeds
      * If hood is not tight then look into chassis velocity based correction for hood
      * 
      * @param distance the distance to the center of the hub
     */
-    private void aimHood(double distance) {
-        double[] map = TurretConstants.shooterMap.get(distance);
+    private void aimOnFly(double distance) {
+        double[] map = TurretConstants.map.get(distance);
 
         hoodPose.Position = map[0];
 
@@ -188,8 +190,30 @@ public class Turret extends SubsystemBase {
         shootVelocity.Velocity = map[1] - deltaMotorRPS;
     }
 
-    // When we are out of shooting range stop wheels and send hood to stow
-    private void hoodZero() {
+    /** 
+     * Aims the hood of the turret and spins wheels based on calculations
+     * If hood is not tight then look into chassis velocity based correction for hood
+     * 
+     * @param distance the distance to the center of the hub
+    */
+    private void aimAnywhere(double distance) {
+        
+    }
+
+    /** 
+     * Aims the hood of the turret and spins wheels based on drive to pose position
+     * 
+     * @param index the index of the drive to pose position
+    */
+    public void aimAndDrive(int index) {
+        hoodPose.Position = TurretConstants.hoodMap[index];
+        shootVelocity.Velocity = TurretConstants.wheelMap[index];
+    }
+
+    /**
+     * When we are out of shooting range stop wheels and send hood to stow
+     */
+    private void hoodWheelsZero() {
         hoodPose.Position = TurretConstants.hoodStowPose;
         shootVelocity.Velocity = 0;
     }
@@ -271,7 +295,7 @@ public class Turret extends SubsystemBase {
     public void periodic() {
         if (joy.get()) {
             index += 1;
-            if (index > degrees.length) {
+            if (index > degrees.length - 1) {
                 index = 0;
             }
             setManualSetpointDegrees(degrees[index]);
@@ -286,7 +310,7 @@ public class Turret extends SubsystemBase {
             return;
         }
 
-        if (aimTurret.get()) {
+        if (aimTurret.get() && !driveAndAim.get()) {
             Pose2d currPose = pose.get();
 
             if (alliance.get() == DriverStation.Alliance.Blue) {
@@ -296,11 +320,11 @@ public class Turret extends SubsystemBase {
                     double hubDegrees = Math.atan2(yError, xError);
                     
                     aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
-                    aimHood(Math.hypot(yError, xError));
+                    aimOnFly(Math.hypot(yError, xError));
                 } else {
                     // Add passing here if needed
                     
-                    hoodZero();
+                    hoodWheelsZero();
                 }
             } else {
                 if (currPose.getX() >= Field.redHubMinX) {
@@ -309,16 +333,20 @@ public class Turret extends SubsystemBase {
                     double hubDegrees = Math.atan2(yError, xError);
                     
                     aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
-                    aimHood(Math.hypot(yError, xError));
+                    aimOnFly(Math.hypot(yError, xError));
                 } else {
                     // Adding passing here if needed
                     
-                    hoodZero();
+                    hoodWheelsZero();
                 }
             }
         } else {
-            hoodZero();
+            hoodWheelsZero();
         }
+
+        spinMotor.setControl(spinPose);
+        hoodMotor.setControl(hoodPose);
+        shootMotor.setControl(shootVelocity);
 
         publishTelemetry();
     }
