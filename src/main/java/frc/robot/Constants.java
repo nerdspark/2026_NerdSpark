@@ -157,5 +157,10 @@ public static class Vision {
     public static final String canBus = "canivore1";
     // public static final double servoOpenPosition = 1.0;
     // public static final double servoCloseposition = 0.0;
+
+    public static final double l1Position = 24;
+    public static final double l2Position = 40;
+    public static final double l3Position = 56;
+
   }
 }

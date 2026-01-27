@@ -20,11 +20,13 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimbConstants;
 
 public class Climb extends SubsystemBase {
-  private TalonFX climbRight, climbLeft, climbKicker;
+  private TalonFX climbShort, climbTall, climbKicker;
   private TalonFXConfiguration climbConfig = new TalonFXConfiguration();
   private boolean ampTriggered, ampTriggerStarted = false;
 
@@ -51,8 +53,8 @@ public class Climb extends SubsystemBase {
 
   /** Creates a new Climb. */
   public Climb() {
-    climbLeft = new TalonFX(ClimbConstants.kLeftID, ClimbConstants.canBus);
-    climbRight = new TalonFX(ClimbConstants.kRightID, ClimbConstants.canBus);
+    climbTall = new TalonFX(ClimbConstants.kLeftID, ClimbConstants.canBus);
+    climbShort = new TalonFX(ClimbConstants.kRightID, ClimbConstants.canBus);
     climbKicker = new TalonFX(ClimbConstants.kKickerID, ClimbConstants.canBus);
     // climbHook = new TalonFX(ClimbConstants.kHookID, ClimbConstants.canBus);
     // Initializing the motor
@@ -71,12 +73,12 @@ public class Climb extends SubsystemBase {
         .withKS(ClimbConstants.kS)
         .withGravityType(GravityTypeValue.Elevator_Static);
 
-    climbLeft
+    climbTall
         .getConfigurator()
         .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
             .withNeutralMode(NeutralModeValue.Brake)));
-    climbRight
+    climbShort
         .getConfigurator()
         .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
             .withInverted(InvertedValue.Clockwise_Positive)
@@ -92,74 +94,90 @@ public class Climb extends SubsystemBase {
     // .withInverted(InvertedValue.Clockwise_Positive)
     // .withNeutralMode(NeutralModeValue.Brake)));
 
-    resetPosition();
+    resetTallPosition();
+    resetShortPosition();
+    resetKickerPosition();
   }
 
   // public void robotAngle(Supplier<Double> position) {
   //   setClimbControl(position);
   // }
 
-  public void setClimbLeft(Supplier<Double> position) {
-    climbLeft.setControl(new PositionVoltage(position.get().doubleValue()));
+  public void setClimbTall(Supplier<Double> position) {
+    climbTall.setControl(new PositionVoltage(position.get().doubleValue()));
     // climbHook.setControl(new PositionVoltage(position));
 
   }
 
-  public void setClimbRight(Supplier<Double> position) {
-    climbRight.setControl(new PositionVoltage(position.get().doubleValue()));
+  public void setClimbShort(Supplier<Double> position) {
+    climbShort.setControl(new PositionVoltage(position.get().doubleValue()));
   }
   //Check if this function is needed during testing.
   public void setClimbKicker(Supplier<Double> position) {
     climbKicker.setControl(new PositionVoltage(position.get().doubleValue()));
   }
 
-  public void resetPosition() {
-    climbLeft.setControl(new PositionVoltage(0));
-    climbRight.setControl(new PositionVoltage(0));
+  public void resetTallPosition() {
+    climbTall.setControl(new PositionVoltage(0));
+  }
+
+  public void resetShortPosition() {
+    climbShort.setControl(new PositionVoltage(0));
+  }
+
+  public void resetKickerPosition() {
     climbKicker.setControl(new PositionVoltage(0));
   }
 
-  public void setClimbLeftVoltage(double voltage) {
-    climbLeft.setVoltage(voltage);
+  public void setClimbTallVoltage(double voltage) {
+    climbTall.setVoltage(voltage);
   }
 
-  public void setClimbRightVoltage(double voltage) {
-    climbRight.setVoltage(voltage);
+  public void setClimbShortVoltage(double voltage) {
+    climbShort.setVoltage(voltage);
   }
   public void setClimbKickerVoltage(double voltage) {
     climbKicker.setVoltage(voltage);
   }
 
   public boolean climbLeftAmpTriggered() {
-    return Math.abs(climbLeft.getStatorCurrent().getValueAsDouble()) > 10;
+    return Math.abs(climbTall.getStatorCurrent().getValueAsDouble()) > 10;
   }
   public boolean climbRightAmpTriggered() {
-    return Math.abs(climbRight.getStatorCurrent().getValueAsDouble()) > 10;
+    return Math.abs(climbShort.getStatorCurrent().getValueAsDouble()) > 10;
   }
   public boolean climbKickerAmpTriggered() {
     return Math.abs(climbKicker.getStatorCurrent().getValueAsDouble()) > 10;
   }
 
   public double getLeftPosition() {
-    return climbLeft.getPosition().getValueAsDouble();
+    return climbTall.getPosition().getValueAsDouble();
   }
 
   public double getRightPosition() {
-    return climbRight.getPosition().getValueAsDouble();
+    return climbShort.getPosition().getValueAsDouble();
   }
 
   public double getKickerPosition() {
     return climbKicker.getPosition().getValueAsDouble();
   }
 
+  public Command tallGoToPosition(Supplier<Double> position) {
+    return new InstantCommand(() -> setClimbTall(position));
+  }
+
+  public Command tallResetPosition() {
+    return new InstantCommand(() -> resetTallPosition());
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    SmartDashboard.putNumber("climb left position", climbLeft.getPosition().getValueAsDouble());
-    SmartDashboard.putNumber("climb right position", climbRight.getPosition().getValueAsDouble());
+    SmartDashboard.putNumber("climb left position", climbTall.getPosition().getValueAsDouble());
+    SmartDashboard.putNumber("climb right position", climbShort.getPosition().getValueAsDouble());
     SmartDashboard.putNumber("climb kicker position", climbKicker.getPosition().getValueAsDouble());
-    SmartDashboard.putNumber("climb left current (amps)", climbLeft.getStatorCurrent().getValueAsDouble());
-    SmartDashboard.putNumber("climb right current (amps)", climbRight.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber("climb left current (amps)", climbTall.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber("climb right current (amps)", climbShort.getStatorCurrent().getValueAsDouble());
     SmartDashboard.putNumber("climb kicker current (amps)", climbKicker.getStatorCurrent().getValueAsDouble());
   }
 }
