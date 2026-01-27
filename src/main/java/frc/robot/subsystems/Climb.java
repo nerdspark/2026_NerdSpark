@@ -68,15 +68,18 @@ public class Climb extends SubsystemBase {
     resetPosition();
   }
 
-  public void robotAngle(Supplier<Double> position) {
-    setClimbControl(position);
-  }
+  // public void robotAngle(Supplier<Double> position) {
+  //   setClimbControl(position);
+  // }
 
-  public void setClimbControl(Supplier<Double> position) {
+  public void setClimbLeft(Supplier<Double> position) {
     climbLeft.setControl(new PositionVoltage(position.get().doubleValue()));
-    climbRight.setControl(new PositionVoltage(position.get().doubleValue()));
     // climbHook.setControl(new PositionVoltage(position));
 
+  }
+
+  public void setClimbRight(Supplier<Double> position) {
+    climbRight.setControl(new PositionVoltage(position.get().doubleValue()));
   }
 
   public void resetPosition() {
