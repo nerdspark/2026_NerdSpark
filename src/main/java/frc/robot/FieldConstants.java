@@ -11,14 +11,12 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.AnalogOutput;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import dev.doglog.DogLog;
 
 
 /**
@@ -32,10 +30,10 @@ public class FieldConstants {
       Units.inchesToMeters(299.438); // Measured from the inside of starting line
   public static final double algaeDiameter = Units.inchesToMeters(16);
 
-  public static class Processor {
-    public static final Pose2d centerFace =
-        new Pose2d(Units.inchesToMeters(235.726), 0, Rotation2d.fromDegrees(90));
-  }
+    public static class Processor {
+        public static final Pose2d centerFace =
+            new Pose2d(Units.inchesToMeters(235.726), 0, Rotation2d.fromDegrees(90));
+    }
 
   public static class Barge {
     public static final Translation2d farCage =

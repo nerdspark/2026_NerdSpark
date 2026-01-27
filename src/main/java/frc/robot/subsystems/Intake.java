@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.SparkMax;
-
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -17,7 +15,7 @@ public class Intake extends SubsystemBase {
     private int intakeMotorRoller2ID = 2;
     private int intakeMotorDeployID = 3;
     
-    private final MotionMagicVoltage m_mmRequest = new MotionMagicVoltage(0);
+    private final MotionMagicVoltage deploy = new MotionMagicVoltage(0);
     
     public Intake() {
         intakeMotorRoller1 = new TalonFX(intakeMotorRoller1ID, "intakeMotorRoller1");
@@ -41,26 +39,25 @@ public class Intake extends SubsystemBase {
         motionMagicConfigs.MotionMagicJerk = 1600; // Target jerk of 1600 rps/s/s (0.1 seconds)
 
         intakeMotorDeploy.getConfigurator().apply(intakeDeployMotorConfig);
-
-
     }
     
     public void setDeployPosition(double rotations) {
-        intakeMotorDeploy.setControl(intakeMotorDeploy);
+        deploy.Position = rotations;
+        intakeMotorDeploy.setControl(deploy);
     }
+    
     public void setDeployPower(double target){
-    intakeMotorDeploy.set(target);
+        intakeMotorDeploy.set(target);
     }
+
     public void setRollerPower(double power) {
         intakeMotorRoller1.set(power);
         intakeMotorRoller2.set(power);
     }
+
     public void stopIntake() {
-            intakeMotorDeploy.stopMotor();
-            intakeMotorRoller1.stopMotor();
-            intakeMotorRoller2.stopMotor();
-
+        intakeMotorDeploy.stopMotor();
+        intakeMotorRoller1.stopMotor();
+        intakeMotorRoller2.stopMotor();
     }
-
 }
-
