@@ -8,6 +8,7 @@ import java.nio.channels.ShutdownChannelGroupException;
 
 import com.ctre.phoenix6.configs.CANdleConfiguration;
 import com.ctre.phoenix6.controls.ColorFlowAnimation;
+import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.RainbowAnimation;
 import com.ctre.phoenix6.controls.SolidColor;
 import com.ctre.phoenix6.controls.StrobeAnimation;
@@ -63,13 +64,14 @@ public class LEDSubsystem extends SubsystemBase {
      * Actions
      * Empty: Red
      * Intaking: Blinking Yellow
-     * Not intaking, but not holding optimal amount of fuel: Blinking Blue
      * Full: Blue
-     * Spinning up shooter: Blinking green
-     * Ready to shoot: Green
+     * Spinning up shooter/turret locking: Blinking green
+     * Ready to shoot & turret locked: Green
      * Shooting: Blinking cyan
      * Climbing: Blinking Magenta
      * Climbed: Magenta
+     * Vision working (april tag detected or sum): white pulse
+     * Error: Rainbow
      */
 
     /* Configure CANdle */
@@ -91,7 +93,7 @@ public class LEDSubsystem extends SubsystemBase {
     // // Write the data to the LED strip
     // m_led.setData(m_ledBuffer);
 
-    SmartDashboard.putData("LED state", (Sendable)m_candle.getAppliedControl());
+    SmartDashboard.putData("LED state", (Sendable) m_candle.getAppliedControl());
 
     CommandXboxController joystick = new CommandXboxController(Constants.testJoystickID);
 
@@ -105,12 +107,27 @@ public class LEDSubsystem extends SubsystemBase {
     m_candle.setControl(new SolidColor(0, 7).withColor(color));
   }
 
+  public void solidColor(RGBWColor color, double brightness) {
+    m_candle.setControl(new SolidColor(0, 7)
+        .withColor(color.scaleBrightness(brightness)));
+  }
+
   public void blinkColor(RGBWColor color) {
     m_candle.setControl(
         new StrobeAnimation(0, 7)
             .withSlot(Constants.ledID)
             .withColor(color)
             .withFrameRate(Constants.ledFramerate));
+  }
+
+  public void pulseColor(RGBWColor color) {
+    ControlRequest previousControl = m_candle.getAppliedControl();
+    m_candle.setControl(
+        new ColorFlowAnimation(0, 7)
+            .withSlot(Constants.ledID)
+            .withColor(color)
+            .withFrameRate(Constants.ledFramerate));
+    m_candle.setControl(previousControl);
   }
 
   public void rainbow() {
@@ -120,56 +137,55 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   // public void updateLED() {
-  //     if (climbing) { // climbing
-  //       m_candle.setControl(
-  //           new StrobeAnimation(0, 7)
-  //               .withSlot(Constants.ledID)
-  //               .withColor(kMagenta)
-  //               .withFrameRate(Constants.ledFramerate));
+  // if (climbing) { // climbing
+  // m_candle.setControl(
+  // new StrobeAnimation(0, 7)
+  // .withSlot(Constants.ledID)
+  // .withColor(kMagenta)
+  // .withFrameRate(Constants.ledFramerate));
 
-  //     } else if (climbDone) {
-  //       m_candle.setControl(new SolidColor(0, 7).withColor(kMagenta));
+  // } else if (climbDone) {
+  // m_candle.setControl(new SolidColor(0, 7).withColor(kMagenta));
 
-  //     } else if (intakeOn) { // intaking
+  // } else if (intakeOn) { // intaking
 
-  //       if (fuelFull) {
-  //         m_candle.setControl(new SolidColor(0, 7).withColor(kBlue));
+  // if (fuelFull) {
+  // m_candle.setControl(new SolidColor(0, 7).withColor(kBlue));
 
-  //       } else {
-  //         m_candle.setControl(
-  //             new StrobeAnimation(0, 7)
-  //                 .withSlot(Constants.ledID)
-  //                 .withColor(kYellow)
-  //                 .withFrameRate(Constants.ledFramerate));
-  //       }
+  // } else {
+  // m_candle.setControl(
+  // new StrobeAnimation(0, 7)
+  // .withSlot(Constants.ledID)
+  // .withColor(kYellow)
+  // .withFrameRate(Constants.ledFramerate));
+  // }
 
-  //     } else if (shooterOn) { // shooting
-  //       m_candle.setControl(
-  //           new StrobeAnimation(0, 7)
-  //               .withSlot(Constants.ledID)
-  //               .withColor(kCyan)
-  //               .withFrameRate(Constants.ledFramerate));
+  // } else if (shooterOn) { // shooting
+  // m_candle.setControl(
+  // new StrobeAnimation(0, 7)
+  // .withSlot(Constants.ledID)
+  // .withColor(kCyan)
+  // .withFrameRate(Constants.ledFramerate));
 
-  //     } else if (shooterReady) { // shooter ready
-  //       m_candle.setControl(new SolidColor(0, 7).withColor(kGreen));
+  // } else if (shooterReady) { // shooter ready
+  // m_candle.setControl(new SolidColor(0, 7).withColor(kGreen));
 
-  //     } else if (shooterSpinning) { // shooter spinning
-  //       m_candle.setControl(
-  //           new StrobeAnimation(0, 7)
-  //               .withSlot(Constants.ledID)
-  //               .withColor(kGreen)
-  //               .withFrameRate(Constants.ledFramerate));
+  // } else if (shooterSpinning) { // shooter spinning
+  // m_candle.setControl(
+  // new StrobeAnimation(0, 7)
+  // .withSlot(Constants.ledID)
+  // .withColor(kGreen)
+  // .withFrameRate(Constants.ledFramerate));
 
-  //     } else if (!fuelFull && !intakeOn && !shooterOn && !shooterSpinning) {
-  //       m_candle.setControl(new SolidColor(0, 7).withColor(kRed));
+  // } else if (!fuelFull && !intakeOn && !shooterOn && !shooterSpinning) {
+  // m_candle.setControl(new SolidColor(0, 7).withColor(kRed));
 
-  //     } else {
-  //       m_candle.setControl(new RainbowAnimation(0, 7)
-  //           .withSlot(Constants.ledID)
-  //           .withFrameRate(Constants.ledFramerate));
-  //     }
+  // } else {
+  // m_candle.setControl(new RainbowAnimation(0, 7)
+  // .withSlot(Constants.ledID)
+  // .withFrameRate(Constants.ledFramerate));
+  // }
 
-    
   // }
 
   @Override
