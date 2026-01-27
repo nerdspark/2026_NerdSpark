@@ -90,7 +90,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -179.34145682243638
+    "rotation": -179.3414568224364
   },
   "reversed": false,
   "folder": "left_auton_neutralx2",
