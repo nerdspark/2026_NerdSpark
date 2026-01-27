@@ -24,8 +24,8 @@ public class IntakeCommand extends Command{
     }
 
     public void execute() {
-        intake.setDeployPower(0.5);
-        intake.setRollerPower(0.8);
+        intake.setDeployPower(null);
+        intake.setRollerPower(1.0);
     }
 
     public void end(boolean interrupted) {
