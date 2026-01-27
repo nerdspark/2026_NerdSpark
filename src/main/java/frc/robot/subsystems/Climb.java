@@ -24,7 +24,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimbConstants;
 
 public class Climb extends SubsystemBase {
-  private TalonFX climbRight, climbLeft;
+  private TalonFX climbRight, climbLeft, climbKicker;
   private TalonFXConfiguration climbConfig = new TalonFXConfiguration();
   private boolean ampTriggered, ampTriggerStarted = false;
 
@@ -53,6 +53,7 @@ public class Climb extends SubsystemBase {
   public Climb() {
     climbLeft = new TalonFX(ClimbConstants.kLeftID, ClimbConstants.canBus);
     climbRight = new TalonFX(ClimbConstants.kRightID, ClimbConstants.canBus);
+    climbKicker = new TalonFX(ClimbConstants.kKickerID, ClimbConstants.canBus);
     // climbHook = new TalonFX(ClimbConstants.kHookID, ClimbConstants.canBus);
     // Initializing the motor
     climbConfig.CurrentLimits = new CurrentLimitsConfigs()
@@ -80,6 +81,11 @@ public class Climb extends SubsystemBase {
         .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
             .withInverted(InvertedValue.Clockwise_Positive)
             .withNeutralMode(NeutralModeValue.Brake)));
+    climbKicker
+        .getConfigurator()
+        .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
+            .withInverted(InvertedValue.Clockwise_Positive) //Change Clockwise/CounterClockwise based on testing
+            .withNeutralMode(NeutralModeValue.Brake)));
     // climbHook
     // .getConfigurator()
     // .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
@@ -102,10 +108,15 @@ public class Climb extends SubsystemBase {
   public void setClimbRight(Supplier<Double> position) {
     climbRight.setControl(new PositionVoltage(position.get().doubleValue()));
   }
+  //Check if this function is needed during testing.
+  public void setClimbKicker(Supplier<Double> position) {
+    climbKicker.setControl(new PositionVoltage(position.get().doubleValue()));
+  }
 
   public void resetPosition() {
     climbLeft.setControl(new PositionVoltage(0));
     climbRight.setControl(new PositionVoltage(0));
+    climbKicker.setControl(new PositionVoltage(0));
   }
 
   public void setClimbLeftVoltage(double voltage) {
@@ -115,13 +126,18 @@ public class Climb extends SubsystemBase {
   public void setClimbRightVoltage(double voltage) {
     climbRight.setVoltage(voltage);
   }
+  public void setClimbKickerVoltage(double voltage) {
+    climbKicker.setVoltage(voltage);
+  }
 
   public boolean climbLeftAmpTriggered() {
     return Math.abs(climbLeft.getStatorCurrent().getValueAsDouble()) > 10;
   }
-
   public boolean climbRightAmpTriggered() {
     return Math.abs(climbRight.getStatorCurrent().getValueAsDouble()) > 10;
+  }
+  public boolean climbKickerAmpTriggered() {
+    return Math.abs(climbKicker.getStatorCurrent().getValueAsDouble()) > 10;
   }
 
   public double getLeftPosition() {
@@ -132,12 +148,18 @@ public class Climb extends SubsystemBase {
     return climbRight.getPosition().getValueAsDouble();
   }
 
+  public double getKickerPosition() {
+    return climbKicker.getPosition().getValueAsDouble();
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("climb left position", climbLeft.getPosition().getValueAsDouble());
     SmartDashboard.putNumber("climb right position", climbRight.getPosition().getValueAsDouble());
+    SmartDashboard.putNumber("climb kicker position", climbKicker.getPosition().getValueAsDouble());
     SmartDashboard.putNumber("climb left current (amps)", climbLeft.getStatorCurrent().getValueAsDouble());
     SmartDashboard.putNumber("climb right current (amps)", climbRight.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber("climb kicker current (amps)", climbKicker.getStatorCurrent().getValueAsDouble());
   }
 }

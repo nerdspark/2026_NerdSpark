@@ -140,7 +140,7 @@ public static class Vision {
   public static class ClimbConstants {
     public static final int kLeftID = 0;
     public static final int kRightID = 0;
-    public static final int kHookID = 0;
+    public static final int kKickerID = 0;
     public static final double climbCurrentLimit = 0;
     public static final double holdCurrentLimit = 0;
     public static final double hookCurrentLimit = 0;

@@ -10,15 +10,22 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Climb;
 
 
-//Start of CLimb Sequence
+//Start of Climb Sequence
+//L1-------------------------
 //Taller Arm goes to 30 inches and hooks on first rung and Small Arm goes to highest position
 //Tall Arm pulls down until small arm then small arm hooks on first rung and Tall Arm lets go
+//L2-------------------------
 //Tall Arm goes to second rung position and hooks on second rung
+//Small Arm unhooks from first rung
 //Kicker Arm goes out and pushes robot back and allows clearance
 //Tall Arm pulls down until small arm then small arm hooks on second rung and Tall Arm lets go
+//L3-------------------------
 //Tall Arm goes to third rung position and hooks on third rung
+//Small Arm unhooks from second rung
 //Kicker Arm goes out and pushes robot back and allow clearance
 //Tall Arm pulls down until small arm then small arm hooks on third rung and Tall Arm lets go.
+//End Climb---------------------
+
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class ClimbCommand extends Command {
