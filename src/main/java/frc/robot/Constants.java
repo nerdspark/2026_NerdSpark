@@ -103,12 +103,13 @@ public final class Constants {
         public static final double spinRatio = 210/21.0;
         public static final double spinTeeth = 210;
         public static final double spinCancoder1Teeth = 15;
-        public static final double spinCancoder2Teeth = 14; 
+        public static final double spinCancoder2Teeth = 14;
+        
+        public static final double hoodRatio = 50;
 
-        public static final double shooterRatio = 2; // TODO
         public static final double shooterWheelRadius = 0.0508; // in meters TODO
 
-        public static final double hoodStowPose = 0.0; // TODO
+        public static final double hoodStowPose = 0.0;
 
         // Hood pose from each drive to pose position
         public static final double[] hoodMap = {0, 0, 0, 0};
@@ -155,22 +156,36 @@ public final class Constants {
         public static final int spinCancoder2Id = 27;
         public static final double spinCancoder2Offset = -0.10009765625;
         
-        public static final int hoodMotorId = 28;
-        public static final double hoodKp = 0.0;
-        public static final double hoodKi = 0.0;
-        public static final double hoodKd = 0.0;
-        public static final double hoodKs = 0.0;
-        public static final double hoodKv = 0.0;
-        public static final double hoodKa = 0.0;
+        public static final int hoodMotor1Id = 28;
+        public static final int hoodMotor2Id = 29;
+        public static final double hoodKp1 = 0.0;
+        public static final double hoodKp2 = 0.0;
+        public static final double hoodKi1 = 0.0;
+        public static final double hoodKi2 = 0.0;
+        public static final double hoodKd1 = 0.0;
+        public static final double hoodKd2 = 0.0;
+        public static final double hoodKs1 = 0.0;
+        public static final double hoodKs2 = 0.0;
+        public static final double hoodKv1 = 0.0;
+        public static final double hoodKv2 = 0.0;
+        public static final double hoodKa1 = 0.0;
+        public static final double hoodKa2 = 0.0;
         public static final double hoodStatorCurrentLimit = 40.0;
 
-        public static final int shootMotorId = 29;
-        public static final double shootKp = 0.0;
-        public static final double shootKi = 0.0;
-        public static final double shootKd = 0.0;
-        public static final double shootKs = 0.0;
-        public static final double shootKv = 0.0;
-        public static final double shootKa = 0.0;
+        public static final int shootMotor1Id = 30;
+        public static final int shootMotor2Id = 31;
+        public static final double shootKp1 = 0.0;
+        public static final double shootKp2 = 0.0;
+        public static final double shootKi1 = 0.0;
+        public static final double shootKi2 = 0.0;
+        public static final double shootKd1 = 0.0;
+        public static final double shootKd2 = 0.0;
+        public static final double shootKs1 = 0.0;
+        public static final double shootKs2 = 0.0;
+        public static final double shootKv1 = 0.0;
+        public static final double shootKv2 = 0.0;
+        public static final double shootKa1 = 0.0;
+        public static final double shootKa2 = 0.0;
         public static final double shootStatorCurrentLimit = 60.0;
     }
 
@@ -178,8 +193,8 @@ public final class Constants {
         public static final Translation2d blueHub = new Translation2d(4.615, 4.040); // May need to redo
         public static final Translation2d redHub = new Translation2d(11.915, 4.040); // May need to redo
 
-        public static final double blueHubMaxX = 4.5;
-        public static final double redHubMinX = 12.0;
+        public static final double blueHubMaxX = 4.5; // Double check
+        public static final double redHubMinX = 12.0; // Double check
 
         public static final Translation2d leftPass = new Translation2d(); // TODO
         public static final Translation2d rightPass = new Translation2d(); // TODO
