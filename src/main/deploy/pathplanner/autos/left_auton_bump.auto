@@ -37,7 +37,7 @@
         {
           "type": "named",
           "data": {
-            "name": "climb_climb"
+            "name": "climb_auton"
           }
         }
       ]

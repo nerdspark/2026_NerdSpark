@@ -79,23 +79,23 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.6108217592592587,
-      "rotationDegrees": -90.0
-    },
-    {
-      "waypointRelativePos": 1.654043692129628,
-      "rotationDegrees": -90.0
-    },
-    {
-      "waypointRelativePos": 2.258029513888891,
-      "rotationDegrees": 94.01890741662014
-    },
-    {
-      "waypointRelativePos": 2.7982494212963,
       "rotationDegrees": 90.0
     },
     {
+      "waypointRelativePos": 1.654043692129628,
+      "rotationDegrees": 90.0
+    },
+    {
+      "waypointRelativePos": 2.258029513888891,
+      "rotationDegrees": -90.0
+    },
+    {
+      "waypointRelativePos": 2.7982494212963,
+      "rotationDegrees": -90.0
+    },
+    {
       "waypointRelativePos": 3.1299734748010577,
-      "rotationDegrees": 0.0
+      "rotationDegrees": 180.0
     }
   ],
   "constraintZones": [
@@ -114,8 +114,8 @@
     },
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 3.2685463881019823,
-      "maxWaypointRelativePos": 3.5080559490084977,
+      "minWaypointRelativePos": 3.1616438356164394,
+      "maxWaypointRelativePos": 4.0,
       "constraints": {
         "maxVelocity": 2.0,
         "maxAcceleration": 3.0,
@@ -157,13 +157,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "reversed": false,
-  "folder": "left_auton_horde",
+  "folder": "left_auton_hoard",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

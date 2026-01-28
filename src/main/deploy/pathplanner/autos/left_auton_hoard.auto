@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "left_auton_horde1"
+            "pathName": "left_auton_hoard1"
           }
         },
         {
@@ -19,7 +19,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "left_auton_horde2"
+            "pathName": "left_auton_hoard2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "climb_auton"
           }
         }
       ]

@@ -16,19 +16,24 @@
     },
     {
       "anchor": {
-        "x": 1.4249627976190475,
-        "y": 4.087202380952381
+        "x": 1.347,
+        "y": 4.185
       },
       "prevControl": {
-        "x": 3.1084895833333333,
-        "y": 4.061101190476191
+        "x": 3.0307291083668266,
+        "y": 4.185
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": null
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 90.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -42,7 +47,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "left_auton_bump",
