@@ -17,21 +17,9 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "shooter_shoot"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "left_auton_neutral3"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "climb_auton"
           }
         }
       ]
