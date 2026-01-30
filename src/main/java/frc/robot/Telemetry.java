@@ -4,6 +4,8 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -15,6 +17,7 @@ import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -34,6 +37,11 @@ public class Telemetry {
         SignalLogger.start();
 
         SmartDashboard.putData("Field", m_field);
+        fieldTypePub.set("Field2d");
+        fieldRobotPub.set(new double[] {0.0, 0.0, 0.0});
+        fieldShotTrajectoryPub.set(new double[] {});
+        fieldShotTargetPub.set(new double[] {});
+        fieldShotLandingPub.set(new double[] {});
 
         /* Set up the module state Mechanism2d telemetry */
         for (int i = 0; i < 4; ++i) {
@@ -57,10 +65,22 @@ public class Telemetry {
     /* Robot pose for field positioning */
     private final NetworkTable table = inst.getTable("Pose");
     private final DoubleArrayPublisher fieldPub = table.getDoubleArrayTopic("robotPose").publish();
-    private final StringPublisher fieldTypePub = table.getStringTopic(".type").publish();
+    private final StringPublisher poseTypePub = table.getStringTopic(".type").publish();
+    private final StructPublisher<Pose2d> pose2dPub = table.getStructTopic("robotPose2d", Pose2d.struct).publish();
+    private final StructPublisher<Pose3d> pose3dPub = table.getStructTopic("robotPose3d", Pose3d.struct).publish();
+
+    private final NetworkTable fieldTable = inst.getTable("SmartDashboard").getSubTable("Field");
+    private final StringPublisher fieldTypePub = fieldTable.getStringTopic(".type").publish();
+    private final DoubleArrayPublisher fieldRobotPub = fieldTable.getDoubleArrayTopic("Robot").publish();
+    private final DoubleArrayPublisher fieldShotTrajectoryPub = fieldTable.getDoubleArrayTopic("ShotTrajectory").publish();
+    private final DoubleArrayPublisher fieldShotTargetPub = fieldTable.getDoubleArrayTopic("ShotTarget").publish();
+    private final DoubleArrayPublisher fieldShotLandingPub = fieldTable.getDoubleArrayTopic("ShotLanding").publish();
 
     /* Mechanisms to represent the swerve module states */
     private final Field2d m_field = new Field2d();
+    private final FieldObject2d m_shotTrajectory = m_field.getObject("ShotTrajectory");
+    private final FieldObject2d m_shotTarget = m_field.getObject("ShotTarget");
+    private final FieldObject2d m_shotLanding = m_field.getObject("ShotLanding");
     private final Mechanism2d[] m_moduleMechanisms = new Mechanism2d[] {
         new Mechanism2d(1, 1),
         new Mechanism2d(1, 1),
@@ -108,8 +128,21 @@ public class Telemetry {
         SignalLogger.writeDouble("DriveState/OdometryPeriod", state.OdometryPeriod, "seconds");
 
         /* Telemeterize the pose to a Field2d */
-        fieldTypePub.set("Field2d");
+        poseTypePub.set("Field2d");
         m_field.setRobotPose(state.Pose);
+        fieldTypePub.set("Field2d");
+        fieldRobotPub.set(new double[] {
+            state.Pose.getX(),
+            state.Pose.getY(),
+            state.Pose.getRotation().getDegrees()
+        });
+        pose2dPub.set(state.Pose);
+        pose3dPub.set(new Pose3d(
+            state.Pose.getX(),
+            state.Pose.getY(),
+            0.0,
+            new Rotation3d(0.0, 0.0, state.Pose.getRotation().getRadians())
+        ));
 
         m_poseArray[0] = state.Pose.getX();
         m_poseArray[1] = state.Pose.getY();
@@ -122,5 +155,34 @@ public class Telemetry {
             m_moduleDirections[i].setAngle(state.ModuleStates[i].angle);
             m_moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * MaxSpeed));
         }
+    }
+
+    public void setShotTrajectory(Pose2d[] poses) {
+        m_shotTrajectory.setPoses(poses);
+        fieldShotTrajectoryPub.set(toPoseArray(poses));
+    }
+
+    public void setShotTarget(Pose2d[] poses) {
+        m_shotTarget.setPoses(poses);
+        fieldShotTargetPub.set(toPoseArray(poses));
+    }
+
+    public void setShotLanding(Pose2d[] poses) {
+        m_shotLanding.setPoses(poses);
+        fieldShotLandingPub.set(toPoseArray(poses));
+    }
+
+    private static double[] toPoseArray(Pose2d[] poses) {
+        if (poses == null || poses.length == 0) {
+            return new double[] {};
+        }
+        double[] data = new double[poses.length * 3];
+        int index = 0;
+        for (Pose2d pose : poses) {
+            data[index++] = pose.getX();
+            data[index++] = pose.getY();
+            data[index++] = pose.getRotation().getDegrees();
+        }
+        return data;
     }
 }

@@ -40,6 +40,7 @@ public final class Constants {
         public static final double targetHeightMeters = 2.64;
         public static final double ballMassKg = 0.2268;
         public static final double ballDiameterMeters = 0.1501;
+        public static final int shotTrajectoryPoints = 25;
 
         public static final double hoodStow = 0.0;
         public static final double turretMinDegrees = -90.0;
@@ -102,6 +103,15 @@ public final class Constants {
         public static final double defaultKI = 0.0;
         public static final double defaultKD = 0.0;
         public static final double defaultSetpointDeg = 0.0;
+    }
+
+    public static final class turretTargetConstants {
+        public static final String enableKey = "TurretTarget/Enable";
+        public static final String targetXKey = "TurretTarget/X";
+        public static final String targetYKey = "TurretTarget/Y";
+        public static final boolean defaultEnable = false;
+        public static final double defaultTargetX = field.blueHub.getX();
+        public static final double defaultTargetY = field.blueHub.getY();
     }
 
     public static final class hoodTuningConstants {

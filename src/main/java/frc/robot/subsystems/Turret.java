@@ -22,6 +22,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -37,7 +38,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants.field;
 import frc.robot.Constants.turretSimConstants;
+import frc.robot.Constants.turretTargetConstants;
 import frc.robot.Constants.turretTelemetryConstants;
+import frc.robot.Telemetry;
 
 public class Turret extends SubsystemBase {
     private static final double TWO_PI = 2.0 * Math.PI;
@@ -68,6 +71,7 @@ public class Turret extends SubsystemBase {
     private final Supplier<DriverStation.Alliance> alliance;
     private final Supplier<Boolean> aimTurret;
     private final ArmFeedforward hoodFeedforward;
+    private final Telemetry telemetry;
 
     private boolean manualSpinOverride = false;
     private boolean manualHoodOverride = false;
@@ -98,11 +102,12 @@ public class Turret extends SubsystemBase {
     private double turretAngle;
 
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<DriverStation.Alliance> driverAlliance,
-            Supplier<Boolean> aimTurret) {
+            Supplier<Boolean> aimTurret, Telemetry telemetry) {
         pose = robotPose;
         speed = speeds;
         alliance = driverAlliance;
         this.aimTurret = aimTurret;
+        this.telemetry = telemetry;
 
         spinMotor = new TalonFX(TurretConstants.spinMotorId);
         hoodMotor = new TalonFX(TurretConstants.hoodMotorId);
@@ -116,6 +121,9 @@ public class Turret extends SubsystemBase {
             TurretConstants.hoodKvVolts,
             TurretConstants.hoodKaVolts
         );
+        SmartDashboard.setDefaultBoolean(turretTargetConstants.enableKey, turretTargetConstants.defaultEnable);
+        SmartDashboard.setDefaultNumber(turretTargetConstants.targetXKey, turretTargetConstants.defaultTargetX);
+        SmartDashboard.setDefaultNumber(turretTargetConstants.targetYKey, turretTargetConstants.defaultTargetY);
 
         TalonFXConfiguration spinConfig = new TalonFXConfiguration()
             .withSlot0(new Slot0Configs()
@@ -204,11 +212,11 @@ public class Turret extends SubsystemBase {
      *
      * @param distance the distance to the center of the hub
      */
-    private void aimHood(double distance) {
+    private ShotSolution aimHood(double distance) {
         ShotSolution solution = solveShotForDistance(distance);
         if (solution == null) {
             hoodZero();
-            return;
+            return null;
         }
 
         hoodPose.Position = degreesToHoodMotorRotations(solution.hoodDegrees);
@@ -222,6 +230,7 @@ public class Turret extends SubsystemBase {
         double deltaMotorRPS = (vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius)) * TurretConstants.shooterRatio;
 
         shootVelocity.Velocity = solution.motorRps - deltaMotorRPS;
+        return solution;
     }
 
     // When we are out of shooting range stop wheels and send hood to stow.
@@ -376,23 +385,45 @@ public class Turret extends SubsystemBase {
             hoodMotor.setControl(hoodPose);
             shootMotor.setControl(shootVelocity);
             publishTelemetry();
+            clearShotVisualization();
             return;
         }
 
         if (aimTurret.get()) {
             Pose2d currPose = pose.get();
+            boolean useLiveTarget = SmartDashboard.getBoolean(
+                turretTargetConstants.enableKey,
+                turretTargetConstants.defaultEnable
+            );
+            if (useLiveTarget) {
+                double targetX = SmartDashboard.getNumber(
+                    turretTargetConstants.targetXKey,
+                    turretTargetConstants.defaultTargetX
+                );
+                double targetY = SmartDashboard.getNumber(
+                    turretTargetConstants.targetYKey,
+                    turretTargetConstants.defaultTargetY
+                );
+                double xError = targetX - currPose.getX();
+                double yError = targetY - currPose.getY();
+                double targetRadians = Math.atan2(yError, xError);
 
-            if (alliance.get() == DriverStation.Alliance.Blue) {
+                aimTurret(normalizeRadians(targetRadians - currPose.getRotation().getRadians()));
+                ShotSolution solution = aimHood(Math.hypot(yError, xError));
+                updateShotVisualization(currPose, targetX, targetY, solution);
+            } else if (alliance.get() == DriverStation.Alliance.Blue) {
                 if (currPose.getX() <= TurretConstants.blueHubMaxX) {
                     double xError = field.blueHub.getX() - currPose.getX();
                     double yError = field.blueHub.getY() - currPose.getY();
                     double hubRadians = Math.atan2(yError, xError);
 
                     aimTurret(normalizeRadians(hubRadians - currPose.getRotation().getRadians()));
-                    aimHood(Math.hypot(yError, xError));
+                    ShotSolution solution = aimHood(Math.hypot(yError, xError));
+                    updateShotVisualization(currPose, field.blueHub.getX(), field.blueHub.getY(), solution);
                 } else {
                     // Add passing here if needed.
                     hoodZero();
+                    clearShotVisualization();
                 }
             } else {
                 if (currPose.getX() >= TurretConstants.redHubMinX) {
@@ -401,14 +432,17 @@ public class Turret extends SubsystemBase {
                     double hubRadians = Math.atan2(yError, xError);
 
                     aimTurret(normalizeRadians(hubRadians - currPose.getRotation().getRadians()));
-                    aimHood(Math.hypot(yError, xError));
+                    ShotSolution solution = aimHood(Math.hypot(yError, xError));
+                    updateShotVisualization(currPose, field.redHub.getX(), field.redHub.getY(), solution);
                 } else {
                     // Adding passing here if needed.
                     hoodZero();
+                    clearShotVisualization();
                 }
             }
         } else {
             hoodZero();
+            clearShotVisualization();
         }
 
         hoodPose.FeedForward = hoodFeedforward.calculate(getHoodSetpointRadians(), 0.0);
@@ -544,6 +578,63 @@ public class Turret extends SubsystemBase {
         }
         double numerator = GRAVITY * distanceMeters * distanceMeters;
         return Math.sqrt(numerator / denom);
+    }
+
+    private void updateShotVisualization(Pose2d robotPose, double targetX, double targetY, ShotSolution solution) {
+        if (telemetry == null) {
+            return;
+        }
+        if (solution == null) {
+            clearShotVisualization();
+            return;
+        }
+
+        double dx = targetX - robotPose.getX();
+        double dy = targetY - robotPose.getY();
+        double distance = Math.hypot(dx, dy);
+        if (distance <= 1e-6) {
+            clearShotVisualization();
+            return;
+        }
+
+        double turretDirection = robotPose.getRotation().getRadians() + TurretConstants.turretOffset + turretAngle;
+        Rotation2d heading = new Rotation2d(turretDirection);
+
+        double hoodRad = Math.toRadians(solution.hoodDegrees);
+        double wheelRps = solution.motorRps / TurretConstants.shooterRatio;
+        double muzzleSpeed = wheelRps * TWO_PI * TurretConstants.shooterWheelRadius;
+        double horizontalSpeed = muzzleSpeed * Math.cos(hoodRad);
+        if (horizontalSpeed <= 1e-6) {
+            clearShotVisualization();
+            return;
+        }
+
+        double flightTime = distance / horizontalSpeed;
+        int points = Math.max(2, TurretConstants.shotTrajectoryPoints);
+        Pose2d[] trajectory = new Pose2d[points];
+        for (int i = 0; i < points; i++) {
+            double t = flightTime * i / (points - 1);
+            double horiz = horizontalSpeed * t;
+            double x = robotPose.getX() + Math.cos(turretDirection) * horiz;
+            double y = robotPose.getY() + Math.sin(turretDirection) * horiz;
+            trajectory[i] = new Pose2d(x, y, heading);
+        }
+
+        Pose2d targetPose = new Pose2d(targetX, targetY, new Rotation2d());
+        Pose2d landingPose = trajectory[trajectory.length - 1];
+
+        telemetry.setShotTrajectory(trajectory);
+        telemetry.setShotTarget(new Pose2d[] { targetPose });
+        telemetry.setShotLanding(new Pose2d[] { landingPose });
+    }
+
+    private void clearShotVisualization() {
+        if (telemetry == null) {
+            return;
+        }
+        telemetry.setShotTrajectory(new Pose2d[] {});
+        telemetry.setShotTarget(new Pose2d[] {});
+        telemetry.setShotLanding(new Pose2d[] {});
     }
 
     private static double normalize180(double degrees) {

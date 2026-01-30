@@ -3,6 +3,7 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.hoodTuningConstants;
+import frc.robot.Constants.turretTargetConstants;
 import frc.robot.Constants.turretTuningConstants;
 import frc.robot.subsystems.Turret;
 
@@ -33,6 +34,20 @@ public class TuneTurretCommand extends Command {
 
     @Override
     public void execute() {
+        boolean liveTargetEnabled = SmartDashboard.getBoolean(
+            turretTargetConstants.enableKey,
+            turretTargetConstants.defaultEnable
+        );
+        if (liveTargetEnabled) {
+            SmartDashboard.putBoolean(turretTuningConstants.enableKey, false);
+            SmartDashboard.putBoolean(hoodTuningConstants.enableKey, false);
+            SmartDashboard.putBoolean(turretTuningConstants.activeKey, false);
+            SmartDashboard.putBoolean(hoodTuningConstants.activeKey, false);
+            turret.clearManualSpinOverride();
+            turret.clearManualHoodOverride();
+            return;
+        }
+
         boolean turretEnabled = SmartDashboard.getBoolean(turretTuningConstants.enableKey, turretTuningConstants.defaultEnable);
         boolean hoodEnabled = SmartDashboard.getBoolean(hoodTuningConstants.enableKey, hoodTuningConstants.defaultEnable);
         if (SmartDashboard.getBoolean(turretTuningConstants.zeroKey, turretTuningConstants.defaultZero)) {

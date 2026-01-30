@@ -49,7 +49,8 @@ public class RobotContainer {
             () -> drivetrain.getState().Pose, 
             () -> drivetrain.getState().Speeds,
             () -> DriverStation.getAlliance().orElse(Alliance.Red),
-            () -> true
+            () -> true,
+            logger
         );
         turret.setDefaultCommand(new TuneTurretCommand(turret));
 
