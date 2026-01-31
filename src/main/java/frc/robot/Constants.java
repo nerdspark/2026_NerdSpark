@@ -1,10 +1,115 @@
 package frc.robot;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 
 public final class Constants {
+    public static class Vision {
+
+        public static boolean DOGLOG_ENABLED = false;
+
+        public static final boolean USE_VISION = true;
+
+        public static final String kCameraNameFrontRight = "FrontRightCamera";
+        public static final Transform3d kRobotToCamFrontRight =
+                new Transform3d(new Translation3d(Units.inchesToMeters(11.5), -Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
+                new Rotation3d(Math.toRadians(0), Math.toRadians(-10), Math.toRadians(0))); //TODO: determine XYZ
+
+        public static final String kCameraNameFrontLeft = "FrontLeftCamera";
+        public static final Transform3d kRobotToCamFrontLeft =
+                new Transform3d(new Translation3d(Units.inchesToMeters(11.5), Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
+                new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(55))); //TODO: determine XYZ
+
+        public static final String kCameraNameBackRight = "BackRightCamera";
+        public static final Transform3d kRobotToCamBackRight =
+                new Transform3d(new Translation3d(-Units.inchesToMeters(11.5), -Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
+                new Rotation3d(Math.toRadians(0), Math.toRadians(-10), Math.toRadians(180))); //TODO: determine XYZ
+
+        public static final String kCameraNameBackLeft = "BackLeftCamera";
+        public static final Transform3d kRobotToCamBackLeft =
+                new Transform3d(new Translation3d(-Units.inchesToMeters(11.5), Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
+                new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(125))); //TODO: determine XYZ
+        // The layout of the AprilTags on the field
+        public static final AprilTagFieldLayout kTagLayout =
+                AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+
+        //Do not change these. Actual values will be calculated by the vision system.
+        public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
+
+        public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
+        
+        //Change these for fine tune vision system calculations of standard deviations.
+        public static final double kXYStdDev = 0.4; 
+        public static final double kThetaStdDev = 1; 
+
+        public static final double TRANSLATION_TOLERANCE_X = 0.013; // Changed from 0.05 3/8/25
+        public static final double TRANSLATION_TOLERANCE_Y = 0.013; // Changed from 0.05 3/8/25
+        public static final double ROTATION_TOLERANCE = Math.toRadians(1.3); // /deg
+
+        //Below same as pathplanner constants
+        public static final double MAX_VELOCITY = 3; 
+        public static final double MAX_ACCELERATION = 5; 
+        public static final double MAX_VELOCITY_ROTATION = 540; 
+        public static final double MAX_ACCELARATION_ROTATION = 720;
+        
+        public static final double VELOCITY_TOLERANCE_X = 4;
+        public static final double VELOCITY_TOLERANCE_Y = 4;
+        public static final double VELOCITY_TOLERANCE_OMEGA = 5;
+
+        public static final double kPXController = 15; //2.5
+        public static final double kIXController = 0.0 ; //0.01d
+        public static final double kDXController = 0.1d;
+    
+        public static final double kPThetaController = 7; //2
+        public static final double kIThetaController = 0.0;
+        public static final double kDThetaController = 0.0; //0.0041
+
+        public static final double kPoseAmbiguityThreshold = 0.2;
+        public static final double kSingleTagDistanceThreshold = 2.0;
+
+        
+    }
+
+    public static final double gyroP = 2;
+    public static final double gyroI = 0.0;
+    public static final double gyroD = 0.00;
+
+    public static final String pigeonCanBus = "canivore1";
+
+    public enum AutoDrivePoses {
+        LEFT(new Pose2d(FieldConstants.Hub.innerCenterPoint2D.plus(new Translation2d(Units.inchesToMeters(-96), Units.inchesToMeters(-72))), Rotation2d.fromDegrees(0)), 2.4397e6),
+        CENTER(new Pose2d(FieldConstants.Hub.innerCenterPoint2D.plus(new Translation2d(Units.inchesToMeters(-96), 0)), Rotation2d.fromDegrees(0)), 2.4397e6),
+        RIGHT(new Pose2d(FieldConstants.Hub.innerCenterPoint2D.plus(new Translation2d(Units.inchesToMeters(-96), Units.inchesToMeters(72))), Rotation2d.fromDegrees(0)), 2.4397e6),
+        // CLIMB_LEFT(new Pose2d(FieldConstants.Tower.leftUpright.getX() + Units.inchesToMeters(13), FieldConstants.Tower.leftUpright.getY(), Rotation2d.fromDegrees(180)), 2.4397e6), //RELATIVE TO DRIVER STATION
+        // CLIMB_RIGHT(new Pose2d(FieldConstants.Tower.rightUpright.getX() + Units.inchesToMeters(13), FieldConstants.Tower.rightUpright.getY(), Rotation2d.fromDegrees(180)), 2.4397e6);   //RELATIVE TO DRIVER STATION
+        CLIMB_LEFT(new Pose2d(FieldConstants.Tower.leftUpright.plus(new Translation2d(Units.inchesToMeters(13), 0)), Rotation2d.fromDegrees(180)), 2.4397e6),  //RELATIVE TO DRIVER STATION
+        CLIMB_RIGHT(new Pose2d(FieldConstants.Tower.rightUpright.plus(new Translation2d(Units.inchesToMeters(13), 0)), Rotation2d.fromDegrees(180)), 2.4397e6);   //RELATIVE TO DRIVER STATION
+
+        private final Pose2d pose;   // in kilograms
+        private final double hoodAngle; // in meters
+        AutoDrivePoses(Pose2d pose, double hoodAngle) {
+        this.pose = pose;
+        this.hoodAngle = hoodAngle;
+         }
+
+         public Pose2d getPose() {
+            return this.pose;
+         }
+
+    }
     public static final class TurretConstants {
         public static final int spinMotorId = 30;
         public static final int hoodMotorId = 31;
