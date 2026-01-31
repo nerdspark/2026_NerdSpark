@@ -32,7 +32,7 @@ public final class Constants {
     public static final double gyroI = 0.0;
     public static final double gyroD = 0.00;
 
-    public static final String pigeonCanBus = "canivore1";
+    public static final String CANbus = "canivore1";
 
     public static class Vision {
         public static boolean DOGLOG_ENABLED = false;
@@ -108,13 +108,6 @@ public final class Constants {
         public static final double hoodRatio = 50;
 
         public static final double shooterWheelRadius = 0.0508; // in meters TODO
-
-        public static final double hoodStowPose = 0.0;
-
-        // Hood pose from each drive to pose position
-        public static final double[] hoodMap = {0, 0, 0, 0};
-        // wheel speed from each drive to pose position
-        public static final double[] wheelMap = {0, 0, 0, 0};
         
         public static InterpolatingTreeMap<Double, double[]> map =  new InterpolatingTreeMap<>(
             // inverseInterpolator for Double keys
@@ -130,15 +123,13 @@ public final class Constants {
             }
         );
 
-        // Add numbers to hash map here, Distance, [Hood Pose, Wheel Speed (motor RPS)]
+        // Add numbers to hash map here (Distance, [Hood Pose, Wheel Speed (motor RPS)])
         static {
             map.put(0.0, new double[] {0, 0});
         }
     }
 
     public static final class TurretConfig {
-        public static final String CANbus = "canivore1";
-
         public static final int spinMotorId = 25;
         public static final double spinKp = 3;
         public static final double spinKi = 0.0;
@@ -147,8 +138,8 @@ public final class Constants {
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
         public static final double spinStatorCurrentLimit = 40.0;
-        public static final double spinVelocity = 40;
-        public static final double spinAccel = 9000;
+        public static final double spinVelocity = 50;
+        public static final double spinAccel = 7500;
 
         public static final int spinCancoder1Id = 26;
         public static final double spinCancoder1Offset = -0.241455078125;
@@ -220,5 +211,20 @@ public final class Constants {
         public static final String shooterMotorRpsKey = "Shooter/MotorRps";
         public static final String shooterWheelRpsKey = "Shooter/WheelRps";
         public static final String shooterMotorVoltsKey = "Shooter/MotorVolts";
+    }
+
+    public static final class IntakeConfig {
+        public static final int intakeMotorRoller1ID = 32;
+        public static final int intakeMotorRoller2ID = 33;
+        public static final int intakeMotorDeployID = 34;
+        public static final double Kp = 4.8; // A position error of 2.5 rotations results in 12 V output
+        public static final double Ki = 0; // no output for integrated error
+        public static final double Kd = 0.1; // A velocity error of 1 rps results in 0.1 V output
+        public static final double Ks = 0.25; // Add 0.25 V output to overcome static friction
+        public static final double Kv = 0.12; // A velocity target of 1 rps results in 0.12 V output
+        public static final double Ka = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
+        public static final double velo = 80; // Target cruise velocity of 80 rps
+        public static final double accel = 160; // Target acceleration of 160 rps/s (0.5 seconds)
+        public static final double jerk = 1600; // Target jerk of 1600 rps/s/s (0.1 seconds)
     }
 }

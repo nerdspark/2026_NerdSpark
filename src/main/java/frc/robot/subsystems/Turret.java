@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.TurretUtil.*;
 
 import java.util.function.Supplier;
@@ -16,6 +18,7 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -23,6 +26,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
@@ -32,11 +36,14 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants.TurretConfig;
+import frc.robot.Constants;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.TurretTelemetryConstants;
 
@@ -51,11 +58,12 @@ public class Turret extends SubsystemBase {
     private PositionVoltage hoodPose = new PositionVoltage(0);
     private MotionMagicVoltage spinPose = new MotionMagicVoltage(0);
 
+    private VoltageOut sysId = new VoltageOut(0);
+
     private Supplier<Pose2d> pose;
     private Supplier<ChassisSpeeds> speed;
     private Supplier<DriverStation.Alliance> alliance;
     private Supplier<Boolean> aimTurret;
-    private Supplier<Boolean> driveAndAim;
     
     private StatusSignal<Angle> spinPositionSignal;
     private StatusSignal<Double> spinClosedLoopOutputSignal;
@@ -66,14 +74,13 @@ public class Turret extends SubsystemBase {
     private double turretAngle;
 
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<DriverStation.Alliance> driverAlliance, 
-        Supplier<Boolean> aimTurret, Supplier<Boolean> driveAndAim) {
+        Supplier<Boolean> aimTurret) {
         pose = robotPose;
         speed = speeds;
         alliance = driverAlliance;
         this.aimTurret = aimTurret;
-        this.driveAndAim = driveAndAim;
 
-        canivore = new CANBus(TurretConfig.CANbus);
+        canivore = new CANBus(Constants.CANbus);
         
         spinMotor = new TalonFX(TurretConfig.spinMotorId, canivore);
         hoodMotor1 = new TalonFX(TurretConfig.hoodMotor1Id, canivore);
@@ -205,6 +212,36 @@ public class Turret extends SubsystemBase {
         hoodMotor2.setControl(new Follower(TurretConfig.hoodMotor1Id, MotorAlignmentValue.Opposed));
         shootMotor2.setControl(new Follower(TurretConfig.shootMotor1Id, MotorAlignmentValue.Opposed));
     }
+
+    private final SysIdRoutine spin = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null, // Use default ramp rate (1 V/s)
+            Volts.of(5), // Reduce dynamic step voltage to 5 V to prevent brownout
+            Time.ofBaseUnits(5, Seconds), // Use 5s timeout
+            state -> SignalLogger.writeString("SysIdSpin_State", state.toString())
+        ), 
+        new SysIdRoutine.Mechanism(
+            output -> spinMotor.setControl(sysId.withOutput(output)),
+            null,
+            this
+        )
+    );
+
+    // private final SysIdRoutine shoot = new SysIdRoutine(
+    //     new SysIdRoutine.Config(
+    //         null, // Use default ramp rate (1 V/s)
+    //         Volts.of(6), // Reduce dynamic step voltage to 6 V to prevent brownout
+    //         Time.ofBaseUnits(8, Seconds), // Use 8s timeout
+    //         state -> SignalLogger.writeString("SysIdShoot_State", state.toString())
+    //     ), 
+    //     new SysIdRoutine.Mechanism(
+    //         output -> shootMotor1.setControl(sysId.withOutput(output)),
+    //         null,
+    //         this
+    //     )
+    // );
+
+    private SysIdRoutine sysIdRoutineToApply = spin;
     
     /** 
      * Aims the hood of the turret and spins wheels based on shooter map and chassis speeds
@@ -228,21 +265,11 @@ public class Turret extends SubsystemBase {
         shootVelocity.Velocity = map[1] - deltaMotorRPS;
     }
 
-    /** 
-     * Aims the hood of the turret and spins wheels based on drive to pose position
-     * 
-     * @param index the index of the drive to pose position
-    */
-    public void aimAndDrive(int index) {
-        hoodPose.Position = TurretConstants.hoodMap[index];
-        shootVelocity.Velocity = TurretConstants.wheelMap[index];
-    }
-
     /**
      * When we are out of shooting range stop wheels and send hood to stow
      */
     private void hoodWheelsZero() {
-        hoodPose.Position = TurretConstants.hoodStowPose;
+        hoodPose.Position = 0;
         shootVelocity.Velocity = 0;
     }
 
@@ -316,7 +343,7 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (aimTurret.get() && !driveAndAim.get()) {
+        if (aimTurret.get()) {
             Pose2d currPose = pose.get();
 
             if (alliance.get() == DriverStation.Alliance.Blue) {
@@ -346,7 +373,7 @@ public class Turret extends SubsystemBase {
                     hoodWheelsZero();
                 }
             }
-        } else if (!driveAndAim.get()) {
+        } else {
             hoodWheelsZero();
         }
 
@@ -367,5 +394,26 @@ public class Turret extends SubsystemBase {
         SmartDashboard.putNumber(TurretTelemetryConstants.spinAngleDegKey, spinPositionSignal.getValueAsDouble());
         SmartDashboard.putNumber(TurretTelemetryConstants.spinClosedLoopOutputKey, spinClosedLoopOutputSignal.getValueAsDouble());
         SmartDashboard.putNumber(TurretTelemetryConstants.spinMotorVoltsKey, spinMotorVoltageSignal.getValueAsDouble());
+    }
+
+    /**
+     * Runs the SysId Quasistatic test in the given direction for the routine
+     * specified by {@link #sysIdRoutineToApply}.
+     *
+     * @param direction Direction of the SysId Quasistatic test
+     * @return Command to run
+     */
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return sysIdRoutineToApply.quasistatic(direction);
+    }
+
+    /**
+     * Runs the SysId Dynamic test in the given direction for the routine
+     * specified by {@link #m_sysIdRoutineToApply}.
+       * @param direction Direction of the SysId Dynamic test
+     * @return Command to run
+     */
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return sysIdRoutineToApply.dynamic(direction);
     }
 }

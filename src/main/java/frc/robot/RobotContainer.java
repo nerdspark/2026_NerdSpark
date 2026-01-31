@@ -6,12 +6,15 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -46,7 +49,12 @@ public class RobotContainer {
 
     private final Turret turret;
 
+    private final PIDController gyroController = new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
+    private Supplier<Double> target = () -> 0.0;
+
     public RobotContainer() {
+        gyroController.enableContinuousInput(-Math.PI, Math.PI);
+
         poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
       
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
@@ -56,12 +64,11 @@ public class RobotContainer {
             () -> drivetrain.getState().Pose, 
             () -> drivetrain.getState().Speeds,
             () -> DriverStation.getAlliance().orElse(Alliance.Red),
-            () -> true, // Turn off turret when false
-            () -> false // Add code knowing when driving to pose here
+            () -> true // Turn off turret when false
         );
 
         configureDefaultCommands();
-        // configureSysid();
+        configureSysid();
 
         configureBindings();
 
@@ -72,6 +79,11 @@ public class RobotContainer {
     private void configureBindings() {
         // Reset the field-centric heading on left bumper press.
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+
+        joystick.povUp().onTrue((Command)(target = () -> 0.0));
+        joystick.povLeft().onTrue((Command)(target = () -> Math.PI/2));
+        joystick.povDown().onTrue((Command)(target = () -> Math.PI));
+        joystick.povRight().onTrue((Command)(target = () -> -Math.PI/2));
     }
 
     private void configureDefaultCommands() {
@@ -82,7 +94,7 @@ public class RobotContainer {
             drivetrain.applyRequest(() ->
                 drive.withVelocityX(-joystick.getRightY() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-joystick.getRightX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(joystick.getLeftX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                    .withRotationalRate(calcAutoTurn() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -99,30 +111,21 @@ public class RobotContainer {
     private void configureSysid() {
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        joystick.back().and(joystick.y()).whileTrue(turret.sysIdDynamic(Direction.kForward));
+        joystick.back().and(joystick.x()).whileTrue(turret.sysIdDynamic(Direction.kReverse));
+        joystick.start().and(joystick.y()).whileTrue(turret.sysIdQuasistatic(Direction.kForward));
+        joystick.start().and(joystick.x()).whileTrue(turret.sysIdQuasistatic(Direction.kReverse));
     }
 
     public Command getAutonomousCommand() {
-        // Simple drive forward auton
-        // final var idle = new SwerveRequest.Idle();
-        // return Commands.sequence(
-        //     // Reset our field centric heading to match the robot
-        //     // facing away from our alliance station wall (0 deg).
-        //     drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
-        //     // Then slowly drive forward (away from us) for 5 seconds.
-        //     drivetrain.applyRequest(() ->
-        //         drive.withVelocityX(0.5)
-        //             .withVelocityY(0)
-        //             .withRotationalRate(0)
-        //     )
-        //     .withTimeout(5.0),
-        //     // Finally idle for the rest of auton
-        //     drivetrain.applyRequest(() -> idle)
-        // );
-
         return autoChooser.getSelected();
+    }
+
+    private double calcAutoTurn() {
+        if (Math.abs(joystick.getLeftX()) > 0.01) {
+            target = () -> target.get() + (joystick.getLeftX() * Math.toRadians(5));
+        }
+
+        return gyroController.calculate(drivetrain.getState().Pose.getRotation().getRadians(), target.get());
     }
 }
