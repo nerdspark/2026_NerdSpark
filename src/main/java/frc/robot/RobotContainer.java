@@ -14,6 +14,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -54,6 +55,7 @@ public class RobotContainer {
 
     public RobotContainer() {
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
+        gyroController.setIntegratorRange(-2.0, 2.0);
 
         poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
       
@@ -94,7 +96,7 @@ public class RobotContainer {
             drivetrain.applyRequest(() ->
                 drive.withVelocityX(-joystick.getRightY() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-joystick.getRightX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(calcAutoTurn() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                    .withRotationalRate(calcAutoTurn()) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -126,6 +128,8 @@ public class RobotContainer {
             target = () -> target.get() + (joystick.getLeftX() * Math.toRadians(5));
         }
 
-        return gyroController.calculate(drivetrain.getState().Pose.getRotation().getRadians(), target.get());
+        double output = gyroController.calculate(drivetrain.getState().Pose.getRotation().getRadians(), target.get());
+
+        return MathUtil.clamp(output, -MaxAngularRate, MaxAngularRate);
     }
 }
