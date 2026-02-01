@@ -22,8 +22,10 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 // import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveToPose;
+import frc.robot.commands.IntakeCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
 
 public class RobotContainer {
@@ -43,6 +45,8 @@ public class RobotContainer {
     public final PoseEstimatorSubsystem poseEstimatorSubsystem;
 
     private final SendableChooser<Command> autoChooser;
+
+    private final Intake intake = new Intake();
       
     public RobotContainer() {
         poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
@@ -85,7 +89,7 @@ public class RobotContainer {
 
         // Reset the field-centric heading on left bumper press.
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-
+        joystick.a().onTrue(new IntakeCommand(intake));
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
