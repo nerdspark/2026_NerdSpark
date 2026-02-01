@@ -1,9 +1,5 @@
 package frc.robot.subsystems;
-
-import com.revrobotics.spark.SparkMax;
-
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -46,7 +42,7 @@ public class Intake extends SubsystemBase {
     }
     
     public void setDeployPosition(double rotations) {
-        intakeMotorDeploy.setControl(intakeMotorDeploy);
+        intakeMotorDeploy.setControl(m_mmRequest.withPosition(rotations));
     }
     public void setDeployPower(double target){
     intakeMotorDeploy.set(target);
