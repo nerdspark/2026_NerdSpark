@@ -172,7 +172,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": "left_auton_horde",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0
