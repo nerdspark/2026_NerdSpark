@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 // import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Climb;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
 
@@ -43,6 +44,8 @@ public class RobotContainer {
     public final PoseEstimatorSubsystem poseEstimatorSubsystem;
 
     private final SendableChooser<Command> autoChooser;
+
+    private final Climb climb;
       
     public RobotContainer() {
         poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
@@ -53,6 +56,8 @@ public class RobotContainer {
 
         // Warmup PathPlanner to avoid Java pauses
         FollowPathCommand.warmupCommand().schedule();
+
+        climb = new Climb();
     }
 
     private void configureBindings() {
@@ -87,6 +92,8 @@ public class RobotContainer {
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        // climb.setDefaultCommand();
     }
 
     public Command getAutonomousCommand() {

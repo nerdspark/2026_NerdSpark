@@ -138,29 +138,29 @@ public static class Vision {
 
 // Change these constants later
   public static class ClimbConstants {
-    public static final int kLeftID = 0;
-    public static final int kRightID = 0;
-    public static final int kKickerID = 0;
-    public static final double climbCurrentLimit = 0;
-    public static final double holdCurrentLimit = 0;
-    public static final double hookCurrentLimit = 0;
+    public static final int kLeftID = 1;
+    public static final int kRightID = 2;
+    public static final int kKickerID = 3;
+    public static final double climbCurrentLimit = 8;
+    public static final double holdCurrentLimit = 8;
+    public static final double hookCurrentLimit = 8;
     // public static final double ampTriggeredCurrentLimit = 2;
     public static final double power = 0.20;
     public static final double deployPosition = 0; // rot
     public static final double climbedPosition = 0; // rot
-    public static final double rampRate = 0;
-    public static final double kP = 0;
-    public static final double kI = 0.0;
-    public static final double kD = 0.0;
-    public static final double kG = 0.0;
-    public static final double kS = 0.0;
+    public static final double rampRate = 15;
+    public static final double kP = 5;
+    public static final double kI = 1.0;
+    public static final double kD = 1.0;
+    public static final double kG = 1.0;
+    public static final double kS = 1.0;
     public static final String canBus = "canivore1";
     // public static final double servoOpenPosition = 1.0;
     // public static final double servoCloseposition = 0.0;
 
-    public static final double l1Position = 24;
-    public static final double l2Position = 40;
-    public static final double l3Position = 56;
-
+    public static final double l1Position = 62.5;
+    public static final double l2Position = 72;
+    public static final double l3Position = 80;
+    public static final double metersPerRotation =  1.6;
   }
 }

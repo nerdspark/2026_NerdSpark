@@ -7,25 +7,20 @@ package frc.robot.commands;
 import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.commandSequences.ClimbSequences;
 import frc.robot.subsystems.Climb;
 
 
-//Start of Climb Sequence
-//L1-------------------------
+//Start of CLimb Sequence
 //Taller Arm goes to 30 inches and hooks on first rung and Small Arm goes to highest position
 //Tall Arm pulls down until small arm then small arm hooks on first rung and Tall Arm lets go
-//L2-------------------------
 //Tall Arm goes to second rung position and hooks on second rung
-//Small Arm unhooks from first rung
 //Kicker Arm goes out and pushes robot back and allows clearance
 //Tall Arm pulls down until small arm then small arm hooks on second rung and Tall Arm lets go
-//L3-------------------------
 //Tall Arm goes to third rung position and hooks on third rung
-//Small Arm unhooks from second rung
 //Kicker Arm goes out and pushes robot back and allow clearance
 //Tall Arm pulls down until small arm then small arm hooks on third rung and Tall Arm lets go.
-//End Climb---------------------
-
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class ClimbCommand extends Command {
@@ -33,6 +28,7 @@ public class ClimbCommand extends Command {
   Climb climb;
   Supplier<Double> positionLeft;
   Supplier<Double> positionRight;
+  private Command activeSequence;
 
   /** Creates a new ClimbCommand. */
   public ClimbCommand(Climb climb, Supplier<Double> positionLeft, Supplier<Double> positionRight) {
@@ -40,18 +36,23 @@ public class ClimbCommand extends Command {
     this.climb = climb;
     this.positionLeft = positionLeft;
     this.positionRight = positionRight;
+    addRequirements(climb); // ONLY USE WHEN NOT DOING BUTTON BINDS
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    activeSequence = ClimbSequences.climbToL1(climb); // ONLY USE WHEN NOT DOING BUTTON BINDS
+    activeSequence.schedule(); // ONLY USE WHEN NOT DOING BUTTON BINDS
   }
+
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    climb.setClimbLeft(positionLeft);
-    climb.setClimbRight(positionRight);
+    // climb.setClimbLeft(positionLeft);
+    // climb.setClimbRight(positionRight);
+
   }
 
   // Called once the command ends or is interrupted.
