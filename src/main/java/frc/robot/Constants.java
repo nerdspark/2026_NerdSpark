@@ -158,9 +158,20 @@ public static class Vision {
     // public static final double servoOpenPosition = 1.0;
     // public static final double servoCloseposition = 0.0;
 
-    public static final double l1Position = 30;
-    public static final double l2Position = 72;
-    public static final double l3Position = 80;
-    public static final double metersPerRotation =  0.16;
+    public static final double metersPerRotation = 0.16;
+
+    public static final double l1HeightInches = 30;
+    public static final double l2HeightInches = 72;
+    public static final double l3HeightInches = 80;
+
+    public static final double l1Position = inchesToRotations(l1HeightInches);
+    public static final double l2Position = inchesToRotations(l2HeightInches);
+    public static final double l3Position = inchesToRotations(l3HeightInches);
+
+    public static final double positionToleranceRotations = 0.25;
+
+    public static double inchesToRotations(double inches) {
+      return Units.inchesToMeters(inches) / metersPerRotation;
+    }
   }
 }

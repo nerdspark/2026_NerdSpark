@@ -231,15 +231,16 @@ public class Climb extends SubsystemBase {
   }
 
   public Command tallGoToPosition(Supplier<Double> position) {
-    return new RunCommand(() -> setClimbTall(position));
+    return new RunCommand(() -> setClimbTall(position), this)
+        .until(() -> Math.abs(getLeftPosition() - position.get()) <= ClimbConstants.positionToleranceRotations);
   }
 
   public Command tallResetPosition() {
-    return new InstantCommand(() -> resetTallPosition());
+    return new InstantCommand(() -> resetTallPosition(), this);
   }
 
   public Command shortResetPosition() {
-    return new InstantCommand(() -> resetShortPosition());
+    return new InstantCommand(() -> resetShortPosition(), this);
   }
 
   public double getClimbTallHeightMeters() {

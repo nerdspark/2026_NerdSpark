@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 // import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.commandSequences.ClimbSequences;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climb;
@@ -49,6 +50,7 @@ public class RobotContainer {
       
     public RobotContainer() {
         poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
+        climb = new Climb();
       
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -56,8 +58,6 @@ public class RobotContainer {
 
         // Warmup PathPlanner to avoid Java pauses
         FollowPathCommand.warmupCommand().schedule();
-
-        climb = new Climb();
     }
 
     private void configureBindings() {
@@ -92,6 +92,8 @@ public class RobotContainer {
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        joystick.a().onTrue(ClimbSequences.climbToL1(climb));
 
         // climb.setDefaultCommand();
     }
