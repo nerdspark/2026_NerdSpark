@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.TuneTurretCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.RealFuelSubsystem;
 import frc.robot.subsystems.SimPoseSubsystem;
 import frc.robot.subsystems.SimFuelSubsystem;
 import frc.robot.subsystems.Turret;
@@ -57,6 +58,7 @@ public class RobotContainer {
     private final Turret turret;
     private final SimFuelSubsystem fuelSim;
     private final SimPoseSubsystem simPose;
+    private final RealFuelSubsystem fuelReal;
 
     public RobotContainer() {
         autoChooser = AutoBuilder.buildAutoChooser();
@@ -80,6 +82,9 @@ public class RobotContainer {
         simPose = RobotBase.isSimulation()
             ? new SimPoseSubsystem(drivetrain)
             : null;
+        fuelReal = RobotBase.isSimulation()
+            ? null
+            : new RealFuelSubsystem();
 
         configureDefaultCommands();
         // configureSysid();
@@ -98,6 +103,11 @@ public class RobotContainer {
             joystick.x().onTrue(shootFuelCommand.until(() -> !joystick.x().getAsBoolean()));
             new Trigger(() -> simKeyboard.getRawButton(kShootKeyButton))
                 .whileTrue(shootFuelCommand);
+        } else if (fuelReal != null) {
+            joystick.x().whileTrue(Commands.runOnce(() -> {
+                fuelReal.enableTargeting(true);
+                fuelReal.setHubTarget(DriverStation.getAlliance().orElse(Alliance.Blue));
+            })).onFalse(Commands.runOnce(() -> fuelReal.enableTargeting(false)));
         }
     }
 

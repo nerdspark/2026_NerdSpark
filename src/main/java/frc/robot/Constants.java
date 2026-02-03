@@ -138,8 +138,8 @@ public final class Constants {
         public static final double spinCancoder1Ratio = 200/19.0; // Turret gear teeth / encoder A gear teeth
         public static final double spinCancoder2Ratio = 200/17.0; // Turret gear teeth / encoder B gear teeth
         public static final double shooterRatio = 2;
-        public static final double shooterWheelRadius = 0.0508; // in meters
-        public static final double shooterMaxMotorRps = 100.0;
+        public static final double shooterWheelRadius = 0.1016; // 4 in in meters
+        public static final double shooterMaxMotorRps = 4000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = 1.0;
         public static final double targetHeightMeters = 2.64;
@@ -150,8 +150,8 @@ public final class Constants {
         public static final double hoodStow = 0.0;
         public static final double turretMinDegrees = -90.0;
         public static final double turretMaxDegrees = 90.0;
-        public static final double hoodMinDegrees = -90.0;
-        public static final double hoodMaxDegrees = 90.0;
+        public static final double hoodMinDegrees = 17.0;
+        public static final double hoodMaxDegrees = 65.0;
         public static final double turretAimErrorScale = 0.25;
         public static final double chassisRotationBufferDegrees = 85.0;
         public static final double blueHubMaxX = 4.5;
