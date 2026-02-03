@@ -149,7 +149,7 @@ public static class Vision {
     public static final double deployPosition = 0; // rot
     public static final double climbedPosition = 0; // rot
     public static final double rampRate = 15;
-    public static final double kP = 5;
+    public static final double kP = 1.0;
     public static final double kI = 1.0;
     public static final double kD = 1.0;
     public static final double kG = 1.0;
@@ -158,9 +158,9 @@ public static class Vision {
     // public static final double servoOpenPosition = 1.0;
     // public static final double servoCloseposition = 0.0;
 
-    public static final double l1Position = 62.5;
+    public static final double l1Position = 30;
     public static final double l2Position = 72;
     public static final double l3Position = 80;
-    public static final double metersPerRotation =  1.6;
+    public static final double metersPerRotation =  0.16;
   }
 }

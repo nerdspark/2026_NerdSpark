@@ -153,18 +153,14 @@ public class Climb extends SubsystemBase {
 
   @Override
   public void simulationPeriodic() {
-    double dt = 0.02;
+    // double dt = 0.02;
 
     // Read the applied motor voltage
     double tallVoltage = tallSim.getMotorVoltage();
     double shortVoltage = shortSim.getMotorVoltage();
 
-    // Fake elevator velocity (tune numbers visually)
-    double tallVelocity = tallVoltage * 1.5; // rotations/sec
-    double shortVelocity = shortVoltage * 1.5;
-
-    tallSim.addRotorPosition(tallVelocity * dt);
-    shortSim.addRotorPosition(shortVelocity * dt);
+    tallSim.addRotorPosition(tallVoltage);
+    shortSim.addRotorPosition(shortVoltage);
   }
 
   // public void robotAngle(Supplier<Double> position) {
@@ -273,5 +269,6 @@ public class Climb extends SubsystemBase {
     SmartDashboard.putNumber("climb left current (amps)", climbTall.getStatorCurrent().getValueAsDouble());
     SmartDashboard.putNumber("climb right current (amps)", climbShort.getStatorCurrent().getValueAsDouble());
     SmartDashboard.putNumber("climb kicker current (amps)", climbKicker.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber("target position", ClimbConstants.l1Position);
   }
 }
