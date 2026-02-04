@@ -30,6 +30,7 @@ import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.units.Units;
@@ -217,7 +218,7 @@ public class Turret extends SubsystemBase {
     private final  SysIdRoutine hood = new SysIdRoutine(
         new SysIdRoutine.Config(
             null, // Use default ramp rate (1 V/s)
-            Volts.of(5), // Reduce dynamic step voltage to 5 V to prevent brownout
+            Volts.of(3), // Reduce dynamic step voltage to 5 V to prevent brownout
             Time.ofBaseUnits(5, Seconds), // Use 5s timeout
             state -> SignalLogger.writeString("SysIdHood_State", state.toString())
         ), 
@@ -356,36 +357,29 @@ public class Turret extends SubsystemBase {
     public void periodic() {
         Pose2d currPose = pose.get();
 
-        if (alliance.get() == DriverStation.Alliance.Blue) {
-            if (currPose.getX() <= Field.blueShootThreshold || currPose.getX() <= Field.bluePassThreshold) {
-                double xError = Field.blueHub.getX() - currPose.getX();
-                double yError = Field.blueHub.getY() - currPose.getY();
-                double hubDegrees = Math.atan2(yError, xError);
-                    
-                aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
-                if (currPose.getX() <= Field.bluePassThreshold) {
-                    aimOnFly(Double.MAX_VALUE);
-                } else {
-                    aimOnFly(Math.hypot(yError, xError));
-                }
+        boolean isBlue = alliance.get() == DriverStation.Alliance.Blue;
+        boolean shoot = currPose.getX() <= (isBlue ? Field.blueShootThreshold : Field.redShootThreshold);
+        boolean pass = currPose.getX() <= (isBlue ? Field.bluePassThreshold : Field.redPassThreshold);
+
+        if (shoot || pass) {
+            Translation2d goalPose;
+            Translation2d passPose;
+            if (isBlue) {
+                goalPose = Field.blueHub;
+                passPose = closerPoint(currPose, Field.blueLeftPass, Field.blueRightPass) ? Field.blueLeftPass : Field.blueRightPass;
             } else {
-                hoodWheelsZero();
+                goalPose = Field.redHub;
+                passPose = closerPoint(currPose, Field.redLeftPass, Field.redRightPass) ? Field.redLeftPass : Field.redRightPass;
             }
+
+            double xError = (shoot ? goalPose.getX() : passPose.getX()) - currPose.getX();
+            double yError = (shoot ? goalPose.getY() : passPose.getY()) - currPose.getY();
+            double errorDegrees = Math.atan2(yError, xError);
+                    
+            aimTurret(normalizeRadians(errorDegrees - currPose.getRotation().getRadians()));
+            aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
         } else {
-            if (currPose.getX() >= Field.redShootThreshold || currPose.getX() >= Field.redPassThreshold) {
-                double xError = Field.redHub.getX() - currPose.getX();
-                double yError = Field.redHub.getY() - currPose.getY();
-                double hubDegrees = Math.atan2(yError, xError);
-                    
-                aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
-                if (currPose.getX() >= Field.redPassThreshold) {
-                    aimOnFly(Double.MAX_VALUE);
-                } else {
-                    aimOnFly(Math.hypot(yError, xError));
-                }
-            } else {
-                hoodWheelsZero();
-            }
+            hoodWheelsZero();
         }
 
         spinMotor.setControl(spinPose);

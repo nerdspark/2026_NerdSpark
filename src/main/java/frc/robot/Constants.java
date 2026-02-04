@@ -159,7 +159,7 @@ public final class Constants {
         public static final double spinKa = 0.11887;
         public static final double spinStatorCurrentLimit = 40.0;
         public static final double spinVelocity = 50;
-        public static final double spinAccel = 7500;
+        public static final double spinAccel = 400; // Full speed in 1/8th of a second
 
         public static final int spinCancoder1Id = 26;
         public static final double spinCancoder1Offset = -0.505859375;
@@ -209,8 +209,10 @@ public final class Constants {
         public static final double redShootThreshold = 12.8; // Double check
         public static final double redPassThreshold = 11; // Double check
 
-        public static final Translation2d leftPass = new Translation2d(); // May need to redo
-        public static final Translation2d rightPass = new Translation2d(); // May need to redo
+        public static final Translation2d blueLeftPass = new Translation2d(); // May need to redo
+        public static final Translation2d blueRightPass = new Translation2d(); // May need to redo
+        public static final Translation2d redLeftPass = new Translation2d(); // May need to redo
+        public static final Translation2d redRightPass = new Translation2d(); // May need to redo
     }
 
     public static final class TurretTelemetryConstants {

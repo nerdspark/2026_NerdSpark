@@ -2,6 +2,8 @@ package frc.robot.util;
 
 import java.math.BigInteger;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Constants.TurretConstants;
 
 public final class TurretUtil {
@@ -45,5 +47,10 @@ public final class TurretUtil {
             degrees += 360.0;    // move into -180..180
         }
         return degrees;
+    }
+
+    public static boolean closerPoint(Pose2d pose, Translation2d poseLeft, Translation2d poseRight) {
+        return Math.hypot(pose.getX() - poseLeft.getX(), pose.getY() - poseLeft.getY()) < 
+            Math.hypot(pose.getX() - poseRight.getX(), pose.getY() - poseRight.getY());
     }
 }
