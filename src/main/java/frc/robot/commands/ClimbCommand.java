@@ -42,8 +42,8 @@ public class ClimbCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    activeSequence = ClimbSequences.climbToL1(climb); // ONLY USE WHEN NOT DOING BUTTON BINDS
-    activeSequence.schedule(); // ONLY USE WHEN NOT DOING BUTTON BINDS
+    // activeSequence = ClimbSequences.climbToL1(climb); // ONLY USE WHEN NOT DOING BUTTON BINDS
+    // activeSequence.schedule(); // ONLY USE WHEN NOT DOING BUTTON BINDS
   }
 
 
