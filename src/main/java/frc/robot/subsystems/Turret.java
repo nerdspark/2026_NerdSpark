@@ -24,20 +24,16 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Time;
-import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -45,7 +41,6 @@ import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants.TurretConfig;
 import frc.robot.Constants;
 import frc.robot.Constants.Field;
-import frc.robot.Constants.TurretTelemetryConstants;
 
 public class Turret extends SubsystemBase {
     private static final double TWO_PI = 2.0 * Math.PI;
@@ -63,22 +58,18 @@ public class Turret extends SubsystemBase {
     private Supplier<Pose2d> pose;
     private Supplier<ChassisSpeeds> speed;
     private Supplier<DriverStation.Alliance> alliance;
-    private Supplier<Boolean> aimTurret;
-    
-    private StatusSignal<Angle> spinPositionSignal;
-    private StatusSignal<Double> spinClosedLoopOutputSignal;
-    private StatusSignal<Voltage> spinMotorVoltageSignal;
+    private Supplier<Boolean> climb;
 
     private boolean shortPathCrossesWrap;
     private boolean pathLatched = false;
     private double turretAngle;
 
-    public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<DriverStation.Alliance> driverAlliance, 
-        Supplier<Boolean> aimTurret) {
+    public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<DriverStation.Alliance> driverAlliance,
+        Supplier<Boolean> climbing) {
         pose = robotPose;
         speed = speeds;
         alliance = driverAlliance;
-        this.aimTurret = aimTurret;
+        climb = climbing;
 
         canivore = new CANBus(Constants.CANbus);
         
@@ -202,10 +193,6 @@ public class Turret extends SubsystemBase {
         shootMotor1.getConfigurator().apply(shootConfig1);
         shootMotor2.getConfigurator().apply(shootConfig2);
 
-        spinPositionSignal = spinMotor.getPosition();
-        spinClosedLoopOutputSignal = spinMotor.getClosedLoopOutput();
-        spinMotorVoltageSignal = spinMotor.getMotorVoltage();
-
         spinCancoder1.getConfigurator().apply(spinCancoder1Config);
         spinCancoder2.getConfigurator().apply(spinCancoder2Config);
 
@@ -213,16 +200,39 @@ public class Turret extends SubsystemBase {
         shootMotor2.setControl(new Follower(TurretConfig.shootMotor1Id, MotorAlignmentValue.Opposed));
     }
 
-    private final SysIdRoutine spin = new SysIdRoutine(
+    // private final SysIdRoutine spin = new SysIdRoutine(
+    //     new SysIdRoutine.Config(
+    //         null, // Use default ramp rate (1 V/s)
+    //         Volts.of(6), // Reduce dynamic step voltage to 5 V to prevent brownout
+    //         null, // Use 5s timeout
+    //         state -> SignalLogger.writeString("SysIdSpin_State", state.toString())
+    //     ), 
+    //     new SysIdRoutine.Mechanism(
+    //         output -> spinMotor.setControl(sysId.withOutput(output)),
+    //         null,
+    //         this
+    //     )
+    // );
+
+    private final  SysIdRoutine hood = new SysIdRoutine(
         new SysIdRoutine.Config(
             null, // Use default ramp rate (1 V/s)
             Volts.of(5), // Reduce dynamic step voltage to 5 V to prevent brownout
             Time.ofBaseUnits(5, Seconds), // Use 5s timeout
-            state -> SignalLogger.writeString("SysIdSpin_State", state.toString())
+            state -> SignalLogger.writeString("SysIdHood_State", state.toString())
         ), 
         new SysIdRoutine.Mechanism(
-            output -> spinMotor.setControl(sysId.withOutput(output)),
-            null,
+            output -> {
+                double pos = hoodMotor1.getPosition().getValueAsDouble();
+                // Block motion INTO the hardstop only
+                if ((pos <= 1 && output.lt(Units.Volts.of(0))) ||
+                    (pos >= 500 && output.gt(Units.Volts.of(0)))) {
+                    hoodMotor1.setControl(sysId.withOutput(0));
+                } else {
+                    hoodMotor1.setControl(sysId.withOutput(output));
+                }
+            }, 
+            null, 
             this
         )
     );
@@ -231,7 +241,7 @@ public class Turret extends SubsystemBase {
     //     new SysIdRoutine.Config(
     //         null, // Use default ramp rate (1 V/s)
     //         Volts.of(6), // Reduce dynamic step voltage to 6 V to prevent brownout
-    //         Time.ofBaseUnits(8, Seconds), // Use 8s timeout
+    //         null, // Use 10s timeout
     //         state -> SignalLogger.writeString("SysIdShoot_State", state.toString())
     //     ), 
     //     new SysIdRoutine.Mechanism(
@@ -241,7 +251,7 @@ public class Turret extends SubsystemBase {
     //     )
     // );
 
-    private SysIdRoutine sysIdRoutineToApply = spin;
+    private SysIdRoutine sysIdRoutineToApply = hood;
     
     /** 
      * Aims the hood of the turret and spins wheels based on shooter map and chassis speeds
@@ -250,7 +260,12 @@ public class Turret extends SubsystemBase {
      * @param distance the distance to the center of the hub
     */
     private void aimOnFly(double distance) {
-        double[] map = TurretConstants.map.get(distance);
+        double[] map;
+        if (climb.get()) {
+            map = TurretConstants.climbMap.get(distance);
+        } else {
+            map = TurretConstants.map.get(distance);
+        }
 
         hoodPose.Position = map[0];
 
@@ -274,7 +289,7 @@ public class Turret extends SubsystemBase {
     }
 
     /**
-    * Aims the turret only.
+    * Aims the turret only
     *
     * @param neededAngle the field-centric target angle minus the chassis heading in radians
     */
@@ -301,8 +316,6 @@ public class Turret extends SubsystemBase {
 
         // Normalize to -pi to pi
         turretAngle = normalizeRadians(turretAngle);
-        SmartDashboard.putNumber(TurretTelemetryConstants.angleRadKey, turretAngle);
-        SmartDashboard.putNumber(TurretTelemetryConstants.angleDegKey, Math.toDegrees(turretAngle));
 
         neededAngle = normalizeRadians(neededAngle);
 
@@ -329,8 +342,6 @@ public class Turret extends SubsystemBase {
 
         // Select legal error
         double chosenError = shortPathCrossesWrap ? error : shortError;
-        SmartDashboard.putNumber(TurretTelemetryConstants.errorRadKey, chosenError);
-        SmartDashboard.putNumber(TurretTelemetryConstants.errorDegKey, Math.toDegrees(chosenError));
 
         if (pathLatched && Math.abs(chosenError) < Math.toRadians(90)) {
             pathLatched = false;
@@ -343,57 +354,43 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (aimTurret.get()) {
-            Pose2d currPose = pose.get();
+        Pose2d currPose = pose.get();
 
-            if (alliance.get() == DriverStation.Alliance.Blue) {
-                if (currPose.getX() <= Field.blueHubMaxX) {
-                    double xError = Field.blueHub.getX() - currPose.getX();
-                    double yError = Field.blueHub.getY() - currPose.getY();
-                    double hubDegrees = Math.atan2(yError, xError);
+        if (alliance.get() == DriverStation.Alliance.Blue) {
+            if (currPose.getX() <= Field.blueShootThreshold || currPose.getX() <= Field.bluePassThreshold) {
+                double xError = Field.blueHub.getX() - currPose.getX();
+                double yError = Field.blueHub.getY() - currPose.getY();
+                double hubDegrees = Math.atan2(yError, xError);
                     
-                    aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
-                    aimOnFly(Math.hypot(yError, xError));
+                aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
+                if (currPose.getX() <= Field.bluePassThreshold) {
+                    aimOnFly(Double.MAX_VALUE);
                 } else {
-                    // Add passing here if needed
-                    
-                    hoodWheelsZero();
+                    aimOnFly(Math.hypot(yError, xError));
                 }
             } else {
-                if (currPose.getX() >= Field.redHubMinX) {
-                    double xError = Field.redHub.getX() - currPose.getX();
-                    double yError = Field.redHub.getY() - currPose.getY();
-                    double hubDegrees = Math.atan2(yError, xError);
-                    
-                    aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
-                    aimOnFly(Math.hypot(yError, xError));
-                } else {
-                    // Adding passing here if needed
-                    
-                    hoodWheelsZero();
-                }
+                hoodWheelsZero();
             }
         } else {
-            hoodWheelsZero();
+            if (currPose.getX() >= Field.redShootThreshold || currPose.getX() >= Field.redPassThreshold) {
+                double xError = Field.redHub.getX() - currPose.getX();
+                double yError = Field.redHub.getY() - currPose.getY();
+                double hubDegrees = Math.atan2(yError, xError);
+                    
+                aimTurret(normalizeRadians(hubDegrees - currPose.getRotation().getRadians()));
+                if (currPose.getX() >= Field.redPassThreshold) {
+                    aimOnFly(Double.MAX_VALUE);
+                } else {
+                    aimOnFly(Math.hypot(yError, xError));
+                }
+            } else {
+                hoodWheelsZero();
+            }
         }
 
         spinMotor.setControl(spinPose);
         hoodMotor1.setControl(hoodPose);
         shootMotor1.setControl(shootVelocity);
-
-        publishTelemetry();
-    }
-
-    private void publishTelemetry() {
-        BaseStatusSignal.refreshAll(
-            spinPositionSignal,
-            spinClosedLoopOutputSignal,
-            spinMotorVoltageSignal
-        );
-
-        SmartDashboard.putNumber(TurretTelemetryConstants.spinAngleDegKey, spinPositionSignal.getValueAsDouble());
-        SmartDashboard.putNumber(TurretTelemetryConstants.spinClosedLoopOutputKey, spinClosedLoopOutputSignal.getValueAsDouble());
-        SmartDashboard.putNumber(TurretTelemetryConstants.spinMotorVoltsKey, spinMotorVoltageSignal.getValueAsDouble());
     }
 
     /**

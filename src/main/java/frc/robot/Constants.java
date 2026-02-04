@@ -122,30 +122,50 @@ public final class Constants {
                 return result;
             }
         );
+        public static InterpolatingTreeMap<Double, double[]> climbMap =  new InterpolatingTreeMap<>(
+            // inverseInterpolator for Double keys
+            InverseInterpolator.forDouble(),
+
+            // interpolator for Double[] values
+            (lower, upper, t) -> {
+                double[] result = new double[lower.length];
+                for (int i = 0; i < lower.length; i++) {
+                    result[i] = lower[i] + t * (upper[i] - lower[i]);
+                }
+                return result;
+            }
+        );
 
         // Add numbers to hash map here (Distance, [Hood Pose, Wheel Speed (motor RPS)])
         static {
+            // Passing
+            map.put(Double.MAX_VALUE, new double[] {0, 0});
+
+            // Shooting
             map.put(0.0, new double[] {0, 0});
+
+            // Shooting while climbing
+            climbMap.put(0.0, new double[] {0, 0});
         }
     }
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 3;
+        public static final double spinKp = 30.308;
         public static final double spinKi = 0.0;
-        public static final double spinKd = 0.08;
-        public static final double spinKs = 0.0;
-        public static final double spinKv = 0.0;
-        public static final double spinKa = 0.0;
+        public static final double spinKd = 2.6399;
+        public static final double spinKs = 0.008757;
+        public static final double spinKv = 0.1325;
+        public static final double spinKa = 0.11887;
         public static final double spinStatorCurrentLimit = 40.0;
         public static final double spinVelocity = 50;
         public static final double spinAccel = 7500;
 
         public static final int spinCancoder1Id = 26;
-        public static final double spinCancoder1Offset = -0.241455078125;
+        public static final double spinCancoder1Offset = -0.505859375;
 
         public static final int spinCancoder2Id = 27;
-        public static final double spinCancoder2Offset = -0.10009765625;
+        public static final double spinCancoder2Offset = -0.604248046875;
         
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
@@ -165,18 +185,18 @@ public final class Constants {
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;
-        public static final double shootKp1 = 0.0;
-        public static final double shootKp2 = 0.0;
+        public static final double shootKp1 = 0.11885;
+        public static final double shootKp2 = 0.2145;
         public static final double shootKi1 = 0.0;
         public static final double shootKi2 = 0.0;
         public static final double shootKd1 = 0.0;
         public static final double shootKd2 = 0.0;
-        public static final double shootKs1 = 0.0;
-        public static final double shootKs2 = 0.0;
-        public static final double shootKv1 = 0.0;
-        public static final double shootKv2 = 0.0;
-        public static final double shootKa1 = 0.0;
-        public static final double shootKa2 = 0.0;
+        public static final double shootKs1 = 0.25766;
+        public static final double shootKs2 = 0.24455;
+        public static final double shootKv1 = 0.13643;
+        public static final double shootKv2 = 0.13767;
+        public static final double shootKa1 = 0.012073;
+        public static final double shootKa2 = 0.011127;
         public static final double shootStatorCurrentLimit = 60.0;
     }
 
@@ -184,33 +204,20 @@ public final class Constants {
         public static final Translation2d blueHub = new Translation2d(4.615, 4.040); // May need to redo
         public static final Translation2d redHub = new Translation2d(11.915, 4.040); // May need to redo
 
-        public static final double blueHubMaxX = 4.5; // Double check
-        public static final double redHubMinX = 12.0; // Double check
+        public static final double blueShootThreshold = 3.8; // Double check
+        public static final double bluePassThreshold = 5.5; // Double check
+        public static final double redShootThreshold = 12.8; // Double check
+        public static final double redPassThreshold = 11; // Double check
 
-        public static final Translation2d leftPass = new Translation2d(); // TODO
-        public static final Translation2d rightPass = new Translation2d(); // TODO
+        public static final Translation2d leftPass = new Translation2d(); // May need to redo
+        public static final Translation2d rightPass = new Translation2d(); // May need to redo
     }
 
     public static final class TurretTelemetryConstants {
-        public static final String angleRadKey = "Turret/AngleRad";
-        public static final String angleDegKey = "Turret/AngleDeg";
-        public static final String errorRadKey = "Turret/ErrorRad";
-        public static final String errorDegKey = "Turret/ErrorDeg";
-        public static final String setpointRadKey = "Turret/SetpointRad";
-        public static final String setpointDegKey = "Turret/SetpointDeg";
-        public static final String spinAngleDegKey = "Turret/SpinAngleRot";
-        public static final String spinClosedLoopOutputKey = "Turret/SpinClosedLoopOutput";
-        public static final String spinMotorVoltsKey = "Turret/SpinMotorVolts";
-
         public static final String hoodAngleDegKey = "Hood/AngleDeg";
         public static final String hoodSetpointRotKey = "Hood/SetpointRot";
         public static final String hoodClosedLoopOutputKey = "Hood/ClosedLoopOutput";
         public static final String hoodMotorVoltsKey = "Hood/MotorVolts";
-
-        public static final String shooterSetpointRpsKey = "Shooter/SetpointRps";
-        public static final String shooterMotorRpsKey = "Shooter/MotorRps";
-        public static final String shooterWheelRpsKey = "Shooter/WheelRps";
-        public static final String shooterMotorVoltsKey = "Shooter/MotorVolts";
     }
 
     public static final class IntakeConfig {
