@@ -11,9 +11,11 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -41,6 +43,10 @@ public class Climb extends SubsystemBase {
   private boolean ampTriggered, ampTriggerStarted = false;
   private final TalonFXSimState tallSim;
   private final TalonFXSimState shortSim;
+
+  private MotionMagicConfigs motionMagicConfigs = climbConfig.MotionMagic;
+  final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
+
 
   // Mechanism 2d
   private final Mechanism2d climbMech;
@@ -123,7 +129,13 @@ public class Climb extends SubsystemBase {
         .withKD(ClimbConstants.kD)
         .withKG(ClimbConstants.kG)
         .withKS(ClimbConstants.kS)
+        .withKA(ClimbConstants.kA)
+        .withKV(ClimbConstants.kV)
         .withGravityType(GravityTypeValue.Elevator_Static);
+
+    motionMagicConfigs.MotionMagicCruiseVelocity = ClimbConstants.motionMagicCruiseVelocity;
+    motionMagicConfigs.MotionMagicAcceleration = ClimbConstants.motionMagicAcceleration;
+    motionMagicConfigs.MotionMagicJerk = ClimbConstants.motionMagicJerk;
 
     climbTall
         .getConfigurator()
@@ -168,13 +180,13 @@ public class Climb extends SubsystemBase {
   // }
 
   public void setClimbTall(Supplier<Double> position) {
-    climbTall.setControl(new PositionVoltage(position.get().doubleValue()));
+    climbTall.setControl(m_request.withPosition(position.get().doubleValue()));
     // climbHook.setControl(new PositionVoltage(position));
 
   }
 
   public void setClimbShort(Supplier<Double> position) {
-    climbShort.setControl(new PositionVoltage(position.get().doubleValue()));
+    climbShort.setControl(m_request.withPosition(position.get().doubleValue()));
   }
 
   // Check if this function is needed during testing.
@@ -183,11 +195,11 @@ public class Climb extends SubsystemBase {
   }
 
   public void resetTallPosition() {
-    climbTall.setControl(new PositionVoltage(0));
+    climbTall.setControl(m_request.withPosition(0));
   }
 
   public void resetShortPosition() {
-    climbShort.setControl(new PositionVoltage(0));
+    climbShort.setControl(m_request.withPosition(0));
   }
 
   public void resetKickerPosition() {

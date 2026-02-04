@@ -150,10 +150,12 @@ public static class Vision {
     public static final double climbedPosition = 0; // rot
     public static final double rampRate = 15;
     public static final double kP = 1.0;
-    public static final double kI = 1.0;
-    public static final double kD = 1.0;
-    public static final double kG = 1.0;
-    public static final double kS = 1.0;
+    public static final double kI = 0.0;
+    public static final double kD = 0.0;
+    public static final double kG = 0.0;
+    public static final double kS = 0.0;
+    public static final double kV = 0.0;
+    public static final double kA = 0.0;
     public static final String canBus = "canivore1";
     // public static final double servoOpenPosition = 1.0;
     // public static final double servoCloseposition = 0.0;
@@ -169,6 +171,11 @@ public static class Vision {
     public static final double l3Position = inchesToRotations(l3HeightInches);
 
     public static final double positionToleranceRotations = 0.25;
+
+    public static final double motionMagicCruiseVelocity = 3.0;
+    public static final double motionMagicAcceleration = 2.0;
+    public static final double motionMagicJerk = 40.0;
+
 
     public static double inchesToRotations(double inches) {
       return Units.inchesToMeters(inches) / metersPerRotation;
