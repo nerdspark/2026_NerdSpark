@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ctre.phoenix6.CANBus;
+
 import dev.doglog.DogLog;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -123,8 +125,17 @@ public static class Vision {
     public static final double gyroI = 0.0;
     public static final double gyroD = 0.00;
 
-    public static final String pigeonCanBus = "canivore1";
 
+    public static class IntakeConstants { 
+        public static final CANBus CANBus = new CANBus("rio");
+
+        public static final int leftIntakeMotorRollerId = 5;
+        public static final int rightIntakeMotorRollerId = 4;
+        public static final int deployIntakeMotorId = 61;
+
+        public static final int intakeCurrentLimit = 5;
+
+    }
 
 //         for (int i = 0; i < FieldConstants.Reef.branchPositions.size(); i++) {
 //           for (FieldConstants.ReefHeight height : FieldConstants.ReefHeight.values()) {

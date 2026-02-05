@@ -20,11 +20,11 @@ public class IntakeCommand extends Command{
     }
 
     public void initialize() {
-        intake.setDeployPosition(1.0);
     }
 
     public void execute() {
-        intake.setRollerPower(1.0);
+        intake.setDeployPosition(0);
+        intake.setRollerPower(0.5);
     }
 
     public void end(boolean interrupted) {
