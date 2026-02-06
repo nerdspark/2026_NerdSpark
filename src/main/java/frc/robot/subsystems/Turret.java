@@ -1,8 +1,6 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.TurretUtil.*;
 
 import java.util.function.Supplier;
@@ -13,35 +11,38 @@ import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.units.Units;
-import edu.wpi.first.units.measure.Time;
-import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants.TurretConfig;
 import frc.robot.Constants;
 import frc.robot.Constants.Field;
+import frc.robot.Constants.ShootMode;
 
 public class Turret extends SubsystemBase {
     private static final double TWO_PI = 2.0 * Math.PI;
@@ -50,11 +51,12 @@ public class Turret extends SubsystemBase {
     private TalonFX spinMotor, hoodMotor1, hoodMotor2, shootMotor1, shootMotor2;
     private CANcoder spinCancoder1, spinCancoder2;
 
-    private VelocityVoltage shootVelocity = new VelocityVoltage(0);
-    private PositionVoltage hoodPose = new PositionVoltage(0);
+    private VelocityDutyCycle shootDutyBang = new VelocityDutyCycle(0);
+    private VelocityTorqueCurrentFOC shootTorqueBang = new VelocityTorqueCurrentFOC(0);
+    private MotionMagicVoltage hoodPose = new MotionMagicVoltage(0);
     private MotionMagicVoltage spinPose = new MotionMagicVoltage(0);
 
-    private VoltageOut sysId = new VoltageOut(0);
+    // private VoltageOut sysId = new VoltageOut(0);
 
     private Supplier<Pose2d> pose;
     private Supplier<ChassisSpeeds> speed;
@@ -65,6 +67,10 @@ public class Turret extends SubsystemBase {
     private boolean pathLatched = false;
     private double turretAngle;
 
+    private Debouncer torqueCurrentDebouncer = new Debouncer(0.025, DebounceType.kFalling);
+    private ShootMode mode = ShootMode.COAST;
+    private double veloTest = 0;
+
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<DriverStation.Alliance> driverAlliance,
         Supplier<Boolean> climbing) {
         pose = robotPose;
@@ -74,14 +80,14 @@ public class Turret extends SubsystemBase {
 
         canivore = new CANBus(Constants.CANbus);
         
-        spinMotor = new TalonFX(TurretConfig.spinMotorId, canivore);
+        // spinMotor = new TalonFX(TurretConfig.spinMotorId, canivore);
         hoodMotor1 = new TalonFX(TurretConfig.hoodMotor1Id, canivore);
         hoodMotor2 = new TalonFX(TurretConfig.hoodMotor2Id, canivore);
         shootMotor1 = new TalonFX(TurretConfig.shootMotor1Id, canivore);
         shootMotor2 = new TalonFX(TurretConfig.shootMotor2Id, canivore);
 
-        spinCancoder1 = new CANcoder(TurretConfig.spinCancoder1Id, canivore);
-        spinCancoder2 = new CANcoder(TurretConfig.spinCancoder2Id, canivore);
+        // spinCancoder1 = new CANcoder(TurretConfig.spinCancoder1Id, canivore);
+        // spinCancoder2 = new CANcoder(TurretConfig.spinCancoder2Id, canivore);
 
         TalonFXConfiguration spinConfig = new TalonFXConfiguration()
             .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake)
@@ -120,6 +126,10 @@ public class Turret extends SubsystemBase {
                 .withStatorCurrentLimit(Amps.of(TurretConfig.hoodStatorCurrentLimit))
                 .withStatorCurrentLimitEnable(true)
             )
+            .withMotionMagic(new MotionMagicConfigs()
+                .withMotionMagicCruiseVelocity(TurretConfig.hoodVelocity)
+                .withMotionMagicAcceleration(TurretConfig.hoodAccel)
+            )
         ;
         TalonFXConfiguration hoodConfig2 = new TalonFXConfiguration()
             .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake)
@@ -138,9 +148,17 @@ public class Turret extends SubsystemBase {
                 .withStatorCurrentLimit(Amps.of(TurretConfig.hoodStatorCurrentLimit))
                 .withStatorCurrentLimitEnable(true)
             )
+            .withMotionMagic(new MotionMagicConfigs()
+                .withMotionMagicCruiseVelocity(TurretConfig.hoodVelocity)
+                .withMotionMagicAcceleration(TurretConfig.hoodAccel)
+            )
         ;
         TalonFXConfiguration shootConfig1 = new TalonFXConfiguration()
-            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast))
+            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast)
+                // Bang Bang Control
+                .withPeakForwardDutyCycle(1)
+                .withPeakReverseDutyCycle(0)
+            )
             .withSlot0(new Slot0Configs()
                 .withKP(TurretConfig.shootKp1)
                 .withKI(TurretConfig.shootKi1)
@@ -150,6 +168,14 @@ public class Turret extends SubsystemBase {
                 .withKA(TurretConfig.shootKa1)
                 .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
             )
+            // Bang Bang Control
+            .withSlot1(new Slot1Configs()
+                .withKP(999999.0)
+            )
+            .withTorqueCurrent(new TorqueCurrentConfigs()
+                .withPeakForwardTorqueCurrent(40)
+                .withPeakReverseTorqueCurrent(0)
+            )
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(Amps.of(TurretConfig.shootStatorCurrentLimit))
                 .withStatorCurrentLimitEnable(true)
@@ -158,6 +184,9 @@ public class Turret extends SubsystemBase {
         TalonFXConfiguration shootConfig2 = new TalonFXConfiguration()
             .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast)
                 .withInverted(InvertedValue.Clockwise_Positive)
+                // Bang Bang Control
+                .withPeakForwardDutyCycle(1)
+                .withPeakReverseDutyCycle(0)
             )
             .withSlot0(new Slot0Configs()
                 .withKP(TurretConfig.shootKp2)
@@ -167,6 +196,14 @@ public class Turret extends SubsystemBase {
                 .withKV(TurretConfig.shootKv2)
                 .withKA(TurretConfig.shootKa2)
                 .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
+            )
+            // Bang Bang Control
+            .withSlot1(new Slot1Configs()
+                .withKP(999999.0)
+            )
+            .withTorqueCurrent(new TorqueCurrentConfigs()
+                .withPeakForwardTorqueCurrent(40)
+                .withPeakReverseTorqueCurrent(0)
             )
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(Amps.of(TurretConfig.shootStatorCurrentLimit))
@@ -188,14 +225,14 @@ public class Turret extends SubsystemBase {
             )
         ;
 
-        spinMotor.getConfigurator().apply(spinConfig);
+        // spinMotor.getConfigurator().apply(spinConfig);
         hoodMotor1.getConfigurator().apply(hoodConfig1);
         hoodMotor2.getConfigurator().apply(hoodConfig2);
         shootMotor1.getConfigurator().apply(shootConfig1);
         shootMotor2.getConfigurator().apply(shootConfig2);
 
-        spinCancoder1.getConfigurator().apply(spinCancoder1Config);
-        spinCancoder2.getConfigurator().apply(spinCancoder2Config);
+        // spinCancoder1.getConfigurator().apply(spinCancoder1Config);
+        // spinCancoder2.getConfigurator().apply(spinCancoder2Config);
 
         hoodMotor2.setControl(new Follower(TurretConfig.hoodMotor1Id, MotorAlignmentValue.Opposed));
         shootMotor2.setControl(new Follower(TurretConfig.shootMotor1Id, MotorAlignmentValue.Opposed));
@@ -215,29 +252,6 @@ public class Turret extends SubsystemBase {
     //     )
     // );
 
-    private final  SysIdRoutine hood = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null, // Use default ramp rate (1 V/s)
-            Volts.of(3), // Reduce dynamic step voltage to 5 V to prevent brownout
-            Time.ofBaseUnits(5, Seconds), // Use 5s timeout
-            state -> SignalLogger.writeString("SysIdHood_State", state.toString())
-        ), 
-        new SysIdRoutine.Mechanism(
-            output -> {
-                double pos = hoodMotor1.getPosition().getValueAsDouble();
-                // Block motion INTO the hardstop only
-                if ((pos <= 1 && output.lt(Units.Volts.of(0))) ||
-                    (pos >= 500 && output.gt(Units.Volts.of(0)))) {
-                    hoodMotor1.setControl(sysId.withOutput(0));
-                } else {
-                    hoodMotor1.setControl(sysId.withOutput(output));
-                }
-            }, 
-            null, 
-            this
-        )
-    );
-
     // private final SysIdRoutine shoot = new SysIdRoutine(
     //     new SysIdRoutine.Config(
     //         null, // Use default ramp rate (1 V/s)
@@ -252,7 +266,7 @@ public class Turret extends SubsystemBase {
     //     )
     // );
 
-    private SysIdRoutine sysIdRoutineToApply = hood;
+    // private SysIdRoutine sysIdRoutineToApply = shoot;
     
     /** 
      * Aims the hood of the turret and spins wheels based on shooter map and chassis speeds
@@ -260,7 +274,7 @@ public class Turret extends SubsystemBase {
      * 
      * @param distance the distance to the center of the hub
     */
-    private void aimOnFly(double distance) {
+    private double aimOnFly(double distance) {
         double[] map;
         if (climb.get()) {
             map = TurretConstants.climbMap.get(distance);
@@ -278,7 +292,32 @@ public class Turret extends SubsystemBase {
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
         double deltaMotorRPS = vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
 
-        shootVelocity.Velocity = map[1] - deltaMotorRPS;
+        double velo =  map[1] - deltaMotorRPS;
+
+        // Actual - Target
+        boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - velo) <= 3.2;
+        boolean torqueCurrentControl = torqueCurrentDebouncer.calculate(inTolerance);
+        mode = torqueCurrentControl ? ShootMode.TORQUE_CURRENT_BANG_BANG : ShootMode.DUTY_CYCLE_BANG_BANG;
+
+        return velo;
+    }
+
+    public void calcBangBang(double velocity) {
+        if (velocity < 3) {
+            mode = ShootMode.COAST;
+            return;
+        }
+
+        // Actual - Target
+        boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - velocity) <= 3.5;
+        SmartDashboard.putBoolean("inTolerance", inTolerance);
+        boolean torqueCurrentControl = torqueCurrentDebouncer.calculate(inTolerance);
+        SmartDashboard.putBoolean("torqueCurrentControl", torqueCurrentControl);
+        mode = torqueCurrentControl ? ShootMode.TORQUE_CURRENT_BANG_BANG : ShootMode.DUTY_CYCLE_BANG_BANG;
+        SmartDashboard.putString("Mode", mode.toString());
+        SmartDashboard.putNumber("Velocity", velocity);
+
+        veloTest = velocity;
     }
 
     /**
@@ -286,7 +325,7 @@ public class Turret extends SubsystemBase {
      */
     private void hoodWheelsZero() {
         hoodPose.Position = 0;
-        shootVelocity.Velocity = 0;
+        mode = ShootMode.COAST;
     }
 
     /**
@@ -355,36 +394,45 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
+        double velocity = veloTest;
         Pose2d currPose = pose.get();
 
         boolean isBlue = alliance.get() == DriverStation.Alliance.Blue;
         boolean shoot = currPose.getX() <= (isBlue ? Field.blueShootThreshold : Field.redShootThreshold);
         boolean pass = currPose.getX() <= (isBlue ? Field.bluePassThreshold : Field.redPassThreshold);
 
-        if (shoot || pass) {
-            Translation2d goalPose;
-            Translation2d passPose;
-            if (isBlue) {
-                goalPose = Field.blueHub;
-                passPose = closerPoint(currPose, Field.blueLeftPass, Field.blueRightPass) ? Field.blueLeftPass : Field.blueRightPass;
-            } else {
-                goalPose = Field.redHub;
-                passPose = closerPoint(currPose, Field.redLeftPass, Field.redRightPass) ? Field.redLeftPass : Field.redRightPass;
-            }
+        // if (shoot || pass) {
+        //     Translation2d goalPose;
+        //     Translation2d passPose;
+        //     if (isBlue) {
+        //         goalPose = Field.blueHub;
+        //         passPose = closerPoint(currPose, Field.blueLeftPass, Field.blueRightPass) ? Field.blueLeftPass : Field.blueRightPass;
+        //     } else {
+        //         goalPose = Field.redHub;
+        //         passPose = closerPoint(currPose, Field.redLeftPass, Field.redRightPass) ? Field.redLeftPass : Field.redRightPass;
+        //     }
 
-            double xError = (shoot ? goalPose.getX() : passPose.getX()) - currPose.getX();
-            double yError = (shoot ? goalPose.getY() : passPose.getY()) - currPose.getY();
-            double errorDegrees = Math.atan2(yError, xError);
+        //     double xError = (shoot ? goalPose.getX() : passPose.getX()) - currPose.getX();
+        //     double yError = (shoot ? goalPose.getY() : passPose.getY()) - currPose.getY();
+        //     double errorDegrees = Math.atan2(yError, xError);
                     
-            aimTurret(normalizeRadians(errorDegrees - currPose.getRotation().getRadians()));
-            aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
-        } else {
-            hoodWheelsZero();
-        }
+        //     aimTurret(normalizeRadians(errorDegrees - currPose.getRotation().getRadians()));
+        //     velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
+        // } else {
+        //     hoodWheelsZero();
+        // }
 
-        spinMotor.setControl(spinPose);
-        hoodMotor1.setControl(hoodPose);
-        shootMotor1.setControl(shootVelocity);
+        // spinMotor.setControl(spinPose);
+        // hoodMotor1.setControl(hoodPose);
+        
+        switch (mode) {
+            case DUTY_CYCLE_BANG_BANG: shootMotor1.setControl(shootDutyBang.withVelocity(velocity).withSlot(1));
+                break;
+            case TORQUE_CURRENT_BANG_BANG: shootMotor1.setControl(shootTorqueBang.withVelocity(velocity).withSlot(1));
+                break;
+            case COAST: shootMotor1.set(0);
+                break;
+        }
     }
 
     /**
@@ -394,9 +442,9 @@ public class Turret extends SubsystemBase {
      * @param direction Direction of the SysId Quasistatic test
      * @return Command to run
      */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return sysIdRoutineToApply.quasistatic(direction);
-    }
+    // public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    //     return sysIdRoutineToApply.quasistatic(direction);
+    // }
 
     /**
      * Runs the SysId Dynamic test in the given direction for the routine
@@ -404,7 +452,7 @@ public class Turret extends SubsystemBase {
        * @param direction Direction of the SysId Dynamic test
      * @return Command to run
      */
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return sysIdRoutineToApply.dynamic(direction);
-    }
+    // public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    //     return sysIdRoutineToApply.dynamic(direction);
+    // }
 }

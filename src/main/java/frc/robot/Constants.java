@@ -149,6 +149,12 @@ public final class Constants {
         }
     }
 
+    public static enum ShootMode {
+        COAST,
+        DUTY_CYCLE_BANG_BANG,
+        TORQUE_CURRENT_BANG_BANG
+    }
+
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
         public static final double spinKp = 30.308;
@@ -169,19 +175,21 @@ public final class Constants {
         
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
-        public static final double hoodKp1 = 0.0;
-        public static final double hoodKp2 = 0.0;
+        public static final double hoodKp1 = 0.7;
+        public static final double hoodKp2 = 0.7;
         public static final double hoodKi1 = 0.0;
         public static final double hoodKi2 = 0.0;
         public static final double hoodKd1 = 0.0;
         public static final double hoodKd2 = 0.0;
-        public static final double hoodKs1 = 0.0;
-        public static final double hoodKs2 = 0.0;
-        public static final double hoodKv1 = 0.0;
-        public static final double hoodKv2 = 0.0;
-        public static final double hoodKa1 = 0.0;
-        public static final double hoodKa2 = 0.0;
+        public static final double hoodKs1 = 0.4404296875;
+        public static final double hoodKs2 = 0.4404296875;
+        public static final double hoodKv1 = 0.07800000160932541;
+        public static final double hoodKv2 = 0.07800000160932541;
+        public static final double hoodKa1 = 0.009999999776482582;
+        public static final double hoodKa2 = 0.009999999776482582;
         public static final double hoodStatorCurrentLimit = 40.0;
+        public static final double hoodVelocity = 30;
+        public static final double hoodAccel = 150;
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;

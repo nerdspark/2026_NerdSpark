@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.commands.TurretTest;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Turret;
@@ -43,11 +44,11 @@ public class RobotContainer {
 
     private final CommandXboxController joystick = new CommandXboxController(0);
 
-    private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    // private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-    public final PoseEstimatorSubsystem poseEstimatorSubsystem;
+    // public final PoseEstimatorSubsystem poseEstimatorSubsystem;
 
-    private final SendableChooser<Command> autoChooser;
+    // private final SendableChooser<Command> autoChooser;
 
     private final Turret turret;
 
@@ -58,23 +59,23 @@ public class RobotContainer {
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
         gyroController.setIntegratorRange(-2.0, 2.0);
 
-        poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
+        // poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
       
-        autoChooser = AutoBuilder.buildAutoChooser("Tests");
-        SmartDashboard.putData("Auto Mode", autoChooser);
+        // autoChooser = AutoBuilder.buildAutoChooser("Tests");
+        // SmartDashboard.putData("Auto Mode", autoChooser);
 
-        turret = new Turret(
-            () -> drivetrain.getState().Pose, 
-            () -> drivetrain.getState().Speeds,
-            () -> DriverStation.getAlliance().orElse(Alliance.Red),
-            () -> true // Turn off turret when false
-        );
         // turret = new Turret(
-        //     () -> new Pose2d(), 
-        //     () -> new ChassisSpeeds(),
+        //     () -> drivetrain.getState().Pose, 
+        //     () -> drivetrain.getState().Speeds,
         //     () -> DriverStation.getAlliance().orElse(Alliance.Red),
         //     () -> true // Turn off turret when false
         // );
+        turret = new Turret(
+            () -> new Pose2d(), 
+            () -> new ChassisSpeeds(),
+            () -> DriverStation.getAlliance().orElse(Alliance.Red),
+            () -> true // Turn off turret when false
+        );
 
         configureDefaultCommands();
         configureSysid();
@@ -82,12 +83,17 @@ public class RobotContainer {
         configureBindings();
 
         // Warmup PathPlanner to avoid Java pauses
-        FollowPathCommand.warmupCommand().schedule();
+        // FollowPathCommand.warmupCommand().schedule();
     }
 
     private void configureBindings() {
         // Reset the field-centric heading on left bumper press.
-        joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        // joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+
+        joystick.y().whileTrue(new TurretTest(turret, 85));
+        joystick.b().whileTrue(new TurretTest(turret, 70));
+        joystick.a().whileTrue(new TurretTest(turret, 50));
+        joystick.x().whileTrue(new TurretTest(turret, 30));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = 0.0));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = Math.PI/2));
@@ -98,46 +104,46 @@ public class RobotContainer {
     private void configureDefaultCommands() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
-        drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getRightY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getRightX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(calcAutoTurn()) // Drive counterclockwise with negative X (left)
-            )
-        );
+        // drivetrain.setDefaultCommand(
+        //     // Drivetrain will execute this command periodically
+        //     drivetrain.applyRequest(() ->
+        //         drive.withVelocityX(-joystick.getRightY() * MaxSpeed) // Drive forward with negative Y (forward)
+        //             .withVelocityY(-joystick.getRightX() * MaxSpeed) // Drive left with negative X (left)
+        //             .withRotationalRate(calcAutoTurn()) // Drive counterclockwise with negative X (left)
+        //     )
+        // );
 
-        // Idle while the robot is disabled. This ensures the configured
-        // neutral mode is applied to the drive motors while disabled.
-        final var idle = new SwerveRequest.Idle();
-        RobotModeTriggers.disabled().whileTrue(
-            drivetrain.applyRequest(() -> idle).ignoringDisable(true)
-        );
+        // // Idle while the robot is disabled. This ensures the configured
+        // // neutral mode is applied to the drive motors while disabled.
+        // final var idle = new SwerveRequest.Idle();
+        // RobotModeTriggers.disabled().whileTrue(
+        //     drivetrain.applyRequest(() -> idle).ignoringDisable(true)
+        // );
         
-        drivetrain.registerTelemetry(logger::telemeterize);
+        // drivetrain.registerTelemetry(logger::telemeterize);
     }
 
     private void configureSysid() {
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        joystick.back().and(joystick.y()).whileTrue(turret.sysIdDynamic(Direction.kForward));
-        joystick.back().and(joystick.x()).whileTrue(turret.sysIdDynamic(Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(turret.sysIdQuasistatic(Direction.kForward));
-        joystick.start().and(joystick.x()).whileTrue(turret.sysIdQuasistatic(Direction.kReverse));
+        // joystick.back().and(joystick.y()).whileTrue(turret.sysIdDynamic(Direction.kForward));
+        // joystick.back().and(joystick.x()).whileTrue(turret.sysIdDynamic(Direction.kReverse));
+        // joystick.start().and(joystick.y()).whileTrue(turret.sysIdQuasistatic(Direction.kForward));
+        // joystick.start().and(joystick.x()).whileTrue(turret.sysIdQuasistatic(Direction.kReverse));
     }
 
     public Command getAutonomousCommand() {
-        return autoChooser.getSelected();
-        // return null;
+        // return autoChooser.getSelected();
+        return null;
     }
 
-    private double calcAutoTurn() {
-        if (Math.abs(joystick.getLeftX()) > 0.01) {
-            target += (joystick.getLeftX() * Math.toRadians(5));
-        }
+    // private double calcAutoTurn() {
+    //     if (Math.abs(joystick.getLeftX()) > 0.01) {
+    //         target += (joystick.getLeftX() * Math.toRadians(5));
+    //     }
 
-        double output = gyroController.calculate(drivetrain.getState().Pose.getRotation().getRadians(), target);
+    //     double output = gyroController.calculate(drivetrain.getState().Pose.getRotation().getRadians(), target);
 
-        return MathUtil.clamp(output, -MaxAngularRate, MaxAngularRate);
-    }
+    //     return MathUtil.clamp(output, -MaxAngularRate, MaxAngularRate);
+    // }
 }
