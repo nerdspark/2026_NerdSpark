@@ -18,10 +18,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.Constants.IntakeConstants;
 // import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.commands.DriveToPose;
+// import frc.robot.commands.DriveToPose;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -89,28 +91,50 @@ public class RobotContainer {
 
         // Reset the field-centric heading on left bumper press.
         // joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-        joystick.a().onTrue(new IntakeCommand(intake));
+        joystick.a().onTrue(
+            new InstantCommand(
+                () -> intake.setDeployPosition(() -> IntakeConstants.deployPos), 
+                intake
+            ).andThen(
+                new InstantCommand(
+                    () -> intake.setRollerPower(MaxSpeed),
+                    intake
+                )
+            )
+        );
+
+        joystick.x().onTrue(
+            new InstantCommand(
+                () -> intake.setDeployPosition(() ->IntakeConstants.homePos), 
+                intake
+                ).andThen(
+                    new InstantCommand(
+                        () -> intake.setRollerPower(0.0),
+                        intake
+                    )
+                )
+        );
         // drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    public Command getAutonomousCommand() {
-        // Simple drive forward auton
-        // final var idle = new SwerveRequest.Idle();
-        // return Commands.sequence(
-        //     // Reset our field centric heading to match the robot
-        //     // facing away from our alliance station wall (0 deg).
-        //     drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
-        //     // Then slowly drive forward (away from us) for 5 seconds.
-        //     drivetrain.applyRequest(() ->
-        //         drive.withVelocityX(0.5)
-        //             .withVelocityY(0)
-        //             .withRotationalRate(0)
-        //     )
-        //     .withTimeout(5.0),
-        //     // Finally idle for the rest of auton
-        //     drivetrain.applyRequest(() -> idle)
-        // );
+    // public Command getAutonomousCommand() {
+    //     // Simple drive forward auton
+    //     // final var idle = new SwerveRequest.Idle();
+    //     // return Commands.sequence(
+    //     //     // Reset our field centric heading to match the robot
+    //     //     // facing away from our alliance station wall (0 deg).
+    //     //     drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
+    //     //     // Then slowly rive forward (away from us) for 5 seconds.
+    //     //     drivetrain.applyRequest(() ->
+    //     //         drive.withVelocityX(0.5)
+    //     //             .withVelocityY(0)
+    //     //             .withRotationalRate(0)
+    //     //     )
+    //     //     .withTimeout(5.0),
+    //     //     // Finally idle for the rest of auton
+    //     //     drivetrain.applyRequest(() -> idle)
+    //     // );
 
-        // return autoChooser.getSelected();
-    }
+    //     // return autoChooser.getSelected();
+    // }
 }

@@ -6,7 +6,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.wpilibj2.command.Command;
-
+import frc.robot.Constants.IntakeConstants;
 import frc.robot.subsystems.Intake;
 
 public class IntakeCommand extends Command{
@@ -23,8 +23,8 @@ public class IntakeCommand extends Command{
     }
 
     public void execute() {
-        intake.setDeployPosition(0);
-        intake.setRollerPower(0.5);
+        intake.setDeployPosition(() -> IntakeConstants.deployPos);
+        intake.setRollerPower(1.0);
     }
 
     public void end(boolean interrupted) {

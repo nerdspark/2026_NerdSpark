@@ -133,7 +133,24 @@ public static class Vision {
         public static final int rightIntakeMotorRollerId = 4;
         public static final int deployIntakeMotorId = 61;
 
-        public static final int intakeCurrentLimit = 5;
+        public static final int intakeCurrentLimit = 70;
+
+
+        public static final int motionMagicAcceleration =150;
+        public static final int motionMagicCruiseVelocity=50;
+        public static final int motionMagicJerk=0;
+        //Constants after tuning in TunerX, works great
+        public static final double kP = 1.5;
+        public static final int kI = 0;
+        public static final double kD = 0.0010000000474974513;
+        public static final int kG = 0;
+        public static final int kS = 0;
+        public static final int kA = 0;
+        public static final int kV = 0;
+
+        public static final double deployPos = 2;
+        public static final double homePos = 14;
+
 
     }
 
