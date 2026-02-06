@@ -56,6 +56,12 @@ public class LEDSubsystem extends SubsystemBase {
   private static final RGBWColor kBlue = new RGBWColor(0, 0, 255, 0);
   private static final RGBWColor kWhite = new RGBWColor(0, 0, 0, 255);
 
+  private int ledStartIndex = 8;
+  private int ledEndIndex = 18;
+
+
+  // private SmartDashboard smartDashboard = new SmartDashboard();
+
   // private boolean updated = true;
 
   // Creates a new LEDSubsystem
@@ -93,7 +99,7 @@ public class LEDSubsystem extends SubsystemBase {
     // // Write the data to the LED strip
     // m_led.setData(m_ledBuffer);
 
-    SmartDashboard.putData("LED state", (Sendable) m_candle.getAppliedControl());
+    // SmartDashboard.putData("LED state", (Sendable) m_candle.getAppliedControl());
 
     CommandXboxController joystick = new CommandXboxController(Constants.testJoystickID);
 
@@ -104,17 +110,17 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public void solidColor(RGBWColor color) {
-    m_candle.setControl(new SolidColor(0, 7).withColor(color));
+    m_candle.setControl(new SolidColor(ledStartIndex, ledEndIndex).withColor(color));
   }
 
   public void solidColor(RGBWColor color, double brightness) {
-    m_candle.setControl(new SolidColor(0, 7)
+    m_candle.setControl(new SolidColor(ledStartIndex, ledEndIndex)
         .withColor(color.scaleBrightness(brightness)));
   }
 
   public void blinkColor(RGBWColor color) {
     m_candle.setControl(
-        new StrobeAnimation(0, 7)
+        new StrobeAnimation(ledStartIndex, ledEndIndex)
             .withSlot(Constants.ledID)
             .withColor(color)
             .withFrameRate(Constants.ledFramerate));
@@ -123,7 +129,7 @@ public class LEDSubsystem extends SubsystemBase {
   public void pulseColor(RGBWColor color) {
     ControlRequest previousControl = m_candle.getAppliedControl();
     m_candle.setControl(
-        new ColorFlowAnimation(0, 7)
+        new ColorFlowAnimation(ledStartIndex, ledEndIndex)
             .withSlot(Constants.ledID)
             .withColor(color)
             .withFrameRate(Constants.ledFramerate));
@@ -131,7 +137,7 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public void rainbow() {
-    m_candle.setControl(new RainbowAnimation(0, 7)
+    m_candle.setControl(new RainbowAnimation(ledStartIndex, ledEndIndex)
         .withSlot(Constants.ledID)
         .withFrameRate(Constants.ledFramerate));
   }

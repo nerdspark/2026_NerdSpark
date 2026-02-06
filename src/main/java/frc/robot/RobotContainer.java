@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 // import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveToPose;
+import frc.robot.commands.Red;
 import frc.robot.commands.UpdateLED;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -37,23 +38,23 @@ public class RobotContainer {
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+    // private final Telemetry logger = new Telemetry(MaxSpeed);
 
     public final CommandXboxController joystick = new CommandXboxController(0);
 
-    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    // public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-    public final PoseEstimatorSubsystem poseEstimatorSubsystem;
+    // public final PoseEstimatorSubsystem poseEstimatorSubsystem;
 
-    private final SendableChooser<Command> autoChooser;
+    // private final SendableChooser<Command> autoChooser;
 
     public final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
     public RobotContainer() {
-        poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
+        // poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
 
-        autoChooser = AutoBuilder.buildAutoChooser("Tests");
-        SmartDashboard.putData("Auto Mode", autoChooser);
+        // autoChooser = AutoBuilder.buildAutoChooser("Tests");
+        // SmartDashboard.putData("Auto Mode", autoChooser);
         configureBindings();
 
         // Warmup PathPlanner to avoid Java pauses
@@ -63,21 +64,21 @@ public class RobotContainer {
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
-        drivetrain.setDefaultCommand(
-                // Drivetrain will execute this command periodically
-                drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getRightY() * MaxSpeed) // Drive forward
-                                                                                                    // with negative Y
-                                                                                                    // (forward)
-                        .withVelocityY(-joystick.getRightX() * MaxSpeed) // Drive left with negative X (left)
-                        .withRotationalRate(joystick.getLeftX() * MaxAngularRate) // Drive counterclockwise with
-                                                                                  // negative X (left)
-                ));
+        // drivetrain.setDefaultCommand(
+        //         // Drivetrain will execute this command periodically
+        //         drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getRightY() * MaxSpeed) // Drive forward
+        //                                                                                             // with negative Y
+        //                                                                                             // (forward)
+        //                 .withVelocityY(-joystick.getRightX() * MaxSpeed) // Drive left with negative X (left)
+        //                 .withRotationalRate(joystick.getLeftX() * MaxAngularRate) // Drive counterclockwise with
+        //                                                                           // negative X (left)
+        //         ));
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
-        final var idle = new SwerveRequest.Idle();
-        RobotModeTriggers.disabled().whileTrue(
-                drivetrain.applyRequest(() -> idle).ignoringDisable(true));
+        // final var idle = new SwerveRequest.Idle();
+        // RobotModeTriggers.disabled().whileTrue(
+        //         drivetrain.applyRequest(() -> idle).ignoringDisable(true));
 
         // joystick.x().whileTrue(new DriveToPose(drivetrain, () -> new Pose2d(2, 2,
         // Rotation2d.fromDegrees(90))));
@@ -90,23 +91,25 @@ public class RobotContainer {
         // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // Reset the field-centric heading on left bumper press.
-        joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-        joystick.a().onTrue(new UpdateLED(ledSubsystem,
-                () -> joystick.a().getAsBoolean(),
-                () -> joystick.b().getAsBoolean(),
-                () -> joystick.x().getAsBoolean(),
-                () -> joystick.y().getAsBoolean(),
-                () -> joystick.povUp().getAsBoolean(),
-                () -> joystick.povDown().getAsBoolean(),
-                () -> joystick.povLeft().getAsBoolean(),
-                () -> joystick.povRight().getAsBoolean(),
-                () -> joystick.leftBumper().getAsBoolean(),
-                () -> joystick.getLeftY()));
+        // joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        joystick.a().onTrue( new Red(ledSubsystem)
+            // new UpdateLED(ledSubsystem,
+            //     () -> joystick.a().getAsBoolean(),
+            //     () -> joystick.b().getAsBoolean(),
+            //     () -> joystick.x().getAsBoolean(),
+            //     () -> joystick.y().getAsBoolean(),
+            //     () -> joystick.povUp().getAsBoolean(),
+            //     () -> joystick.povDown().getAsBoolean(),
+            //     () -> joystick.povLeft().getAsBoolean(),
+            //     () -> joystick.povRight().getAsBoolean(),
+            //     () -> joystick.leftBumper().getAsBoolean(),
+            //     () -> joystick.getLeftY())
+        );
 
-        drivetrain.registerTelemetry(logger::telemeterize);
+        // drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    public Command getAutonomousCommand() {
+    // public Command getAutonomousCommand() {
         // Simple drive forward auton
         // final var idle = new SwerveRequest.Idle();
         // return Commands.sequence(
@@ -124,6 +127,6 @@ public class RobotContainer {
         // drivetrain.applyRequest(() -> idle)
         // );
 
-        return autoChooser.getSelected();
-    }
+    //     return autoChooser.getSelected();
+    // }
 }
