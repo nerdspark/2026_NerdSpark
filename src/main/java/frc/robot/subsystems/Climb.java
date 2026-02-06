@@ -37,6 +37,17 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimbConstants;
 
+/*
+**Hardware limits**
+Device ID of climb:
+Sprocket radius: 
+Climb current limit:
+Gearbox ratio:
+Velocity:
+Accleration:
+Jerk:
+*/ 
+
 public class Climb extends SubsystemBase {
   private TalonFX climbShort, climbTall, climbKicker;
   private TalonFXConfiguration climbConfig = new TalonFXConfiguration();
@@ -121,8 +132,8 @@ public class Climb extends SubsystemBase {
         .withStatorCurrentLimitEnable(true);
     climbConfig.Feedback = new FeedbackConfigs()
         .withFeedbackRotorOffset(0)
-        .withSensorToMechanismRatio(1);
-    climbConfig.ClosedLoopRamps = new ClosedLoopRampsConfigs().withVoltageClosedLoopRampPeriod(ClimbConstants.rampRate);
+        .withSensorToMechanismRatio(ClimbConstants.sensorToMechanismRatio);
+    // climbConfig.ClosedLoopRamps = new ClosedLoopRampsConfigs().withVoltageClosedLoopRampPeriod(ClimbConstants.rampRate);
     climbConfig.Slot0 = new Slot0Configs()
         .withKP(ClimbConstants.kP)
         .withKI(ClimbConstants.kI)
@@ -187,7 +198,7 @@ public class Climb extends SubsystemBase {
 
   public void setClimbShort(Supplier<Double> position) {
     climbShort.setControl(m_request.withPosition(position.get().doubleValue()));
-  }
+  } 
 
   // Check if this function is needed during testing.
   public void setClimbKicker(Supplier<Double> position) {
@@ -219,15 +230,15 @@ public class Climb extends SubsystemBase {
   }
 
   public boolean climbLeftAmpTriggered() {
-    return Math.abs(climbTall.getStatorCurrent().getValueAsDouble()) > 10;
+    return Math.abs(climbTall.getStatorCurrent().getValueAsDouble()) > ClimbConstants.climbCurrentLimit;
   }
 
   public boolean climbRightAmpTriggered() {
-    return Math.abs(climbShort.getStatorCurrent().getValueAsDouble()) > 10;
+    return Math.abs(climbShort.getStatorCurrent().getValueAsDouble()) > ClimbConstants.climbCurrentLimit;
   }
 
   public boolean climbKickerAmpTriggered() {
-    return Math.abs(climbKicker.getStatorCurrent().getValueAsDouble()) > 10;
+    return Math.abs(climbKicker.getStatorCurrent().getValueAsDouble()) > ClimbConstants.climbCurrentLimit;
   }
 
   public double getLeftPosition() {
@@ -255,13 +266,13 @@ public class Climb extends SubsystemBase {
     return new InstantCommand(() -> resetShortPosition(), this);
   }
 
-  public double getClimbTallHeightMeters() {
-    return climbTall.getPosition().getValueAsDouble() * ClimbConstants.metersPerRotation;
-  }
+  // public double getClimbTallHeightMeters() {
+  //   return climbTall.getPosition().getValueAsDouble() * ClimbConstants.metersPerRotation;
+  // }
 
-  public double getClimbShortHeightMeters() {
-    return climbShort.getPosition().getValueAsDouble() * ClimbConstants.metersPerRotation;
-  }
+  // public double getClimbShortHeightMeters() {
+  //   return climbShort.getPosition().getValueAsDouble() * ClimbConstants.metersPerRotation;
+  // }
 
   @Override
   public void periodic() {
@@ -273,8 +284,8 @@ public class Climb extends SubsystemBase {
     // double heightTall = 0.7 + 0.5 * Math.sin(time);
     // double heightShort = 0.5 + 0.1 * Math.sin(time);
 
-    tallMech.setLength(getClimbTallHeightMeters());
-    shortMech.setLength(getClimbShortHeightMeters());
+    // tallMech.setLength(getClimbTallHeightMeters());
+    // shortMech.setLength(getClimbShortHeightMeters());
 
     SmartDashboard.putNumber("climb left position", climbTall.getPosition().getValueAsDouble());
     SmartDashboard.putNumber("climb right position", climbShort.getPosition().getValueAsDouble());

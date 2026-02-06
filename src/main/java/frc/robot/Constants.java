@@ -141,7 +141,7 @@ public static class Vision {
     public static final int kLeftID = 1;
     public static final int kRightID = 2;
     public static final int kKickerID = 3;
-    public static final double climbCurrentLimit = 8;
+    public static final double climbCurrentLimit = 70.0;
     public static final double holdCurrentLimit = 8;
     public static final double hookCurrentLimit = 8;
     // public static final double ampTriggeredCurrentLimit = 2;
@@ -160,25 +160,32 @@ public static class Vision {
     // public static final double servoOpenPosition = 1.0;
     // public static final double servoCloseposition = 0.0;
 
-    public static final double metersPerRotation = 0.16;
+    public static final double pitchDiameterInches = 1.214;
+    public static final double pitchDiameterMeters = Units.inchesToMeters(pitchDiameterInches);
 
     public static final double l1HeightInches = 30;
     public static final double l2HeightInches = 72;
     public static final double l3HeightInches = 80;
 
-    public static final double l1Position = inchesToRotations(l1HeightInches);
-    public static final double l2Position = inchesToRotations(l2HeightInches);
-    public static final double l3Position = inchesToRotations(l3HeightInches);
+    public static final double l1Position = inchesToRotations(l1HeightInches, pitchDiameterMeters);
+    public static final double l2Position = inchesToRotations(l2HeightInches, pitchDiameterMeters);
+    public static final double l3Position = inchesToRotations(l3HeightInches, pitchDiameterMeters);
 
     public static final double positionToleranceRotations = 0.25;
 
     public static final double motionMagicCruiseVelocity = 3.0;
     public static final double motionMagicAcceleration = 2.0;
-    public static final double motionMagicJerk = 40.0;
+    public static final double motionMagicJerk = 0.0;
+
+    public static final double sensorToMechanismRatio = 45.0;
+
+    public static double metersPerRotation(double pitchDiameterMeters) {
+        return Math.PI * pitchDiameterMeters;
+    }
 
 
-    public static double inchesToRotations(double inches) {
-      return Units.inchesToMeters(inches) / metersPerRotation;
+    public static double inchesToRotations(double inches, double pitchDiameterMeters) {
+      return Units.inchesToMeters(inches) / metersPerRotation(pitchDiameterMeters);
     }
   }
 }
