@@ -1,0 +1,37 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "left_auton_noclimb_1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "left_auton_noclimb_2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "left_auton_noclimb_3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "left_auton_noclimb_4"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
