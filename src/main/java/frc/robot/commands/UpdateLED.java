@@ -93,7 +93,7 @@ public class UpdateLED extends Command {
   @Override
   public void execute() {
 
-    fuelFull = leftSupplier.get();
+    fuelFull = leftBSupplier.get();
     intakeOn = bSupplier.get();
     shooterSpinning = xSupplier.get();
     shooterReady = ySupplier.get();
@@ -101,8 +101,8 @@ public class UpdateLED extends Command {
     // private boolean lidClosed = false;
     climbing = downSupplier.get();
     climbDone = rightSupplier.get();
-    visionUpdate = aSupplier.get();
-    turretLocked = leftBSupplier.get();
+    visionUpdate = leftSupplier.get();
+    turretLocked = aSupplier.get();
     distance = leftStickSupplier.get();
 
     led.setFuelFull(fuelFull);

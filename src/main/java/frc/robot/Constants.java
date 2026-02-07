@@ -136,7 +136,11 @@ public static class Vision {
 
 public static final int testJoystickID = 0;
 public static final int ledID = 0;
-public static final int ledFramerate = 4; //fps
+public static final int ledSolidID = 0;
+public static final int ledBlinkID = 1;
+public static final int ledPulseID = 2;
+public static final int ledRainbowID = 3;
+public static final int ledFramerate = 16; //fps
 public static final int totalLEDs = 100;
 
 public static final double optimalShootingDistance = 2; //meters from hub

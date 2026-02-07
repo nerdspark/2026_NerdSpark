@@ -14,12 +14,12 @@ import frc.robot.subsystems.LEDSubsystem;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class BlinkRed extends Command {
   private LEDSubsystem ledSubsystem = new LEDSubsystem();
-    private Supplier<Boolean> a;
-  /** Creates a new Red. */
-  public BlinkRed(LEDSubsystem ledSubsystem, Supplier<Boolean> a) {
+  private Supplier<Boolean> b;
+  /** Creates a new blue. */
+  public BlinkRed(LEDSubsystem ledSubsystem, Supplier<Boolean> b) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.ledSubsystem = ledSubsystem;
-    this.a = a;
+    this.b = b;
   }
 
 
@@ -31,7 +31,7 @@ public class BlinkRed extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    ledSubsystem.blinkColor(  new RGBWColor(0, 0, 255, 0));
+    ledSubsystem.blinkColor(new RGBWColor(0, 0, 255, 0));
   }
 
   // Called once the command ends or is interrupted.
@@ -45,6 +45,6 @@ public class BlinkRed extends Command {
   @Override
   public boolean isFinished() {
     // return false;  
-    return !a.get();  
+    return !b.get();  
   }
 }

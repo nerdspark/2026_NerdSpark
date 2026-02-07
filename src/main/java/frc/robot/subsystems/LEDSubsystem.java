@@ -52,7 +52,6 @@ public class LEDSubsystem extends SubsystemBase {
   private boolean turretLocked = false;
   private double distance;
 
-
   private static final RGBWColor kGreen = new RGBWColor(0, 255, 0, 0);
   private static final RGBWColor kYellow = new RGBWColor(255, 255, 0, 0);
   private static final RGBWColor kRed = new RGBWColor(255, 0, 0, 0);
@@ -60,10 +59,10 @@ public class LEDSubsystem extends SubsystemBase {
   private static final RGBWColor kCyan = new RGBWColor(0, 255, 255, 0);
   private static final RGBWColor kMagenta = new RGBWColor(255, 0, 255, 0);
   private static final RGBWColor kBlue = new RGBWColor(0, 0, 255, 0);
-  private static final RGBWColor kWhite = new RGBWColor(0, 0, 0, 255);
+  private static final RGBWColor kWhite = new RGBWColor(255, 255, 255, 255);
 
   private int ledStartIndex = 8;
-  private int ledEndIndex = 18;
+  private int ledEndIndex = 21;
 
   // private SmartDashboard smartDashboard = new SmartDashboard();
 
@@ -115,53 +114,71 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public void solidColor(RGBWColor color) {
-    m_candle.setControl(new EmptyAnimation(Constants.ledID));
+    // m_candle.setControl(new StrobeAnimation(ledStartIndex, ledEndIndex)
+    // .withSlot(Constants.ledBlinkID)
+    // .withColor(kBlack)
+    // .withFrameRate(0));
+    empty();
     m_candle.setControl(new SolidColor(ledStartIndex, ledEndIndex).withColor(color));
   }
 
   public void solidColor(RGBWColor color, double brightness) {
-    m_candle.setControl(new EmptyAnimation(Constants.ledID));
+    empty();
     m_candle.setControl(new SolidColor(ledStartIndex, ledEndIndex)
         .withColor(color.scaleBrightness(brightness)));
   }
 
   public void blinkColor(RGBWColor color) {
     // m_candle.setControl(new EmptyAnimation(Constants.ledID));
-    // m_candle.se    
+    // m_candle.se
+    // m_candle.setControl(new SolidColor(ledStartIndex,
+    // ledEndIndex).withColor(color));
+    empty();
     m_candle.setControl(
-      
         new StrobeAnimation(ledStartIndex, ledEndIndex)
-            .withSlot(Constants.ledID)
+            .withSlot(Constants.ledBlinkID)
             .withColor(color)
             .withFrameRate(Constants.ledFramerate));
-            // .withUpdateFreqHz(60));
+    // .withUpdateFreqHz(60));
   }
 
   public void pulseColor(RGBWColor color) {
     ControlRequest previousControl = m_candle.getAppliedControl();
     // m_candle.setControl(new EmptyAnimation(Constants.ledID));
-    m_candle.setControl(
-        new ColorFlowAnimation(ledStartIndex, ledEndIndex)
-            .withSlot(Constants.ledID)
-            .withColor(color)
-            .withFrameRate(Constants.ledFramerate));
+    // if ((int) ( / (time * 1000)) % 2 == 0) {
+    // empty();
+    // m_candle.setControl(
+    // new SolidColor(ledStartIndex, ledEndIndex)
+    // .withColor(color));
+    // } else
+    empty();
+    m_candle
+        .setControl(new ColorFlowAnimation(ledStartIndex, ledEndIndex)
+            .withSlot(Constants.ledPulseID)
+            .withColor(color));
+
     m_candle.setControl(previousControl);
   }
 
+  public void empty(int slot) {
+    m_candle.setControl(new EmptyAnimation(slot));
+  }
+
   public void empty() {
-    m_candle.setControl(new EmptyAnimation(Constants.ledID));
+    m_candle.setControl(new EmptyAnimation(Constants.ledSolidID));
+    m_candle.setControl(new EmptyAnimation(Constants.ledBlinkID));
+    m_candle.setControl(new EmptyAnimation(Constants.ledPulseID));
+    m_candle.setControl(new EmptyAnimation(Constants.ledRainbowID));
   }
 
   public void rainbow() {
 
     // m_candle.setControl(new EmptyAnimation(Constants.ledID));
     m_candle.setControl(new RainbowAnimation(ledStartIndex, ledEndIndex)
-        .withSlot(Constants.ledID)
+        .withSlot(Constants.ledRainbowID)
         .withFrameRate(Constants.ledFramerate));
   }
 
-
-  
   public CANdle getM_candle() {
     return m_candle;
   }
@@ -246,8 +263,6 @@ public class LEDSubsystem extends SubsystemBase {
     this.ledEndIndex = ledEndIndex;
   }
 
-  
-
   public boolean isVisionUpdate() {
     return visionUpdate;
   }
@@ -272,43 +287,32 @@ public class LEDSubsystem extends SubsystemBase {
     this.distance = distance;
   }
 
-  
   public void updateLED() {
+    if (visionUpdate) { // vision updating
+      // System.currentTimeMillis()
+      pulseColor(kWhite);
+    }
     if (climbing) { // climbing
-      blinkColor(kGreen);
-
+      blinkColor(kMagenta);
     } else if (climbDone) {
       solidColor(kMagenta);
-    } 
-    // else if (visionUpdate) { // vision updating
-    //   pulseColor(kWhite);
-    // } else if (intakeOn) { // intaking
+    } else if (intakeOn) { // intaking
 
-    //   if (fuelFull) {
-    //     solidColor(kBlue);
-    //   } else {
-    //     blinkColor(kYellow);
-    //   }
+      if (fuelFull) {
+        solidColor(kBlue);
+      } else {
+        blinkColor(kYellow);
+      }
 
-    // } 
-    // else if (shooterOn) { // shooting
-    //   blinkColor(kCyan);
+    } else if (shooterOn) { // shooting
+      blinkColor(kCyan);
 
-    // } else if (shooterReady && turretLocked) { // shooter ready
-    //   solidColor(kGreen, Math.abs(distance));
+    } else if (shooterReady && turretLocked) { // shooter ready
+      solidColor(kGreen, Math.abs(distance));
 
-    //   // solidColor(kGreen, Math.min(distance / Constants.optimalShootingDistance,
-    //   // 1.0));
+    } else if (shooterReady || shooterSpinning) { // shooter spinning
+      blinkColor(kGreen);
 
-    // } else if (shooterReady || shooterSpinning) { // shooter spinning
-    //   blinkColor(kGreen);
-
-    // } 
-    else if (!fuelFull && !intakeOn && !shooterOn && !shooterSpinning) {
-      solidColor(kBlack);
-
-    } else { // rainbow = error
-      rainbow();
     }
 
   }
@@ -322,6 +326,5 @@ public class LEDSubsystem extends SubsystemBase {
     // climbing
 
   }
-
 
 }
