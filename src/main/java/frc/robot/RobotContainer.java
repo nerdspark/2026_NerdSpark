@@ -26,9 +26,11 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.commands.IndexerCommand;
 import frc.robot.commands.TurretTest;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
 
@@ -51,6 +53,7 @@ public class RobotContainer {
     // private final SendableChooser<Command> autoChooser;
 
     private final Turret turret;
+    private final Indexer indexer;
 
     private final PIDController gyroController = new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
     private double target = 0.0;
@@ -77,8 +80,10 @@ public class RobotContainer {
             () -> true // Turn off turret when false
         );
 
+        indexer = new Indexer();
+
         configureDefaultCommands();
-        configureSysid();
+        // configureSysid();
 
         configureBindings();
 
@@ -90,10 +95,12 @@ public class RobotContainer {
         // Reset the field-centric heading on left bumper press.
         // joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        joystick.y().whileTrue(new TurretTest(turret, 85));
-        joystick.b().whileTrue(new TurretTest(turret, 70));
-        joystick.a().whileTrue(new TurretTest(turret, 50));
-        joystick.x().whileTrue(new TurretTest(turret, 30));
+        joystick.y().whileTrue(new TurretTest(turret, 85, 0));
+        joystick.b().whileTrue(new TurretTest(turret, 70, 0));
+        joystick.a().whileTrue(new TurretTest(turret, 50, 0));
+        joystick.x().whileTrue(new TurretTest(turret, 30, 0));
+
+        joystick.rightBumper().whileTrue(new IndexerCommand(indexer, () -> 1.0));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = 0.0));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = Math.PI/2));
@@ -123,14 +130,14 @@ public class RobotContainer {
         // drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    private void configureSysid() {
-        // Run SysId routines when holding back/start and X/Y.
-        // Note that each routine should be run exactly once in a single log.
-        // joystick.back().and(joystick.y()).whileTrue(turret.sysIdDynamic(Direction.kForward));
-        // joystick.back().and(joystick.x()).whileTrue(turret.sysIdDynamic(Direction.kReverse));
-        // joystick.start().and(joystick.y()).whileTrue(turret.sysIdQuasistatic(Direction.kForward));
-        // joystick.start().and(joystick.x()).whileTrue(turret.sysIdQuasistatic(Direction.kReverse));
-    }
+    // private void configureSysid() {
+    //     // Run SysId routines when holding back/start and X/Y.
+    //     // Note that each routine should be run exactly once in a single log.
+    //     joystick.back().and(joystick.y()).whileTrue(turret.sysIdDynamic(Direction.kForward));
+    //     joystick.back().and(joystick.x()).whileTrue(turret.sysIdDynamic(Direction.kReverse));
+    //     joystick.start().and(joystick.y()).whileTrue(turret.sysIdQuasistatic(Direction.kForward));
+    //     joystick.start().and(joystick.x()).whileTrue(turret.sysIdQuasistatic(Direction.kReverse));
+    // }
 
     public Command getAutonomousCommand() {
         // return autoChooser.getSelected();

@@ -30,7 +30,7 @@ import edu.wpi.first.math.interpolation.InverseInterpolator;
 public final class Constants {
     public static final double gyroP = 2;
     public static final double gyroI = 0.0;
-    public static final double gyroD = 0.00;
+    public static final double gyroD = 0.0;
 
     public static final String CANbus = "canivore1";
 
@@ -163,7 +163,7 @@ public final class Constants {
         public static final double spinKs = 0.008757;
         public static final double spinKv = 0.1325;
         public static final double spinKa = 0.11887;
-        public static final double spinStatorCurrentLimit = 40.0;
+        public static final double spinStatorCurrentLimit = 50.0;
         public static final double spinVelocity = 50;
         public static final double spinAccel = 400; // Full speed in 1/8th of a second
 
@@ -181,31 +181,34 @@ public final class Constants {
         public static final double hoodKi2 = 0.0;
         public static final double hoodKd1 = 0.0;
         public static final double hoodKd2 = 0.0;
-        public static final double hoodKs1 = 0.4404296875;
-        public static final double hoodKs2 = 0.4404296875;
-        public static final double hoodKv1 = 0.07800000160932541;
-        public static final double hoodKv2 = 0.07800000160932541;
-        public static final double hoodKa1 = 0.009999999776482582;
-        public static final double hoodKa2 = 0.009999999776482582;
-        public static final double hoodStatorCurrentLimit = 40.0;
-        public static final double hoodVelocity = 30;
+        public static final double hoodKs1 = 0;
+        public static final double hoodKs2 = 0;
+        public static final double hoodKv1 = 0;
+        public static final double hoodKv2 = 0;
+        public static final double hoodKa1 = 0;
+        public static final double hoodKa2 = 0;
+        public static final double hoodStatorCurrentLimit = 50.0;
+        public static final double hoodVelocity = 50;
         public static final double hoodAccel = 150;
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;
-        public static final double shootKp1 = 0.11885;
-        public static final double shootKp2 = 0.2145;
-        public static final double shootKi1 = 0.0;
-        public static final double shootKi2 = 0.0;
-        public static final double shootKd1 = 0.0;
-        public static final double shootKd2 = 0.0;
-        public static final double shootKs1 = 0.25766;
-        public static final double shootKs2 = 0.24455;
-        public static final double shootKv1 = 0.13643;
-        public static final double shootKv2 = 0.13767;
-        public static final double shootKa1 = 0.012073;
-        public static final double shootKa2 = 0.011127;
+        public static final double bangbangKp = 99999999;
+        public static final double peakDutyCycle = 1;
+        public static final double peakTorque = 40;
         public static final double shootStatorCurrentLimit = 60.0;
+    }
+
+    public static final class TurretTelemetryConstants {
+        public static final String hoodAngleDegKey = "Hood/AngleDeg";
+        public static final String hoodSetpointRotKey = "Hood/SetpointRot";
+        public static final String hoodClosedLoopOutputKey = "Hood/ClosedLoopOutput";
+        public static final String hoodMotorVoltsKey = "Hood/MotorVolts";
+    }
+
+    public static final class PassThroughConfig {
+        public static final int passThroughId = 32;
+        public static final double passThroughStatorCurrentLimit = 40;
     }
 
     public static final class Field {
@@ -221,27 +224,5 @@ public final class Constants {
         public static final Translation2d blueRightPass = new Translation2d(); // May need to redo
         public static final Translation2d redLeftPass = new Translation2d(); // May need to redo
         public static final Translation2d redRightPass = new Translation2d(); // May need to redo
-    }
-
-    public static final class TurretTelemetryConstants {
-        public static final String hoodAngleDegKey = "Hood/AngleDeg";
-        public static final String hoodSetpointRotKey = "Hood/SetpointRot";
-        public static final String hoodClosedLoopOutputKey = "Hood/ClosedLoopOutput";
-        public static final String hoodMotorVoltsKey = "Hood/MotorVolts";
-    }
-
-    public static final class IntakeConfig {
-        public static final int intakeMotorRoller1ID = 32;
-        public static final int intakeMotorRoller2ID = 33;
-        public static final int intakeMotorDeployID = 34;
-        public static final double Kp = 4.8; // A position error of 2.5 rotations results in 12 V output
-        public static final double Ki = 0; // no output for integrated error
-        public static final double Kd = 0.1; // A velocity error of 1 rps results in 0.1 V output
-        public static final double Ks = 0.25; // Add 0.25 V output to overcome static friction
-        public static final double Kv = 0.12; // A velocity target of 1 rps results in 0.12 V output
-        public static final double Ka = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
-        public static final double velo = 80; // Target cruise velocity of 80 rps
-        public static final double accel = 160; // Target acceleration of 160 rps/s (0.5 seconds)
-        public static final double jerk = 1600; // Target jerk of 1600 rps/s/s (0.1 seconds)
     }
 }

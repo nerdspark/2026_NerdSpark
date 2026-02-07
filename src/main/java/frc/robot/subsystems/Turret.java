@@ -11,16 +11,12 @@ import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
-import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -67,7 +63,7 @@ public class Turret extends SubsystemBase {
     private boolean pathLatched = false;
     private double turretAngle;
 
-    private Debouncer torqueCurrentDebouncer = new Debouncer(0.025, DebounceType.kFalling);
+    private Debouncer torqueCurrentDebouncer = new Debouncer(0.02, DebounceType.kFalling);
     private ShootMode mode = ShootMode.COAST;
     private double veloTest = 0;
 
@@ -155,25 +151,15 @@ public class Turret extends SubsystemBase {
         ;
         TalonFXConfiguration shootConfig1 = new TalonFXConfiguration()
             .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast)
-                // Bang Bang Control
-                .withPeakForwardDutyCycle(1)
+                .withPeakForwardDutyCycle(TurretConfig.peakDutyCycle)
                 .withPeakReverseDutyCycle(0)
             )
             .withSlot0(new Slot0Configs()
-                .withKP(TurretConfig.shootKp1)
-                .withKI(TurretConfig.shootKi1)
-                .withKD(TurretConfig.shootKd1)
-                .withKS(TurretConfig.shootKs1)
-                .withKV(TurretConfig.shootKv1)
-                .withKA(TurretConfig.shootKa1)
+                .withKP(TurretConfig.bangbangKp)
                 .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
             )
-            // Bang Bang Control
-            .withSlot1(new Slot1Configs()
-                .withKP(999999.0)
-            )
             .withTorqueCurrent(new TorqueCurrentConfigs()
-                .withPeakForwardTorqueCurrent(40)
+                .withPeakForwardTorqueCurrent(TurretConfig.peakTorque)
                 .withPeakReverseTorqueCurrent(0)
             )
             .withCurrentLimits(new CurrentLimitsConfigs()
@@ -184,25 +170,15 @@ public class Turret extends SubsystemBase {
         TalonFXConfiguration shootConfig2 = new TalonFXConfiguration()
             .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast)
                 .withInverted(InvertedValue.Clockwise_Positive)
-                // Bang Bang Control
-                .withPeakForwardDutyCycle(1)
+                .withPeakForwardDutyCycle(TurretConfig.peakDutyCycle)
                 .withPeakReverseDutyCycle(0)
             )
             .withSlot0(new Slot0Configs()
-                .withKP(TurretConfig.shootKp2)
-                .withKI(TurretConfig.shootKi2)
-                .withKD(TurretConfig.shootKd2)
-                .withKS(TurretConfig.shootKs2)
-                .withKV(TurretConfig.shootKv2)
-                .withKA(TurretConfig.shootKa2)
+                .withKP(TurretConfig.bangbangKp)
                 .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
             )
-            // Bang Bang Control
-            .withSlot1(new Slot1Configs()
-                .withKP(999999.0)
-            )
             .withTorqueCurrent(new TorqueCurrentConfigs()
-                .withPeakForwardTorqueCurrent(40)
+                .withPeakForwardTorqueCurrent(TurretConfig.peakTorque)
                 .withPeakReverseTorqueCurrent(0)
             )
             .withCurrentLimits(new CurrentLimitsConfigs()
@@ -273,6 +249,7 @@ public class Turret extends SubsystemBase {
      * If hood is not tight then look into chassis velocity based correction for hood
      * 
      * @param distance the distance to the center of the hub
+     * @return the velocity to shoot at
     */
     private double aimOnFly(double distance) {
         double[] map;
@@ -294,6 +271,11 @@ public class Turret extends SubsystemBase {
 
         double velo =  map[1] - deltaMotorRPS;
 
+        if (velo < 3) {
+            mode = ShootMode.COAST;
+            return 0;
+        }
+
         // Actual - Target
         boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - velo) <= 3.2;
         boolean torqueCurrentControl = torqueCurrentDebouncer.calculate(inTolerance);
@@ -302,7 +284,7 @@ public class Turret extends SubsystemBase {
         return velo;
     }
 
-    public void calcBangBang(double velocity) {
+    public void calcBangBang(double velocity, double pose) {
         if (velocity < 3) {
             mode = ShootMode.COAST;
             return;
@@ -318,6 +300,7 @@ public class Turret extends SubsystemBase {
         SmartDashboard.putNumber("Velocity", velocity);
 
         veloTest = velocity;
+        hoodPose.Position = pose;
     }
 
     /**
@@ -423,12 +406,12 @@ public class Turret extends SubsystemBase {
         // }
 
         // spinMotor.setControl(spinPose);
-        // hoodMotor1.setControl(hoodPose);
+        hoodMotor1.setControl(hoodPose);
         
         switch (mode) {
-            case DUTY_CYCLE_BANG_BANG: shootMotor1.setControl(shootDutyBang.withVelocity(velocity).withSlot(1));
+            case DUTY_CYCLE_BANG_BANG: shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
                 break;
-            case TORQUE_CURRENT_BANG_BANG: shootMotor1.setControl(shootTorqueBang.withVelocity(velocity).withSlot(1));
+            case TORQUE_CURRENT_BANG_BANG: shootMotor1.setControl(shootTorqueBang.withVelocity(velocity));
                 break;
             case COAST: shootMotor1.set(0);
                 break;
