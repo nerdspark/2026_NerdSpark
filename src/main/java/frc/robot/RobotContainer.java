@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -51,6 +52,8 @@ public class RobotContainer {
     private final Intake intake = new Intake();
       
     public RobotContainer() {
+        NamedCommands.registerCommand("intake deploy", new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos),intake).andThen(new InstantCommand(() -> intake.setRollerPower(1.0),intake)));
+        NamedCommands.registerCommand("intake home", new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos),intake).andThen(new InstantCommand(() -> intake.setRollerPower(0.0),intake)));
         // poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
       
         // autoChooser = AutoBuilder.buildAutoChooser("Tests");
@@ -93,11 +96,11 @@ public class RobotContainer {
         // joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
         joystick.a().onTrue(
             new InstantCommand(
-                () -> intake.setDeployPosition(() -> IntakeConstants.deployPos), 
+                () -> intake.setDeployPosition(() -> IntakeConstants.deployPos),    
                 intake
             ).andThen(
                 new InstantCommand(
-                    () -> intake.setRollerPower(MaxSpeed),
+                    () -> intake.setRollerPower(0.0),
                     intake
                 )
             )
