@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.commands.BlinkRed;
 // import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveToPose;
 import frc.robot.commands.Red;
@@ -92,19 +93,21 @@ public class RobotContainer {
 
         // Reset the field-centric heading on left bumper press.
         // joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-        joystick.a().onTrue( new Red(ledSubsystem)
-            // new UpdateLED(ledSubsystem,
-            //     () -> joystick.a().getAsBoolean(),
-            //     () -> joystick.b().getAsBoolean(),
-            //     () -> joystick.x().getAsBoolean(),
-            //     () -> joystick.y().getAsBoolean(),
-            //     () -> joystick.povUp().getAsBoolean(),
-            //     () -> joystick.povDown().getAsBoolean(),
-            //     () -> joystick.povLeft().getAsBoolean(),
-            //     () -> joystick.povRight().getAsBoolean(),
-            //     () -> joystick.leftBumper().getAsBoolean(),
-            //     () -> joystick.getLeftY())
-        );
+        joystick.a().whileTrue(new Red(ledSubsystem, () -> joystick.a().getAsBoolean()));
+        joystick.b().whileTrue(new BlinkRed(ledSubsystem, () -> joystick.b().getAsBoolean()));
+        // (
+        //     new UpdateLED(ledSubsystem,
+        //         () -> joystick.a().getAsBoolean(),
+        //         () -> joystick.b().getAsBoolean(),
+        //         () -> joystick.x().getAsBoolean(),
+        //         () -> joystick.y().getAsBoolean(),
+        //         () -> joystick.povUp().getAsBoolean(),
+        //         () -> joystick.povDown().getAsBoolean(),
+        //         () -> joystick.povLeft().getAsBoolean(),
+        //         () -> joystick.povRight().getAsBoolean(),
+        //         () -> joystick.leftBumper().getAsBoolean(),
+        //         () -> joystick.getLeftY())
+        // );
 
         // drivetrain.registerTelemetry(logger::telemeterize);
     }

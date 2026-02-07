@@ -20,16 +20,16 @@ import frc.robot.subsystems.LEDSubsystem;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class UpdateLED extends Command {
   /** Creates a new UpdateLED. */
-  private boolean fuelFull = false;
-  private boolean intakeOn = false;
-  private boolean shooterSpinning = false;
-  private boolean shooterReady = false;
-  private boolean shooterOn = false;
+  private boolean fuelFull  ;
+  private boolean intakeOn  ;
+  private boolean shooterSpinning  ;
+  private boolean shooterReady  ;
+  private boolean shooterOn ;
   // private boolean lidClosed = false;
-  private boolean climbing = false;
-  private boolean climbDone = false;
-  private boolean visionUpdate = false;
-  private boolean turretLocked = false;
+  private boolean climbing ;
+  private boolean climbDone;
+  private boolean visionUpdate;
+  private boolean turretLocked;
   private double distance;
 
   private static final RGBWColor kGreen = new RGBWColor(0, 255, 0, 0);
@@ -76,6 +76,23 @@ public class UpdateLED extends Command {
   @Override
   public void initialize() {
 
+    // fuelFull = leftSupplier.get();
+    // intakeOn = bSupplier.get();
+    // shooterSpinning = xSupplier.get();
+    // shooterReady = ySupplier.get();
+    // shooterOn = upSupplier.get();
+    // // private boolean lidClosed = false;
+    // climbing = downSupplier.get();
+    // climbDone = rightSupplier.get();
+    // visionUpdate = aSupplier.get();
+    // turretLocked = leftBSupplier.get();
+    // distance = leftStickSupplier.get();
+  }
+
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {
+
     fuelFull = leftSupplier.get();
     intakeOn = bSupplier.get();
     shooterSpinning = xSupplier.get();
@@ -87,54 +104,64 @@ public class UpdateLED extends Command {
     visionUpdate = aSupplier.get();
     turretLocked = leftBSupplier.get();
     distance = leftStickSupplier.get();
-  }
 
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {
+    led.setFuelFull(fuelFull);
+    led.setClimbDone(climbDone);
+    led.setClimbing(climbing);
+    led.setIntakeOn(intakeOn);
+    led.setShooterOn(shooterOn);
+    led.setShooterReady(shooterReady);
+    led.setShooterSpinning(shooterSpinning);
+    led.setTurretLocked(turretLocked);
+    led.setDistance(distance);
+    led.setVisionUpdate(visionUpdate);
+    
+    
+    // if (climbing) { // climbing
+    //   led.blinkColor(kMagenta);
 
-    if (climbing) { // climbing
-      led.blinkColor(kMagenta);
+    // } else if (climbDone) {
+    //   led.solidColor(kMagenta);
+    // } else if (visionUpdate) { // vision updating
+    //   led.pulseColor(kWhite);
+    // } else if (intakeOn) { // intaking
 
-    } else if (climbDone) {
-      led.solidColor(kMagenta);
-    } else if (visionUpdate) { // vision updating
-      led.pulseColor(kWhite);
-    } else if (intakeOn) { // intaking
+    //   if (fuelFull) {
+    //     led.solidColor(kBlue);
+    //   } else {
+    //     led.blinkColor(kYellow);
+    //   }
 
-      if (fuelFull) {
-        led.solidColor(kBlue);
-      } else {
-        led.blinkColor(kYellow);
-      }
+    // } else if (shooterOn) { // shooting
+    //   led.blinkColor(kCyan);
 
-    } else if (shooterOn) { // shooting
-      led.blinkColor(kCyan);
+    // } else if (shooterReady && turretLocked) { // shooter ready
+    //   led.solidColor(kGreen, Math.abs(distance));
 
-    } else if (shooterReady && turretLocked) { // shooter ready
-      led.solidColor(kGreen, Math.abs(distance));
+    //   // led.solidColor(kGreen, Math.min(distance / Constants.optimalShootingDistance, 1.0));
 
-      // led.solidColor(kGreen, Math.min(distance / Constants.optimalShootingDistance, 1.0));
+    // } else if (shooterReady || shooterSpinning) { // shooter spinning
+    //   led.blinkColor(kGreen);
 
-    } else if (shooterReady || shooterSpinning) { // shooter spinning
-      led.blinkColor(kGreen);
+    // } else if (!fuelFull && !intakeOn && !shooterOn && !shooterSpinning) {
+    //   led.solidColor(kRed);
 
-    } else if (!fuelFull && !intakeOn && !shooterOn && !shooterSpinning) {
-      led.solidColor(kRed);
-
-    } else { // rainbow = error
-      led.rainbow();
-    }
+    // } else { // rainbow = error
+    //   led.rainbow();
+    // }
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
+    led.solidColor(kBlack);
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    return !aSupplier.get();
+
+    // return false;
   }
 }

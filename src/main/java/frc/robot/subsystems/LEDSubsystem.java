@@ -9,9 +9,11 @@ import java.nio.channels.ShutdownChannelGroupException;
 import com.ctre.phoenix6.configs.CANdleConfiguration;
 import com.ctre.phoenix6.controls.ColorFlowAnimation;
 import com.ctre.phoenix6.controls.ControlRequest;
+import com.ctre.phoenix6.controls.EmptyAnimation;
 import com.ctre.phoenix6.controls.RainbowAnimation;
 import com.ctre.phoenix6.controls.SolidColor;
 import com.ctre.phoenix6.controls.StrobeAnimation;
+import com.ctre.phoenix6.controls.TwinkleAnimation;
 import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.RGBWColor;
 import com.ctre.phoenix6.signals.StatusLedWhenActiveValue;
@@ -46,6 +48,10 @@ public class LEDSubsystem extends SubsystemBase {
   // private boolean lidClosed = false;
   private boolean climbing = false;
   private boolean climbDone = false;
+  private boolean visionUpdate = false;
+  private boolean turretLocked = false;
+  private double distance;
+
 
   private static final RGBWColor kGreen = new RGBWColor(0, 255, 0, 0);
   private static final RGBWColor kYellow = new RGBWColor(255, 255, 0, 0);
@@ -58,7 +64,6 @@ public class LEDSubsystem extends SubsystemBase {
 
   private int ledStartIndex = 8;
   private int ledEndIndex = 18;
-
 
   // private SmartDashboard smartDashboard = new SmartDashboard();
 
@@ -110,24 +115,31 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public void solidColor(RGBWColor color) {
+    m_candle.setControl(new EmptyAnimation(Constants.ledID));
     m_candle.setControl(new SolidColor(ledStartIndex, ledEndIndex).withColor(color));
   }
 
   public void solidColor(RGBWColor color, double brightness) {
+    m_candle.setControl(new EmptyAnimation(Constants.ledID));
     m_candle.setControl(new SolidColor(ledStartIndex, ledEndIndex)
         .withColor(color.scaleBrightness(brightness)));
   }
 
   public void blinkColor(RGBWColor color) {
+    // m_candle.setControl(new EmptyAnimation(Constants.ledID));
+    // m_candle.se    
     m_candle.setControl(
+      
         new StrobeAnimation(ledStartIndex, ledEndIndex)
             .withSlot(Constants.ledID)
             .withColor(color)
             .withFrameRate(Constants.ledFramerate));
+            // .withUpdateFreqHz(60));
   }
 
   public void pulseColor(RGBWColor color) {
     ControlRequest previousControl = m_candle.getAppliedControl();
+    // m_candle.setControl(new EmptyAnimation(Constants.ledID));
     m_candle.setControl(
         new ColorFlowAnimation(ledStartIndex, ledEndIndex)
             .withSlot(Constants.ledID)
@@ -136,71 +148,180 @@ public class LEDSubsystem extends SubsystemBase {
     m_candle.setControl(previousControl);
   }
 
+  public void empty() {
+    m_candle.setControl(new EmptyAnimation(Constants.ledID));
+  }
+
   public void rainbow() {
+
+    // m_candle.setControl(new EmptyAnimation(Constants.ledID));
     m_candle.setControl(new RainbowAnimation(ledStartIndex, ledEndIndex)
         .withSlot(Constants.ledID)
         .withFrameRate(Constants.ledFramerate));
   }
 
-  // public void updateLED() {
-  // if (climbing) { // climbing
-  // m_candle.setControl(
-  // new StrobeAnimation(0, 7)
-  // .withSlot(Constants.ledID)
-  // .withColor(kMagenta)
-  // .withFrameRate(Constants.ledFramerate));
 
-  // } else if (climbDone) {
-  // m_candle.setControl(new SolidColor(0, 7).withColor(kMagenta));
+  
+  public CANdle getM_candle() {
+    return m_candle;
+  }
 
-  // } else if (intakeOn) { // intaking
+  public XboxController getJoystick() {
+    return joystick;
+  }
 
-  // if (fuelFull) {
-  // m_candle.setControl(new SolidColor(0, 7).withColor(kBlue));
+  public void setJoystick(XboxController joystick) {
+    this.joystick = joystick;
+  }
 
-  // } else {
-  // m_candle.setControl(
-  // new StrobeAnimation(0, 7)
-  // .withSlot(Constants.ledID)
-  // .withColor(kYellow)
-  // .withFrameRate(Constants.ledFramerate));
-  // }
+  public boolean isFuelFull() {
+    return fuelFull;
+  }
 
-  // } else if (shooterOn) { // shooting
-  // m_candle.setControl(
-  // new StrobeAnimation(0, 7)
-  // .withSlot(Constants.ledID)
-  // .withColor(kCyan)
-  // .withFrameRate(Constants.ledFramerate));
+  public void setFuelFull(boolean fuelFull) {
+    this.fuelFull = fuelFull;
+  }
 
-  // } else if (shooterReady) { // shooter ready
-  // m_candle.setControl(new SolidColor(0, 7).withColor(kGreen));
+  public boolean isIntakeOn() {
+    return intakeOn;
+  }
 
-  // } else if (shooterSpinning) { // shooter spinning
-  // m_candle.setControl(
-  // new StrobeAnimation(0, 7)
-  // .withSlot(Constants.ledID)
-  // .withColor(kGreen)
-  // .withFrameRate(Constants.ledFramerate));
+  public void setIntakeOn(boolean intakeOn) {
+    this.intakeOn = intakeOn;
+  }
 
-  // } else if (!fuelFull && !intakeOn && !shooterOn && !shooterSpinning) {
-  // m_candle.setControl(new SolidColor(0, 7).withColor(kRed));
+  public boolean isShooterSpinning() {
+    return shooterSpinning;
+  }
 
-  // } else {
-  // m_candle.setControl(new RainbowAnimation(0, 7)
-  // .withSlot(Constants.ledID)
-  // .withFrameRate(Constants.ledFramerate));
-  // }
+  public void setShooterSpinning(boolean shooterSpinning) {
+    this.shooterSpinning = shooterSpinning;
+  }
 
-  // }
+  public boolean isShooterReady() {
+    return shooterReady;
+  }
+
+  public void setShooterReady(boolean shooterReady) {
+    this.shooterReady = shooterReady;
+  }
+
+  public boolean isShooterOn() {
+    return shooterOn;
+  }
+
+  public void setShooterOn(boolean shooterOn) {
+    this.shooterOn = shooterOn;
+  }
+
+  public boolean isClimbing() {
+    return climbing;
+  }
+
+  public void setClimbing(boolean climbing) {
+    this.climbing = climbing;
+  }
+
+  public boolean isClimbDone() {
+    return climbDone;
+  }
+
+  public void setClimbDone(boolean climbDone) {
+    this.climbDone = climbDone;
+  }
+
+  public int getLedStartIndex() {
+    return ledStartIndex;
+  }
+
+  public void setLedStartIndex(int ledStartIndex) {
+    this.ledStartIndex = ledStartIndex;
+  }
+
+  public int getLedEndIndex() {
+    return ledEndIndex;
+  }
+
+  public void setLedEndIndex(int ledEndIndex) {
+    this.ledEndIndex = ledEndIndex;
+  }
+
+  
+
+  public boolean isVisionUpdate() {
+    return visionUpdate;
+  }
+
+  public void setVisionUpdate(boolean visionUpdate) {
+    this.visionUpdate = visionUpdate;
+  }
+
+  public boolean isTurretLocked() {
+    return turretLocked;
+  }
+
+  public void setTurretLocked(boolean turretLocked) {
+    this.turretLocked = turretLocked;
+  }
+
+  public double getDistance() {
+    return distance;
+  }
+
+  public void setDistance(double distance) {
+    this.distance = distance;
+  }
+
+  
+  public void updateLED() {
+    if (climbing) { // climbing
+      blinkColor(kGreen);
+
+    } else if (climbDone) {
+      solidColor(kMagenta);
+    } 
+    // else if (visionUpdate) { // vision updating
+    //   pulseColor(kWhite);
+    // } else if (intakeOn) { // intaking
+
+    //   if (fuelFull) {
+    //     solidColor(kBlue);
+    //   } else {
+    //     blinkColor(kYellow);
+    //   }
+
+    // } 
+    // else if (shooterOn) { // shooting
+    //   blinkColor(kCyan);
+
+    // } else if (shooterReady && turretLocked) { // shooter ready
+    //   solidColor(kGreen, Math.abs(distance));
+
+    //   // solidColor(kGreen, Math.min(distance / Constants.optimalShootingDistance,
+    //   // 1.0));
+
+    // } else if (shooterReady || shooterSpinning) { // shooter spinning
+    //   blinkColor(kGreen);
+
+    // } 
+    else if (!fuelFull && !intakeOn && !shooterOn && !shooterSpinning) {
+      solidColor(kBlack);
+
+    } else { // rainbow = error
+      rainbow();
+    }
+
+  }
 
   @Override
   public void periodic() {
 
     // This method will be called once per scheduler run
-    // updateLED();
+    updateLED();
 
     // climbing
 
   }
+
+
 }
