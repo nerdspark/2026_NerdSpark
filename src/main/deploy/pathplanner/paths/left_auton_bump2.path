@@ -157,7 +157,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "intake_retract",
+      "name": "",
       "waypointRelativePos": 0,
       "endWaypointRelativePos": null,
       "command": null
@@ -169,7 +169,7 @@
       "command": null
     },
     {
-      "name": "intake_run",
+      "name": "",
       "waypointRelativePos": 4.86027397260275,
       "endWaypointRelativePos": null,
       "command": null

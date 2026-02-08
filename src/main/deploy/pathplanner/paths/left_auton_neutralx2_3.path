@@ -129,13 +129,23 @@
       "name": "intake_deploy",
       "waypointRelativePos": 0.7753424657534239,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_deploy"
+        }
+      }
     },
     {
-      "name": "intake_run",
-      "waypointRelativePos": 0.7753424657534258,
+      "name": "intake_home",
+      "waypointRelativePos": 1.9972602739726022,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_home"
+        }
+      }
     }
   ],
   "globalConstraints": {

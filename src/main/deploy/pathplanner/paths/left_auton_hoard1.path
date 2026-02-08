@@ -135,13 +135,13 @@
       "command": null
     },
     {
-      "name": "intake_run",
+      "name": "",
       "waypointRelativePos": 0.62482294617564,
       "endWaypointRelativePos": null,
       "command": null
     },
     {
-      "name": "intake_retract",
+      "name": "",
       "waypointRelativePos": 3.121901558073653,
       "endWaypointRelativePos": null,
       "command": null
