@@ -27,6 +27,12 @@
           "data": {
             "pathName": "left_auton_noclimb_4"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": null
+          }
         }
       ]
     }
