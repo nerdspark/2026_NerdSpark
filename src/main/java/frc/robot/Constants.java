@@ -133,7 +133,7 @@ public static class Vision {
         public static final int rightIntakeMotorRollerId = 4;
         public static final int deployIntakeMotorId = 61;
 
-        public static final int intakeCurrentLimit = 70;
+        public static final int intakeCurrentLimit = 40;
 
 
         public static final int motionMagicAcceleration =150;

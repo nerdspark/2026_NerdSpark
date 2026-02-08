@@ -24,7 +24,7 @@ public class IntakeCommand extends Command{
 
     public void execute() {
         intake.setDeployPosition(() -> IntakeConstants.deployPos);
-        intake.setRollerPower(1.0);
+        intake.setRollerPower(0.5);
     }
 
     public void end(boolean interrupted) {
