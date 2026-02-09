@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -18,12 +19,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-// import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.Constants.IntakeConstants;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveToPose;
+import frc.robot.commands.IntakeCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
 
 public class RobotContainer {
@@ -32,7 +37,7 @@ public class RobotContainer {
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
@@ -43,8 +48,12 @@ public class RobotContainer {
     public final PoseEstimatorSubsystem poseEstimatorSubsystem;
 
     private final SendableChooser<Command> autoChooser;
+
+    private final Intake intake = new Intake();
       
     public RobotContainer() {
+        NamedCommands.registerCommand("intake_deploy", new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos),intake).andThen(new InstantCommand(() -> intake.setRollerPower(1.0),intake)));
+        NamedCommands.registerCommand("intake_home", new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos),intake).andThen(new InstantCommand(() -> intake.setRollerPower(0.0),intake)));
         poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
       
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
@@ -85,7 +94,31 @@ public class RobotContainer {
 
         // Reset the field-centric heading on left bumper press.
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        
+        // Intake bindings
+        joystick.a().onTrue(
+            new InstantCommand(
+                () -> intake.setDeployPosition(() -> IntakeConstants.deployPos),    
+                intake
+            ).andThen(
+                new InstantCommand(
+                    () -> intake.setRollerPower(0.0),
+                    intake
+                )
+            )
+        );
 
+        joystick.x().onTrue(
+            new InstantCommand(
+                () -> intake.setDeployPosition(() ->IntakeConstants.homePos), 
+                intake
+                ).andThen(
+                    new InstantCommand(
+                        () -> intake.setRollerPower(0.0),
+                        intake
+                    )
+                )
+        );
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
@@ -96,7 +129,7 @@ public class RobotContainer {
         //     // Reset our field centric heading to match the robot
         //     // facing away from our alliance station wall (0 deg).
         //     drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
-        //     // Then slowly drive forward (away from us) for 5 seconds.
+        //     // Then slowly rive forward (away from us) for 5 seconds.
         //     drivetrain.applyRequest(() ->
         //         drive.withVelocityX(0.5)
         //             .withVelocityY(0)

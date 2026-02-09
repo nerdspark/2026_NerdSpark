@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ctre.phoenix6.CANBus;
+
 import dev.doglog.DogLog;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -125,6 +127,33 @@ public static class Vision {
 
     public static final String pigeonCanBus = "canivore1";
 
+    public static class IntakeConstants { 
+        public static final CANBus CANBus = new CANBus("rio");
+
+        public static final int leftIntakeMotorRollerId = 5;
+        public static final int rightIntakeMotorRollerId = 4;
+        public static final int deployIntakeMotorId = 61;
+
+        public static final int intakeCurrentLimit = 40;
+
+
+        public static final int motionMagicAcceleration =150;
+        public static final int motionMagicCruiseVelocity=50;
+        public static final int motionMagicJerk=0;
+        //Constants after tuning in TunerX, works great
+        public static final double kP = 1.5;
+        public static final int kI = 0;
+        public static final double kD = 0.0010000000474974513;
+        public static final int kG = 0;
+        public static final int kS = 0;
+        public static final int kA = 0;
+        public static final int kV = 0;
+
+        public static final double deployPos = 2;
+        public static final double homePos = 14;
+
+
+    }
 
 //         for (int i = 0; i < FieldConstants.Reef.branchPositions.size(); i++) {
 //           for (FieldConstants.ReefHeight height : FieldConstants.ReefHeight.values()) {

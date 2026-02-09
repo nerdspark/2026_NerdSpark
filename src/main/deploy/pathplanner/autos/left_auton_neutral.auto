@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "right_auton_neutral1"
+            "pathName": "left_auton_neutral1"
           }
         },
         {
@@ -17,27 +17,15 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "shooter_shoot"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "left_auton_neutral3"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "climb_auton"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "left_autons",
+  "folder": "left_autos",
   "choreoAuto": false
 }
