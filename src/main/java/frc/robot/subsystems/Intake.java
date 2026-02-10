@@ -18,8 +18,8 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 
 public class Intake extends SubsystemBase {
-    private TalonFX leftIntakeRollerMotor;
-    private TalonFX rightIntakeRollerMotor;
+    private TalonFX roller1;
+    private TalonFX roller2;
     private TalonFX intakeMotorDeploy;
 
      private final TalonFXSimState intakeSim;
@@ -33,8 +33,8 @@ public class Intake extends SubsystemBase {
     public Intake() {
         intakeMotorDeploy = new TalonFX(IntakeConstants.deployIntakeMotorId,  IntakeConstants.CANBus);
         intakeSim = intakeMotorDeploy.getSimState();
-        leftIntakeRollerMotor = new TalonFX(IntakeConstants.leftIntakeMotorRollerId, IntakeConstants.CANBus);
-        rightIntakeRollerMotor = new TalonFX(IntakeConstants.rightIntakeMotorRollerId,  IntakeConstants.CANBus);
+        roller1 = new TalonFX(IntakeConstants.roller1id, IntakeConstants.CANBus);
+        roller2 = new TalonFX(IntakeConstants.roller2id,  IntakeConstants.CANBus);
 
         intakeDeployMotorConfig.CurrentLimits = new CurrentLimitsConfigs()
         .withStatorCurrentLimit(IntakeConstants.intakeCurrentLimit)
@@ -74,8 +74,8 @@ public class Intake extends SubsystemBase {
     }
     
     public void setRollerPower(double power) {
-        leftIntakeRollerMotor.set(-power);
-        rightIntakeRollerMotor.set(power);
+        roller1.set(-power);
+        roller2.set(power);
     }
     public void simulationPeriodic() {
     // double dt = 0.02;
@@ -87,8 +87,8 @@ public class Intake extends SubsystemBase {
   }
     public void stopIntake() {
             intakeMotorDeploy.stopMotor();
-            leftIntakeRollerMotor.stopMotor();
-            rightIntakeRollerMotor.stopMotor();
+            roller1.stopMotor();
+            roller2.stopMotor();
 
 
     }
@@ -96,7 +96,7 @@ public class Intake extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putNumber("Intake Position", intakeMotorDeploy.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Intake Current",intakeMotorDeploy.getStatorCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Intake Roller Current", leftIntakeRollerMotor.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Intake Roller Current", roller1.getStatorCurrent().getValueAsDouble());
     }
 
 }
