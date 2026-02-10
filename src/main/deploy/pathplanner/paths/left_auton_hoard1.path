@@ -65,11 +65,11 @@
     {
       "anchor": {
         "x": 2.274,
-        "y": 4.594
+        "y": 5.0
       },
       "prevControl": {
-        "x": 2.2498562555456965,
-        "y": 5.752899733806566
+        "x": 2.2743034605146404,
+        "y": 5.906140195208518
       },
       "nextControl": null,
       "isLocked": false,
@@ -95,7 +95,7 @@
     },
     {
       "waypointRelativePos": 3.1299734748010577,
-      "rotationDegrees": 180.0
+      "rotationDegrees": -45.0
     }
   ],
   "constraintZones": [
@@ -114,10 +114,10 @@
     },
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 3.1616438356164394,
-      "maxWaypointRelativePos": 4.0,
+      "minWaypointRelativePos": 3.3355263157894766,
+      "maxWaypointRelativePos": 3.4671052631578934,
       "constraints": {
-        "maxVelocity": 2.0,
+        "maxVelocity": 1.5,
         "maxAcceleration": 3.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -157,7 +157,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": -45.0
   },
   "reversed": false,
   "folder": "left_auton_hoard",

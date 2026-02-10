@@ -4,24 +4,24 @@
     {
       "anchor": {
         "x": 2.274,
-        "y": 4.594
+        "y": 5.0
       },
       "prevControl": null,
       "nextControl": {
         "x": 2.10359375,
-        "y": 4.126354166666667
+        "y": 4.532354166666667
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.6,
-        "y": 4.185
+        "x": 1.477559893522626,
+        "y": 4.216078083407275
       },
       "prevControl": {
-        "x": 3.04175,
-        "y": 4.185081845238096
+        "x": 2.919309893522626,
+        "y": 4.2161599286453715
       },
       "nextControl": null,
       "isLocked": false,
@@ -67,7 +67,7 @@
   "folder": "left_auton_hoard",
   "idealStartingState": {
     "velocity": 0.0,
-    "rotation": 180.0
+    "rotation": -45.0
   },
   "useDefaultConstraints": true
 }

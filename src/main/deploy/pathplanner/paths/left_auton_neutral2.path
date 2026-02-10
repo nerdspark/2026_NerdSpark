@@ -84,7 +84,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "shooter_spin",
+      "name": "intake_home",
       "waypointRelativePos": 0.25,
       "endWaypointRelativePos": null,
       "command": null
