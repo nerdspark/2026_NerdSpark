@@ -32,6 +32,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
 import frc.robot.RobotContainer;
 
+import java.lang.Math;
+
 public class LEDSubsystem extends SubsystemBase {
   private final CANdle m_candle = new CANdle(Constants.ledID, "rio");
   private XboxController joystick;
@@ -48,8 +50,9 @@ public class LEDSubsystem extends SubsystemBase {
   // private boolean lidClosed = false;
   private boolean climbing = false;
   private boolean climbDone = false;
-  private boolean visionUpdate = false;
+  private boolean visionUpdate;
   private boolean turretLocked = false;
+  private boolean startup = false;
   private double distance;
 
   private static final RGBWColor kGreen = new RGBWColor(0, 255, 0, 0);
@@ -142,7 +145,7 @@ public class LEDSubsystem extends SubsystemBase {
     // .withUpdateFreqHz(60));
   }
 
-  public void pulseColor(RGBWColor color) {
+  public void flowColor(RGBWColor color) {
     ControlRequest previousControl = m_candle.getAppliedControl();
     // m_candle.setControl(new EmptyAnimation(Constants.ledID));
     // if ((int) ( / (time * 1000)) % 2 == 0) {
@@ -172,8 +175,7 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public void rainbow() {
-
-    // m_candle.setControl(new EmptyAnimation(Constants.ledID));
+    empty();
     m_candle.setControl(new RainbowAnimation(ledStartIndex, ledEndIndex)
         .withSlot(Constants.ledRainbowID)
         .withFrameRate(Constants.ledFramerate));
@@ -287,15 +289,15 @@ public class LEDSubsystem extends SubsystemBase {
     this.distance = distance;
   }
 
-  public void updateLED() {
-    if (visionUpdate) { // vision updating
-      // System.currentTimeMillis()
-      pulseColor(kWhite);
-    }
+  private double distanceCurve(double distance) { 
+    return Math.pow(Math.abs(distance), 2);
+  }
+
+  public void updateLED() {   
     if (climbing) { // climbing
       blinkColor(kMagenta);
     } else if (climbDone) {
-      solidColor(kMagenta);
+      rainbow();
     } else if (intakeOn) { // intaking
 
       if (fuelFull) {
@@ -308,13 +310,17 @@ public class LEDSubsystem extends SubsystemBase {
       blinkColor(kCyan);
 
     } else if (shooterReady && turretLocked) { // shooter ready
-      solidColor(kGreen, Math.abs(distance));
+      solidColor(kGreen, distanceCurve(distance));
 
     } else if (shooterReady || shooterSpinning) { // shooter spinning
       blinkColor(kGreen);
 
+    } else if (startup) {
+      rainbow();
+    }    if (visionUpdate) { // vision updating
+      // System.currentTimeMillis()
+      flowColor(kWhite);
     }
-
   }
 
   @Override
