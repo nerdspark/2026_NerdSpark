@@ -5,10 +5,12 @@
 package frc.robot;
 
 import com.ctre.phoenix6.HootAutoReplay;
+import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.Turret;
 
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
@@ -31,7 +33,19 @@ public class Robot extends TimedRobot {
     }
 
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        if (Turret.delaySamples > 0) {
+            double avgDelay = Turret.delaySum / Turret.delaySamples;
+
+            SignalLogger.writeDouble("Turret Avg Phase Delay", avgDelay);
+            SignalLogger.writeDouble("Turret Max Phase Delay", Turret.maxDelay);
+
+            System.out.println("=== Match Turret Delay Summary ===");
+            System.out.println("Avg Delay: " + avgDelay + " sec");
+            System.out.println("Max Delay: " + Turret.maxDelay + " sec");
+        }
+    }
+
 
     @Override
     public void disabledPeriodic() {}

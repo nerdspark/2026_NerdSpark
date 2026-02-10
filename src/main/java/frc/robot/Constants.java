@@ -111,7 +111,12 @@ public final class Constants {
         public static final double shooterWheelRadius = Units.inchesToMeters(4);
 
         public static final Translation2d robotToTurret = new Translation2d(0,0); // TODO
-        public static final double delay = 0.002; // Phase delay in seconds TODO
+        
+        public static final double delay = 0.0011; // in seconds
+        public static final double maxDelay = 0.25; // in seconds TODO
+        // Fast to rise, slow to fall (IMPORTANT)
+        public static final double riseTime = 0.05; // seconds TODO
+        public static final double fallTime = 0.20; // seconds TODO
         
         public static InterpolatingTreeMap<Double, ShooterParams> climbMap =  new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),

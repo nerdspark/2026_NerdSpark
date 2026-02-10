@@ -26,6 +26,7 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -65,6 +66,12 @@ public class Turret extends SubsystemBase {
     private boolean pathLatched = false;
     private double turretAngle;
 
+    private double filteredTurretDelaySec = TurretConstants.delay;
+    public static double delaySum = 0.0;
+    public static int delaySamples = 0;
+    public static double maxDelay = 0.0;
+
+
     private Debouncer torqueCurrentDebouncer = new Debouncer(0.02, DebounceType.kFalling);
     private ShootMode mode = ShootMode.COAST;
     private double veloTest = 0;
@@ -78,14 +85,14 @@ public class Turret extends SubsystemBase {
 
         canivore = new CANBus(Constants.CANbus);
         
-        // spinMotor = new TalonFX(TurretConfig.spinMotorId, canivore);
+        spinMotor = new TalonFX(TurretConfig.spinMotorId, canivore);
         hoodMotor1 = new TalonFX(TurretConfig.hoodMotor1Id, canivore);
         hoodMotor2 = new TalonFX(TurretConfig.hoodMotor2Id, canivore);
         shootMotor1 = new TalonFX(TurretConfig.shootMotor1Id, canivore);
         shootMotor2 = new TalonFX(TurretConfig.shootMotor2Id, canivore);
 
-        // spinCancoder1 = new CANcoder(TurretConfig.spinCancoder1Id, canivore);
-        // spinCancoder2 = new CANcoder(TurretConfig.spinCancoder2Id, canivore);
+        spinCancoder1 = new CANcoder(TurretConfig.spinCancoder1Id, canivore);
+        spinCancoder2 = new CANcoder(TurretConfig.spinCancoder2Id, canivore);
 
         TalonFXConfiguration spinConfig = new TalonFXConfiguration()
             .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake)
@@ -203,14 +210,14 @@ public class Turret extends SubsystemBase {
             )
         ;
 
-        // spinMotor.getConfigurator().apply(spinConfig);
+        spinMotor.getConfigurator().apply(spinConfig);
         hoodMotor1.getConfigurator().apply(hoodConfig1);
         hoodMotor2.getConfigurator().apply(hoodConfig2);
         shootMotor1.getConfigurator().apply(shootConfig1);
         shootMotor2.getConfigurator().apply(shootConfig2);
 
-        // spinCancoder1.getConfigurator().apply(spinCancoder1Config);
-        // spinCancoder2.getConfigurator().apply(spinCancoder2Config);
+        spinCancoder1.getConfigurator().apply(spinCancoder1Config);
+        spinCancoder2.getConfigurator().apply(spinCancoder2Config);
 
         hoodMotor2.setControl(new Follower(TurretConfig.hoodMotor1Id, MotorAlignmentValue.Opposed));
         shootMotor2.setControl(new Follower(TurretConfig.shootMotor1Id, MotorAlignmentValue.Opposed));
@@ -234,6 +241,42 @@ public class Turret extends SubsystemBase {
     // );
 
     // private SysIdRoutine sysIdRoutineToApply = spin;
+
+   /**
+     * Estimates and filters turret phase delay in seconds. Updates the filtered phase delay in seconds
+     *
+     * @param desiredAngleRad   Desired turret angle (radians, normalized)
+     * @param currentAngleRad   Current turret angle (radians, normalized)
+     * @param motorVelRadPerSec Measured turret motor angular velocity (rad/s, signed)
+     * @param dtSec             Loop period in seconds
+     */
+    private void estimateTurretPhaseDelaySec(double desiredAngleRad, double currentAngleRad, double motorVelRadPerSec, 
+        double dtSec
+    ) {
+        /* ---------------- Raw delay estimate ---------------- */
+        // Shortest angular error
+        double error = MathUtil.angleModulus(desiredAngleRad - currentAngleRad);
+
+        // Prevent divide-by-zero
+        double effectiveVel = Math.max(Math.abs(motorVelRadPerSec), 0.01);
+
+        double rawDelaySec = Math.abs(error) / effectiveVel;
+
+        rawDelaySec = MathUtil.clamp(rawDelaySec, 0.0, TurretConstants.maxDelay);
+
+        /* ---------------- Asymmetric filter ---------------- */
+        double alpha;
+        if (rawDelaySec > filteredTurretDelaySec) {
+            alpha = dtSec / TurretConstants.riseTime;
+        } else {
+            alpha = dtSec / TurretConstants.fallTime;
+        }
+
+        alpha = MathUtil.clamp(alpha, 0.0, 1.0);
+
+        filteredTurretDelaySec += alpha * (rawDelaySec - filteredTurretDelaySec);
+    }
+
     
     /** 
      * Aims the hood of the turret and spins wheels based on shooter map and chassis speeds
@@ -333,6 +376,14 @@ public class Turret extends SubsystemBase {
 
         neededAngle = normalizeRadians(neededAngle);
 
+        // Update phase delay here, 20ms loop
+        estimateTurretPhaseDelaySec(
+            neededAngle, 
+            turretAngle, 
+            spinMotor.getVelocity().getValueAsDouble() * TWO_PI, 
+            0.02
+        );
+
         // Compute angular error
         double error = neededAngle - turretAngle;
 
@@ -372,9 +423,9 @@ public class Turret extends SubsystemBase {
         ChassisSpeeds speeds = speed.get();
         Pose2d currPose = pose.get();
         Pose2d delayPose = currPose.exp(new Twist2d( // Account for phase delay
-            speeds.vxMetersPerSecond * TurretConstants.delay, 
-            speeds.vyMetersPerSecond * TurretConstants.delay,
-            speeds.omegaRadiansPerSecond * TurretConstants.delay
+            speeds.vxMetersPerSecond * filteredTurretDelaySec, 
+            speeds.vyMetersPerSecond * filteredTurretDelaySec,
+            speeds.omegaRadiansPerSecond * filteredTurretDelaySec
         ));
         Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(delayPose.getRotation());
         Pose2d turretPose = new Pose2d(delayPose.getTranslation().plus(rotationOffset), delayPose.getRotation());
@@ -384,6 +435,10 @@ public class Turret extends SubsystemBase {
         boolean pass = turretPose.getX() <= (isBlue ? Field.bluePassThreshold : Field.redPassThreshold);
 
         if (shoot || pass) {
+            delaySum += filteredTurretDelaySec;
+            delaySamples++;
+            maxDelay = Math.max(maxDelay, filteredTurretDelaySec);
+
             Translation2d goalPose;
             Translation2d passPose;
             if (isBlue) {
@@ -400,7 +455,7 @@ public class Turret extends SubsystemBase {
             double tof = TurretConstants.map.get(distance).tof; // Lookup TOF from table
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 8; i++) {
                 Translation2d robotFieldVelocity = new Translation2d(
                     speeds.vxMetersPerSecond,
                     speeds.vyMetersPerSecond
