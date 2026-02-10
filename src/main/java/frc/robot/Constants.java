@@ -128,11 +128,11 @@ public static class Vision {
     public static final String pigeonCanBus = "canivore1";
 
     public static class IntakeConstants { 
-        public static final CANBus CANBus = new CANBus("rio");
+        public static final CANBus CANBus = new CANBus("canivore1");
 
-        public static final int leftIntakeMotorRollerId = 5;
-        public static final int rightIntakeMotorRollerId = 4;
-        public static final int deployIntakeMotorId = 61;
+        public static final int roller1id = 34;
+        public static final int roller2id = 35;
+        public static final int deployIntakeMotorId = 33;
 
         public static final int intakeCurrentLimit = 40;
 
@@ -149,8 +149,8 @@ public static class Vision {
         public static final int kA = 0;
         public static final int kV = 0;
 
-        public static final double deployPos = 2;
-        public static final double homePos = 14;
+        public static final double deployPos = -10.5;
+        public static final double homePos = 0;
 
 
     }
