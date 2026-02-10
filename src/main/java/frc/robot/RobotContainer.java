@@ -102,7 +102,7 @@ public class RobotContainer {
                 intake
             ).andThen(
                 new InstantCommand(
-                    () -> intake.setRollerPower(0.0),
+                    () -> intake.setRollerPower(1.0),
                     intake
                 )
             )
