@@ -138,10 +138,10 @@ public static class Vision {
 
 // Change these constants later
   public static class ClimbConstants {
-    public static final int kLeftID = 1;
-    public static final int kRightID = 2;
+    public static final int kLeftID = 6;
+    public static final int kRightID = 7;
     public static final int kKickerID = 3;
-    public static final double climbCurrentLimit = 70.0;
+    public static final double climbCurrentLimit = 100.0;
     public static final double holdCurrentLimit = 8;
     public static final double hookCurrentLimit = 8;
     // public static final double ampTriggeredCurrentLimit = 2;
@@ -149,35 +149,39 @@ public static class Vision {
     public static final double deployPosition = 0; // rot
     public static final double climbedPosition = 0; // rot
     public static final double rampRate = 15;
-    public static final double kP = 1.0;
+    public static final double kP = 200.0;
     public static final double kI = 0.0;
     public static final double kD = 0.0;
     public static final double kG = 0.0;
     public static final double kS = 0.0;
     public static final double kV = 0.0;
     public static final double kA = 0.0;
-    public static final String canBus = "canivore1";
+    public static final String canBus = "rio";
     // public static final double servoOpenPosition = 1.0;
     // public static final double servoCloseposition = 0.0;
 
     public static final double pitchDiameterInches = 1.214;
     public static final double pitchDiameterMeters = Units.inchesToMeters(pitchDiameterInches);
 
-    public static final double l1HeightInches = 30;
+    public static final double l1HeightInches = 10;
     public static final double l2HeightInches = 72;
     public static final double l3HeightInches = 80;
+
+    // dummy
+    public static final double l1ShortInches = 8;
 
     public static final double l1Position = inchesToRotations(l1HeightInches, pitchDiameterMeters);
     public static final double l2Position = inchesToRotations(l2HeightInches, pitchDiameterMeters);
     public static final double l3Position = inchesToRotations(l3HeightInches, pitchDiameterMeters);
+    public static final double l1ShortPosition = inchesToRotations(l1ShortInches, pitchDiameterMeters);
 
     public static final double positionToleranceRotations = 0.25;
 
-    public static final double motionMagicCruiseVelocity = 3.0;
-    public static final double motionMagicAcceleration = 2.0;
+    public static final double motionMagicCruiseVelocity = 200;
+    public static final double motionMagicAcceleration = 800;
     public static final double motionMagicJerk = 0.0;
 
-    public static final double sensorToMechanismRatio = 45.0;
+    public static final double sensorToMechanismRatio = 15.0;
 
     public static double metersPerRotation(double pitchDiameterMeters) {
         return Math.PI * pitchDiameterMeters;

@@ -39,13 +39,13 @@ import frc.robot.Constants.ClimbConstants;
 
 /*
 **Hardware limits**
-Device ID of climb:
-Sprocket radius: 
-Climb current limit:
-Gearbox ratio:
-Velocity:
-Accleration:
-Jerk:
+Device ID of climb: done
+Sprocket pitch diameter: done
+Climb current limit: done
+Gearbox ratio: done
+Velocity: done
+Accleration: done
+Jerk: done
 */ 
 
 public class Climb extends SubsystemBase {
@@ -109,7 +109,7 @@ public class Climb extends SubsystemBase {
     // Vertical elevator rails
     tallMech = new MechanismLigament2d(
         "LeftElevator",
-        0.1, // initial length
+        0, // initial length
         90, // 90° = vertical
         6,
         new Color8Bit(0, 150, 255));
@@ -206,11 +206,12 @@ public class Climb extends SubsystemBase {
   }
 
   public void resetTallPosition() {
-    climbTall.setControl(m_request.withPosition(0));
+    // climbTall.setControl(m_request.withPosition(0));
+    climbTall.setPosition(0);
   }
 
   public void resetShortPosition() {
-    climbShort.setControl(m_request.withPosition(0));
+    climbShort.setPosition(0);
   }
 
   public void resetKickerPosition() {
@@ -252,11 +253,17 @@ public class Climb extends SubsystemBase {
   public double getKickerPosition() {
     return climbKicker.getPosition().getValueAsDouble();
   }
-
+  
   public Command tallGoToPosition(Supplier<Double> position) {
     return new RunCommand(() -> setClimbTall(position), this)
         .until(() -> Math.abs(getLeftPosition() - position.get()) <= ClimbConstants.positionToleranceRotations);
   }
+
+  public Command shortGoToPosition(Supplier<Double> position) {
+    return new RunCommand(() -> setClimbShort(position), this)
+        .until(() -> Math.abs(getRightPosition() - position.get()) <= ClimbConstants.positionToleranceRotations);
+  }
+
 
   public Command tallResetPosition() {
     return new InstantCommand(() -> resetTallPosition(), this);
@@ -266,13 +273,13 @@ public class Climb extends SubsystemBase {
     return new InstantCommand(() -> resetShortPosition(), this);
   }
 
-  // public double getClimbTallHeightMeters() {
-  //   return climbTall.getPosition().getValueAsDouble() * ClimbConstants.metersPerRotation;
-  // }
+  public double getClimbTallHeightMeters() {
+    return climbTall.getPosition().getValueAsDouble() * ClimbConstants.metersPerRotation(ClimbConstants.pitchDiameterMeters);
+  }
 
-  // public double getClimbShortHeightMeters() {
-  //   return climbShort.getPosition().getValueAsDouble() * ClimbConstants.metersPerRotation;
-  // }
+  public double getClimbShortHeightMeters() {
+    return climbShort.getPosition().getValueAsDouble() * ClimbConstants.metersPerRotation(ClimbConstants.pitchDiameterMeters);
+  }
 
   @Override
   public void periodic() {
@@ -284,7 +291,7 @@ public class Climb extends SubsystemBase {
     // double heightTall = 0.7 + 0.5 * Math.sin(time);
     // double heightShort = 0.5 + 0.1 * Math.sin(time);
 
-    // tallMech.setLength(getClimbTallHeightMeters());
+    tallMech.setLength(getClimbTallHeightMeters());
     // shortMech.setLength(getClimbShortHeightMeters());
 
     SmartDashboard.putNumber("climb left position", climbTall.getPosition().getValueAsDouble());

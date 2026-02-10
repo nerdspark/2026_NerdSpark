@@ -1,6 +1,7 @@
 package frc.robot.commandSequences;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants.ClimbConstants;
@@ -23,15 +24,32 @@ import frc.robot.subsystems.Climb;
 //End Climb---------------------
 
 public class ClimbSequences {
+    public static Command resetPosition(Climb climb) {
+        return new SequentialCommandGroup(
+                climb.tallGoToPosition(() -> 0.0)
+        // new WaitCommand(0.5),
+        // climb.tallGoToPosition(() -> ClimbConstants.l1Position)
+        );
+    }
+
     public static Command climbToL1(Climb climb) {
 
         // L1-------------------------
         // Taller Arm goes to 30 inches and hooks on first rung and Small Arm goes to
         // highest position
         // Tall Arm pulls down until small arm then small arm hooks on first rung and
-        // Tall Arm lets go
         return new SequentialCommandGroup(
-                climb.tallGoToPosition(() -> ClimbConstants.l1Position)
+                climb.tallGoToPosition(() -> ClimbConstants.l1Position),
+                new WaitCommand(0.5),
+                climb.tallGoToPosition(() -> 0.0),
+                climb.shortGoToPosition(() -> ClimbConstants.l1ShortPosition)
+                
+
+                
+                
+
+                // new WaitCommand(0.5),
+                // climb.tallGoToPosition(() -> ClimbConstants.l1Position)
         );
     }
 
@@ -54,8 +72,7 @@ public class ClimbSequences {
 
     public static Command climbToL3(Climb climb) {
         return new SequentialCommandGroup(
-            climb.tallGoToPosition(() -> ClimbConstants.l3Position),
-            climb.tallResetPosition()
-        );
+                climb.tallGoToPosition(() -> ClimbConstants.l3Position),
+                climb.tallResetPosition());
     }
 }
