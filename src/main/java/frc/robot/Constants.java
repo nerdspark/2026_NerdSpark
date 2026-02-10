@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import frc.robot.util.ShooterParams;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
@@ -107,45 +108,31 @@ public final class Constants {
         
         public static final double hoodRatio = 50;
 
-        public static final double shooterWheelRadius = 0.0508; // in meters TODO
+        public static final double shooterWheelRadius = Units.inchesToMeters(4);
+
+        public static final Translation2d robotToTurret = new Translation2d(0,0); // TODO
+        public static final double delay = 0.02; // Phase delay in seconds TODO
         
-        public static InterpolatingTreeMap<Double, double[]> map =  new InterpolatingTreeMap<>(
-            // inverseInterpolator for Double keys
+        public static InterpolatingTreeMap<Double, ShooterParams> climbMap =  new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
-
-            // interpolator for Double[] values
-            (lower, upper, t) -> {
-                double[] result = new double[lower.length];
-                for (int i = 0; i < lower.length; i++) {
-                    result[i] = lower[i] + t * (upper[i] - lower[i]);
-                }
-                return result;
-            }
+            (start, end, t) -> start.interpolate(end, t) // value interpolation
         );
-        public static InterpolatingTreeMap<Double, double[]> climbMap =  new InterpolatingTreeMap<>(
-            // inverseInterpolator for Double keys
-            InverseInterpolator.forDouble(),
 
-            // interpolator for Double[] values
-            (lower, upper, t) -> {
-                double[] result = new double[lower.length];
-                for (int i = 0; i < lower.length; i++) {
-                    result[i] = lower[i] + t * (upper[i] - lower[i]);
-                }
-                return result;
-            }
+        public static InterpolatingTreeMap<Double, ShooterParams> map = new InterpolatingTreeMap<>(
+            InverseInterpolator.forDouble(),
+            (start, end, t) -> start.interpolate(end, t) // value interpolation
         );
 
         // Add numbers to hash map here (Distance, [Hood Pose, Wheel Speed (motor RPS)])
         static {
             // Passing
-            map.put(Double.MAX_VALUE, new double[] {0, 0});
+            map.put(Double.MAX_VALUE, new ShooterParams(0, 0, 0));
 
             // Shooting
-            map.put(0.0, new double[] {0, 0});
+            map.put(0.0, new ShooterParams(0, 0, 0));
 
             // Shooting while climbing
-            climbMap.put(0.0, new double[] {0, 0});
+            climbMap.put(0.0, new ShooterParams(0, 0, 0));
         }
     }
 
@@ -175,8 +162,8 @@ public final class Constants {
         
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
-        public static final double hoodKp1 = 0.7;
-        public static final double hoodKp2 = 0.7;
+        public static final double hoodKp1 = 5;
+        public static final double hoodKp2 = 5;
         public static final double hoodKi1 = 0.0;
         public static final double hoodKi2 = 0.0;
         public static final double hoodKd1 = 0.0;
@@ -187,13 +174,13 @@ public final class Constants {
         public static final double hoodKv2 = 0;
         public static final double hoodKa1 = 0;
         public static final double hoodKa2 = 0;
-        public static final double hoodStatorCurrentLimit = 50.0;
+        public static final double hoodStatorCurrentLimit = 40.0;
         public static final double hoodVelocity = 50;
         public static final double hoodAccel = 150;
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;
-        public static final double bangbangKp = 99999999;
+        public static final double bangbangKp = 999999;
         public static final double peakDutyCycle = 1;
         public static final double peakTorque = 40;
         public static final double shootStatorCurrentLimit = 60.0;

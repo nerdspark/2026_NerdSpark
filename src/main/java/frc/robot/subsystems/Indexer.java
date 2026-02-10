@@ -2,19 +2,22 @@ package frc.robot.subsystems;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.Constants;
 import frc.robot.Constants.PassThroughConfig;
 
 public class Indexer implements Subsystem {
-
+    private CANBus canivore;
     private TalonFX passThroughMotor;
     
     public Indexer() {
-        passThroughMotor = new TalonFX(PassThroughConfig.passThroughId);
+        canivore = new CANBus(Constants.CANbus);
+        passThroughMotor = new TalonFX(PassThroughConfig.passThroughId, canivore);
         
         TalonFXConfiguration passThroughConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()

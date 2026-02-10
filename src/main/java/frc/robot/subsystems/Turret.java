@@ -30,11 +30,13 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.TurretConstants;
+import frc.robot.util.ShooterParams;
 import frc.robot.Constants.TurretConfig;
 import frc.robot.Constants;
 import frc.robot.Constants.Field;
@@ -212,6 +214,9 @@ public class Turret extends SubsystemBase {
 
         hoodMotor2.setControl(new Follower(TurretConfig.hoodMotor1Id, MotorAlignmentValue.Opposed));
         shootMotor2.setControl(new Follower(TurretConfig.shootMotor1Id, MotorAlignmentValue.Opposed));
+
+        hoodMotor1.setPosition(0);
+        hoodMotor2.setPosition(0);
     }
 
     // private final SysIdRoutine spin = new SysIdRoutine(
@@ -228,56 +233,42 @@ public class Turret extends SubsystemBase {
     //     )
     // );
 
-    // private final SysIdRoutine shoot = new SysIdRoutine(
-    //     new SysIdRoutine.Config(
-    //         null, // Use default ramp rate (1 V/s)
-    //         Volts.of(6), // Reduce dynamic step voltage to 6 V to prevent brownout
-    //         null, // Use 10s timeout
-    //         state -> SignalLogger.writeString("SysIdShoot_State", state.toString())
-    //     ), 
-    //     new SysIdRoutine.Mechanism(
-    //         output -> shootMotor1.setControl(sysId.withOutput(output)),
-    //         null,
-    //         this
-    //     )
-    // );
-
-    // private SysIdRoutine sysIdRoutineToApply = shoot;
+    // private SysIdRoutine sysIdRoutineToApply = spin;
     
     /** 
      * Aims the hood of the turret and spins wheels based on shooter map and chassis speeds
      * If hood is not tight then look into chassis velocity based correction for hood
      * 
-     * @param distance the distance to the center of the hub
+     * @param distance the distance to the center of the hub from the center of the robot
      * @return the velocity to shoot at
     */
     private double aimOnFly(double distance) {
-        double[] map;
+        ShooterParams map;
         if (climb.get()) {
             map = TurretConstants.climbMap.get(distance);
         } else {
             map = TurretConstants.map.get(distance);
         }
 
-        hoodPose.Position = map[0];
+        hoodPose.Position = map.hoodPose;
 
         double robotHeading = pose.get().getRotation().getRadians();
         double shooterFOA = robotHeading + turretAngle;
-        ChassisSpeeds robotFOS = ChassisSpeeds.fromRobotRelativeSpeeds(speed.get(), pose.get().getRotation());
+        ChassisSpeeds robotFOS = speed.get();
         double robotSpeed = Math.hypot(robotFOS.vxMetersPerSecond, robotFOS.vyMetersPerSecond);
         double robotVelAngle = Math.atan2(robotFOS.vyMetersPerSecond, robotFOS.vxMetersPerSecond);
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
         double deltaMotorRPS = vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
 
-        double velo =  map[1] - deltaMotorRPS;
+        double velo =  map.shooterSpeed - deltaMotorRPS;
 
-        if (velo < 3) {
+        if (velo < 5) {
             mode = ShootMode.COAST;
             return 0;
         }
 
         // Actual - Target
-        boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - velo) <= 3.2;
+        boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - velo) <= 3;
         boolean torqueCurrentControl = torqueCurrentDebouncer.calculate(inTolerance);
         mode = torqueCurrentControl ? ShootMode.TORQUE_CURRENT_BANG_BANG : ShootMode.DUTY_CYCLE_BANG_BANG;
 
@@ -285,13 +276,13 @@ public class Turret extends SubsystemBase {
     }
 
     public void calcBangBang(double velocity, double pose) {
-        if (velocity < 3) {
+        if (velocity < 5) {
             mode = ShootMode.COAST;
             return;
         }
 
         // Actual - Target
-        boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - velocity) <= 3.5;
+        boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - velocity) <= 3;
         SmartDashboard.putBoolean("inTolerance", inTolerance);
         boolean torqueCurrentControl = torqueCurrentDebouncer.calculate(inTolerance);
         SmartDashboard.putBoolean("torqueCurrentControl", torqueCurrentControl);
@@ -378,35 +369,62 @@ public class Turret extends SubsystemBase {
     @Override
     public void periodic() {
         double velocity = veloTest;
+        ChassisSpeeds speeds = speed.get();
         Pose2d currPose = pose.get();
+        Pose2d delayPose = currPose.exp(new Twist2d(
+            speeds.vxMetersPerSecond * TurretConstants.delay, 
+            speeds.vyMetersPerSecond * TurretConstants.delay,
+            speeds.omegaRadiansPerSecond * TurretConstants.delay
+        )); // Account for phase delay
+        Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(delayPose.getRotation());
+        Pose2d turretPose = new Pose2d(delayPose.getTranslation().plus(rotationOffset), delayPose.getRotation());
 
         boolean isBlue = alliance.get() == DriverStation.Alliance.Blue;
-        boolean shoot = currPose.getX() <= (isBlue ? Field.blueShootThreshold : Field.redShootThreshold);
-        boolean pass = currPose.getX() <= (isBlue ? Field.bluePassThreshold : Field.redPassThreshold);
+        boolean shoot = turretPose.getX() <= (isBlue ? Field.blueShootThreshold : Field.redShootThreshold);
+        boolean pass = turretPose.getX() <= (isBlue ? Field.bluePassThreshold : Field.redPassThreshold);
 
-        // if (shoot || pass) {
-        //     Translation2d goalPose;
-        //     Translation2d passPose;
-        //     if (isBlue) {
-        //         goalPose = Field.blueHub;
-        //         passPose = closerPoint(currPose, Field.blueLeftPass, Field.blueRightPass) ? Field.blueLeftPass : Field.blueRightPass;
-        //     } else {
-        //         goalPose = Field.redHub;
-        //         passPose = closerPoint(currPose, Field.redLeftPass, Field.redRightPass) ? Field.redLeftPass : Field.redRightPass;
-        //     }
+        if (shoot || pass) {
+            Translation2d goalPose;
+            Translation2d passPose;
+            if (isBlue) {
+                goalPose = Field.blueHub;
+                passPose = closerPoint(turretPose, Field.blueLeftPass, Field.blueRightPass) ? Field.blueLeftPass : Field.blueRightPass;
+            } else {
+                goalPose = Field.redHub;
+                passPose = closerPoint(turretPose, Field.redLeftPass, Field.redRightPass) ? Field.redLeftPass : Field.redRightPass;
+            }
 
-        //     double xError = (shoot ? goalPose.getX() : passPose.getX()) - currPose.getX();
-        //     double yError = (shoot ? goalPose.getY() : passPose.getY()) - currPose.getY();
-        //     double errorDegrees = Math.atan2(yError, xError);
+            Translation2d targetPose = shoot ? goalPose : passPose;
+            double distance = turretPose.getTranslation().getDistance(targetPose);
+
+            double tof = TurretConstants.map.get(distance).tof; // Lookup TOF from table
+            Translation2d lookaheadTurretPos = turretPose.getTranslation();
+
+            for (int i = 0; i < 3; i++) {
+                Translation2d robotFieldVelocity = new Translation2d(
+                    speeds.vxMetersPerSecond,
+                    speeds.vyMetersPerSecond
+                );
+                Translation2d flightOffset = robotFieldVelocity.times(tof); // How far robot moves during ball flight
+                lookaheadTurretPos = turretPose.getTranslation().plus(flightOffset); // Effective launch point
+                distance = lookaheadTurretPos.getDistance(targetPose); // Recompute distance
+                tof = TurretConstants.map.get(distance).tof;       // Recompute TOF for new distance
+            }
+
+            double xError = targetPose.getX() - lookaheadTurretPos.getX();
+            double yError = targetPose.getY() - lookaheadTurretPos.getY();
+            double errorDegrees = Math.atan2(yError, xError);
                     
-        //     aimTurret(normalizeRadians(errorDegrees - currPose.getRotation().getRadians()));
-        //     velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
-        // } else {
-        //     hoodWheelsZero();
-        // }
+            aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
+            velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
+        } else {
+            hoodWheelsZero();
+        }
 
         // spinMotor.setControl(spinPose);
         hoodMotor1.setControl(hoodPose);
+        SmartDashboard.putNumber("Hood Motor 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Hood Motor 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
         
         switch (mode) {
             case DUTY_CYCLE_BANG_BANG: shootMotor1.setControl(shootDutyBang.withVelocity(velocity));

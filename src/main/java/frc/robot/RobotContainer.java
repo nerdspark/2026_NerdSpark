@@ -46,7 +46,7 @@ public class RobotContainer {
 
     private final CommandXboxController joystick = new CommandXboxController(0);
 
-    // private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     // public final PoseEstimatorSubsystem poseEstimatorSubsystem;
 
@@ -67,18 +67,18 @@ public class RobotContainer {
         // autoChooser = AutoBuilder.buildAutoChooser("Tests");
         // SmartDashboard.putData("Auto Mode", autoChooser);
 
-        // turret = new Turret(
-        //     () -> drivetrain.getState().Pose, 
-        //     () -> drivetrain.getState().Speeds,
-        //     () -> DriverStation.getAlliance().orElse(Alliance.Red),
-        //     () -> true // Turn off turret when false
-        // );
         turret = new Turret(
-            () -> new Pose2d(), 
-            () -> new ChassisSpeeds(),
+            () -> drivetrain.getState().Pose, 
+            () -> ChassisSpeeds.fromRobotRelativeSpeeds(drivetrain.getState().Speeds, drivetrain.getState().Pose.getRotation()),
             () -> DriverStation.getAlliance().orElse(Alliance.Red),
             () -> true // Turn off turret when false
         );
+        // turret = new Turret(
+        //     () -> new Pose2d(), 
+        //     () -> new ChassisSpeeds(),
+        //     () -> DriverStation.getAlliance().orElse(Alliance.Red),
+        //     () -> true // Turn off turret when false
+        // );
 
         indexer = new Indexer();
 
@@ -95,10 +95,10 @@ public class RobotContainer {
         // Reset the field-centric heading on left bumper press.
         // joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        joystick.y().whileTrue(new TurretTest(turret, 85, 0));
-        joystick.b().whileTrue(new TurretTest(turret, 70, 0));
-        joystick.a().whileTrue(new TurretTest(turret, 50, 0));
-        joystick.x().whileTrue(new TurretTest(turret, 30, 0));
+        joystick.y().whileTrue(new TurretTest(turret, 85, 2.5));
+        joystick.b().whileTrue(new TurretTest(turret, 70, 2.5));
+        joystick.a().whileTrue(new TurretTest(turret, 50, 2.5));
+        joystick.x().whileTrue(new TurretTest(turret, 31, 2));
 
         joystick.rightBumper().whileTrue(new IndexerCommand(indexer, () -> 1.0));
 
