@@ -24,9 +24,10 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.commandSequences.ClimbSequences;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Climb;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
+import frc.robot.subsystems.Climb.ShortClimb;
+import frc.robot.subsystems.Climb.TallClimb;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -46,11 +47,13 @@ public class RobotContainer {
 
     private final SendableChooser<Command> autoChooser;
 
-    private final Climb climb;
+    private final TallClimb tallClimb;
+    private final ShortClimb shortClimb;
       
     public RobotContainer() {
         poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
-        climb = new Climb();
+        tallClimb = new TallClimb();
+        shortClimb = new ShortClimb();
       
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -93,7 +96,7 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        joystick.a().onTrue(ClimbSequences.climbToL1(climb));
+        joystick.a().onTrue(ClimbSequences.climbToL2(tallClimb, shortClimb));
 
         // climb.setDefaultCommand();
     }

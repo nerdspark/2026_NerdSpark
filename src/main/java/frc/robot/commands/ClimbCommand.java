@@ -9,7 +9,8 @@ import java.util.function.Supplier;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commandSequences.ClimbSequences;
-import frc.robot.subsystems.Climb;
+import frc.robot.subsystems.Climb.ShortClimb;
+import frc.robot.subsystems.Climb.TallClimb;
 
 
 //Start of CLimb Sequence
@@ -25,18 +26,21 @@ import frc.robot.subsystems.Climb;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class ClimbCommand extends Command {
 
-  Climb climb;
+  TallClimb tallClimb;
+  ShortClimb shortClimb;
   Supplier<Double> positionLeft;
   Supplier<Double> positionRight;
   private Command activeSequence;
 
   /** Creates a new ClimbCommand. */
-  public ClimbCommand(Climb climb, Supplier<Double> positionLeft, Supplier<Double> positionRight) {
+  public ClimbCommand(TallClimb tallClimb, ShortClimb shortClimb, Supplier<Double> positionLeft, Supplier<Double> positionRight) {
     // Use addRequirements() here to declare subsystem dependencies.
-    this.climb = climb;
+    this.tallClimb = tallClimb;
+    this.shortClimb = shortClimb;
     this.positionLeft = positionLeft;
     this.positionRight = positionRight;
-    addRequirements(climb); // ONLY USE WHEN NOT DOING BUTTON BINDS
+    addRequirements(tallClimb); // ONLY USE WHEN NOT DOING BUTTON BINDS
+    addRequirements(shortClimb);
   }
 
   // Called when the command is initially scheduled.

@@ -5,7 +5,8 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants.ClimbConstants;
-import frc.robot.subsystems.Climb;
+import frc.robot.subsystems.Climb.ShortClimb;
+import frc.robot.subsystems.Climb.TallClimb;
 
 //Start of Climb Sequence
 //L1-------------------------
@@ -24,55 +25,58 @@ import frc.robot.subsystems.Climb;
 //End Climb---------------------
 
 public class ClimbSequences {
-    public static Command resetPosition(Climb climb) {
+    public static Command resetPosition(TallClimb tallClimb, ShortClimb shortClimb) {
         return new SequentialCommandGroup(
-                climb.tallGoToPosition(() -> 0.0)
+                tallClimb.tallGoToPosition(() -> 0.0)
         // new WaitCommand(0.5),
         // climb.tallGoToPosition(() -> ClimbConstants.l1Position)
         );
     }
 
-    public static Command climbToL1(Climb climb) {
+    public static Command climbToL1(TallClimb tallClimb, ShortClimb shortClimb) {
 
         // L1-------------------------
         // Taller Arm goes to 30 inches and hooks on first rung and Small Arm goes to
         // highest position
         // Tall Arm pulls down until small arm then small arm hooks on first rung and
         return new SequentialCommandGroup(
-                climb.tallGoToPosition(() -> ClimbConstants.l1Position),
+                tallClimb.tallGoToPosition(() -> ClimbConstants.l1Position),
                 new WaitCommand(0.5),
-                climb.tallGoToPosition(() -> 0.0),
-                climb.shortGoToPosition(() -> ClimbConstants.l1ShortPosition)
-                
+                new ParallelCommandGroup(
+                        tallClimb.tallGoToPosition(() -> 0.0),
+                        shortClimb.shortGoToPosition(() -> ClimbConstants.l1ShortPosition))
 
-                
-                
-
-                // new WaitCommand(0.5),
-                // climb.tallGoToPosition(() -> ClimbConstants.l1Position)
+        // new WaitCommand(0.5),
+        // climb.tallGoToPosition(() -> ClimbConstants.l1Position)
         );
     }
 
-    public static Command climbToL2(Climb climb) {
-        // Tall Arm goes to second rung position and hooks on second rung
-        // Small Arm unhooks from first rung
-        // Kicker Arm goes out and pushes robot back and allows clearance
-        // Tall Arm pulls down until small arm then small arm hooks on second rung and
-        // Tall Arm lets go
-        return new SequentialCommandGroup(
-                climb.tallGoToPosition(() -> ClimbConstants.l2Position),
-                climb.tallResetPosition());
+    public static Command climbToL2(TallClimb tallClimb, ShortClimb shortClimb) {
+          return new SequentialCommandGroup(
+                tallClimb.tallGoToPosition(() -> ClimbConstants.l1Position),
+                new WaitCommand(0.5),
+                new ParallelCommandGroup(
+                        tallClimb.tallGoToPosition(() -> 0.0),
+                        shortClimb.shortGoToPosition(() -> ClimbConstants.l1ShortPosition)),
+                new WaitCommand(0.5),
+                 new ParallelCommandGroup(
+                        tallClimb.tallGoToPosition(() -> ClimbConstants.l1Position),
+                        shortClimb.shortGoToPosition(() -> 0.0))        
+
+        // new WaitCommand(0.5),
+        // climb.tallGoToPosition(() -> ClimbConstants.l1Position)
+        );
     }
 
-    // Tall Arm goes to third rung position and hooks on third rung
-    // Small Arm unhooks from second rung
-    // Kicker Arm goes out and pushes robot back and allow clearance
-    // Tall Arm pulls down until small arm then small arm hooks on third rung and
-    // Tall Arm lets go.
+    // // Tall Arm goes to third rung position and hooks on third rung
+    // // Small Arm unhooks from second rung
+    // // Kicker Arm goes out and pushes robot back and allow clearance
+    // // Tall Arm pulls down until small arm then small arm hooks on third rung and
+    // // Tall Arm lets go.
 
-    public static Command climbToL3(Climb climb) {
-        return new SequentialCommandGroup(
-                climb.tallGoToPosition(() -> ClimbConstants.l3Position),
-                climb.tallResetPosition());
-    }
+    // public static Command climbToL3(TallClimb tallClimb, ShortClimb shortClimb) {
+    // // return new SequentialCommandGroup(
+    // // climb.tallGoToPosition(() -> ClimbConstants.l3Position),
+    // // climb.tallResetPosition());
+    // }
 }

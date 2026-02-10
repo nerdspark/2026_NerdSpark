@@ -2,13 +2,10 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
-
-import static edu.wpi.first.units.Units.Meters;
+package frc.robot.subsystems.Climb;
 
 import java.util.function.Supplier;
 
-import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -23,9 +20,6 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
@@ -37,37 +31,26 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimbConstants;
 
-/*
-**Hardware limits**
-Device ID of climb: done
-Sprocket pitch diameter: done
-Climb current limit: done
-Gearbox ratio: done
-Velocity: done
-Accleration: done
-Jerk: done
-*/ 
-
-public class Climb extends SubsystemBase {
-  private TalonFX climbShort, climbTall, climbKicker;
+public class TallClimb extends SubsystemBase {
+ private TalonFX climbTall, climbShort;
   private TalonFXConfiguration climbConfig = new TalonFXConfiguration();
   private boolean ampTriggered, ampTriggerStarted = false;
-  private final TalonFXSimState tallSim;
-  private final TalonFXSimState shortSim;
+  // private final TalonFXSimState tallSim;
+  // private final TalonFXSimState shortSim;
 
   private MotionMagicConfigs motionMagicConfigs = climbConfig.MotionMagic;
   final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
 
 
   // Mechanism 2d
-  private final Mechanism2d climbMech;
-  // Roots for left and right elevators
-  private final MechanismRoot2d tallRoot;
-  private final MechanismRoot2d shortRoot;
+  // private final Mechanism2d climbMech;
+  // // Roots for left and right elevators
+  // private final MechanismRoot2d tallRoot;
+  // private final MechanismRoot2d shortRoot;
 
   // Elevator ligaments
-  private final MechanismLigament2d tallMech;
-  private final MechanismLigament2d shortMech;
+  // private final MechanismLigament2d tallMech;
+  // private final MechanismLigament2d shortMech;
   // End of Mechanism 2d
   // private final StructPublisher<Pose3d> leftElevatorPoseHub;
   // private final StructPublisher<Pose3d> rightElevatorPoseHub;
@@ -92,39 +75,37 @@ public class Climb extends SubsystemBase {
   // Tall Arm lets go.
   // End Climb---------------------
 
-  /** Creates a new Climb. */
-  public Climb() {
+  /** Creates a new TallClimb. */
+  public TallClimb() {
     climbTall = new TalonFX(ClimbConstants.kLeftID, ClimbConstants.canBus);
-    climbShort = new TalonFX(ClimbConstants.kRightID, ClimbConstants.canBus);
-    climbKicker = new TalonFX(ClimbConstants.kKickerID, ClimbConstants.canBus);
     // climbHook = new TalonFX(ClimbConstants.kHookID, ClimbConstants.canBus);
-    tallSim = climbTall.getSimState();
-    shortSim = climbShort.getSimState();
+    // tallSim = climbTall.getSimState();
+    // shortSim = climbShort.getSimState();
 
-    climbMech = new Mechanism2d(3.0, 3.0);
-    // Roots at bottom of elevators
-    tallRoot = climbMech.getRoot("LeftRoot", 1.0, 0.2);
-    shortRoot = climbMech.getRoot("RightRoot", 2.0, 0.2);
+    // climbMech = new Mechanism2d(3.0, 3.0);
+    // // Roots at bottom of elevators
+    // tallRoot = climbMech.getRoot("LeftRoot", 1.0, 0.2);
+    // shortRoot = climbMech.getRoot("RightRoot", 2.0, 0.2);
 
-    // Vertical elevator rails
-    tallMech = new MechanismLigament2d(
-        "LeftElevator",
-        0, // initial length
-        90, // 90° = vertical
-        6,
-        new Color8Bit(0, 150, 255));
+    // // Vertical elevator rails
+    // tallMech = new MechanismLigament2d(
+    //     "LeftElevator",
+    //     0, // initial length
+    //     90, // 90° = vertical
+    //     6,
+    //     new Color8Bit(0, 150, 255));
 
-    shortMech = new MechanismLigament2d(
-        "RightElevator",
-        0.,
-        90,
-        6,
-        new Color8Bit(255, 150, 0));
+    // // shortMech = new MechanismLigament2d(
+    // //     "RightElevator",
+    // //     0.,
+    // //     90,
+    // //     6,
+    // //     new Color8Bit(255, 150, 0));
 
-    tallRoot.append(tallMech);
-    shortRoot.append(shortMech);
+    // tallRoot.append(tallMech);
+    // shortRoot.append(shortMech);
 
-    SmartDashboard.putData("ClimbMechanism", climbMech);
+    // SmartDashboard.putData("ClimbMechanism", climbMech);
 
     // Initializing the motor
     climbConfig.CurrentLimits = new CurrentLimitsConfigs()
@@ -153,16 +134,6 @@ public class Climb extends SubsystemBase {
         .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
             .withNeutralMode(NeutralModeValue.Brake)));
-    climbShort
-        .getConfigurator()
-        .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
-            .withInverted(InvertedValue.Clockwise_Positive)
-            .withNeutralMode(NeutralModeValue.Brake)));
-    climbKicker
-        .getConfigurator()
-        .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
-            .withInverted(InvertedValue.Clockwise_Positive) // Change Clockwise/CounterClockwise based on testing
-            .withNeutralMode(NeutralModeValue.Brake)));
     // climbHook
     // .getConfigurator()
     // .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
@@ -170,20 +141,18 @@ public class Climb extends SubsystemBase {
     // .withNeutralMode(NeutralModeValue.Brake)));
 
     resetTallPosition();
-    resetShortPosition();
-    resetKickerPosition();
   }
 
   @Override
   public void simulationPeriodic() {
-    // double dt = 0.02;
+    // // double dt = 0.02;
 
-    // Read the applied motor voltage
-    double tallVoltage = tallSim.getMotorVoltage();
-    double shortVoltage = shortSim.getMotorVoltage();
+    // // Read the applied motor voltage
+    // double tallVoltage = tallSim.getMotorVoltage();
+    // double shortVoltage = shortSim.getMotorVoltage();
 
-    tallSim.addRotorPosition(tallVoltage);
-    shortSim.addRotorPosition(shortVoltage);
+    // tallSim.addRotorPosition(tallVoltage);
+    // shortSim.addRotorPosition(shortVoltage);
   }
 
   // public void robotAngle(Supplier<Double> position) {
@@ -196,89 +165,38 @@ public class Climb extends SubsystemBase {
 
   }
 
-  public void setClimbShort(Supplier<Double> position) {
-    climbShort.setControl(m_request.withPosition(position.get().doubleValue()));
-  } 
-
   // Check if this function is needed during testing.
-  public void setClimbKicker(Supplier<Double> position) {
-    climbKicker.setControl(new PositionVoltage(position.get().doubleValue()));
-  }
 
   public void resetTallPosition() {
     // climbTall.setControl(m_request.withPosition(0));
     climbTall.setPosition(0);
   }
 
-  public void resetShortPosition() {
-    climbShort.setPosition(0);
-  }
-
-  public void resetKickerPosition() {
-    climbKicker.setControl(new PositionVoltage(0));
-  }
-
   public void setClimbTallVoltage(double voltage) {
     climbTall.setVoltage(voltage);
-  }
-
-  public void setClimbShortVoltage(double voltage) {
-    climbShort.setVoltage(voltage);
-  }
-
-  public void setClimbKickerVoltage(double voltage) {
-    climbKicker.setVoltage(voltage);
   }
 
   public boolean climbLeftAmpTriggered() {
     return Math.abs(climbTall.getStatorCurrent().getValueAsDouble()) > ClimbConstants.climbCurrentLimit;
   }
 
-  public boolean climbRightAmpTriggered() {
-    return Math.abs(climbShort.getStatorCurrent().getValueAsDouble()) > ClimbConstants.climbCurrentLimit;
-  }
-
-  public boolean climbKickerAmpTriggered() {
-    return Math.abs(climbKicker.getStatorCurrent().getValueAsDouble()) > ClimbConstants.climbCurrentLimit;
-  }
 
   public double getLeftPosition() {
     return climbTall.getPosition().getValueAsDouble();
   }
 
-  public double getRightPosition() {
-    return climbShort.getPosition().getValueAsDouble();
-  }
-
-  public double getKickerPosition() {
-    return climbKicker.getPosition().getValueAsDouble();
-  }
-  
   public Command tallGoToPosition(Supplier<Double> position) {
     return new RunCommand(() -> setClimbTall(position), this)
         .until(() -> Math.abs(getLeftPosition() - position.get()) <= ClimbConstants.positionToleranceRotations);
   }
 
-  public Command shortGoToPosition(Supplier<Double> position) {
-    return new RunCommand(() -> setClimbShort(position), this)
-        .until(() -> Math.abs(getRightPosition() - position.get()) <= ClimbConstants.positionToleranceRotations);
-  }
-
-
   public Command tallResetPosition() {
     return new InstantCommand(() -> resetTallPosition(), this);
   }
 
-  public Command shortResetPosition() {
-    return new InstantCommand(() -> resetShortPosition(), this);
-  }
 
   public double getClimbTallHeightMeters() {
     return climbTall.getPosition().getValueAsDouble() * ClimbConstants.metersPerRotation(ClimbConstants.pitchDiameterMeters);
-  }
-
-  public double getClimbShortHeightMeters() {
-    return climbShort.getPosition().getValueAsDouble() * ClimbConstants.metersPerRotation(ClimbConstants.pitchDiameterMeters);
   }
 
   @Override
@@ -291,15 +209,11 @@ public class Climb extends SubsystemBase {
     // double heightTall = 0.7 + 0.5 * Math.sin(time);
     // double heightShort = 0.5 + 0.1 * Math.sin(time);
 
-    tallMech.setLength(getClimbTallHeightMeters());
+    // tallMech.setLength(getClimbTallHeightMeters());
     // shortMech.setLength(getClimbShortHeightMeters());
 
     SmartDashboard.putNumber("climb left position", climbTall.getPosition().getValueAsDouble());
-    SmartDashboard.putNumber("climb right position", climbShort.getPosition().getValueAsDouble());
-    SmartDashboard.putNumber("climb kicker position", climbKicker.getPosition().getValueAsDouble());
     SmartDashboard.putNumber("climb left current (amps)", climbTall.getStatorCurrent().getValueAsDouble());
-    SmartDashboard.putNumber("climb right current (amps)", climbShort.getStatorCurrent().getValueAsDouble());
-    SmartDashboard.putNumber("climb kicker current (amps)", climbKicker.getStatorCurrent().getValueAsDouble());
     SmartDashboard.putNumber("target position", ClimbConstants.l1Position);
   }
 }
