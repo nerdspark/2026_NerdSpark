@@ -371,11 +371,11 @@ public class Turret extends SubsystemBase {
         double velocity = veloTest;
         ChassisSpeeds speeds = speed.get();
         Pose2d currPose = pose.get();
-        Pose2d delayPose = currPose.exp(new Twist2d(
+        Pose2d delayPose = currPose.exp(new Twist2d( // Account for phase delay
             speeds.vxMetersPerSecond * TurretConstants.delay, 
             speeds.vyMetersPerSecond * TurretConstants.delay,
             speeds.omegaRadiansPerSecond * TurretConstants.delay
-        )); // Account for phase delay
+        ));
         Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(delayPose.getRotation());
         Pose2d turretPose = new Pose2d(delayPose.getTranslation().plus(rotationOffset), delayPose.getRotation());
 
@@ -400,7 +400,7 @@ public class Turret extends SubsystemBase {
             double tof = TurretConstants.map.get(distance).tof; // Lookup TOF from table
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
 
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 5; i++) {
                 Translation2d robotFieldVelocity = new Translation2d(
                     speeds.vxMetersPerSecond,
                     speeds.vyMetersPerSecond
@@ -421,7 +421,7 @@ public class Turret extends SubsystemBase {
             hoodWheelsZero();
         }
 
-        // spinMotor.setControl(spinPose);
+        spinMotor.setControl(spinPose);
         hoodMotor1.setControl(hoodPose);
         SmartDashboard.putNumber("Hood Motor 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Hood Motor 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
