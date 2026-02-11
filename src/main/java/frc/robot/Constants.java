@@ -149,7 +149,7 @@ public static class Vision {
         public static final int kA = 0;
         public static final int kV = 0;
 
-        public static final double deployPos = -11;
+        public static final double deployPos = -11.9;
         public static final double homePos = 0;
 
 
