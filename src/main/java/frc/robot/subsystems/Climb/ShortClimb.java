@@ -106,7 +106,7 @@ public class ShortClimb extends SubsystemBase {
     climbShort
         .getConfigurator()
         .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
-            .withInverted(InvertedValue.CounterClockwise_Positive)
+            .withInverted(InvertedValue.Clockwise_Positive)
             .withNeutralMode(NeutralModeValue.Brake)));
 
     // climbHook
