@@ -125,6 +125,7 @@ public static class Vision {
     public static final double gyroI = 0.0;
     public static final double gyroD = 0.00;
 
+    public static final String pigeonCanBus = "canivore1";
 
     public static class IntakeConstants { 
         public static final CANBus CANBus = new CANBus("canivore1");
@@ -148,7 +149,7 @@ public static class Vision {
         public static final int kA = 0;
         public static final int kV = 0;
 
-        public static final double deployPos = -10.5;
+        public static final double deployPos = -11;
         public static final double homePos = 0;
 
 
