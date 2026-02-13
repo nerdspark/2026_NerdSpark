@@ -149,21 +149,21 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 30.308;
+        public static final double spinKp = 66.608;
         public static final double spinKi = 0.0;
-        public static final double spinKd = 2.6399;
-        public static final double spinKs = 0.008757;
-        public static final double spinKv = 0.1325;
-        public static final double spinKa = 0.11887;
+        public static final double spinKd = 1.8545;
+        public static final double spinKs = 0.78431;
+        public static final double spinKv = 0.1309;
+        public static final double spinKa = 0.02865;
         public static final double spinStatorCurrentLimit = 50.0;
         public static final double spinVelocity = 50;
-        public static final double spinAccel = 400; // Full speed in 1/8th of a second
+        public static final double spinAccel = 400;
 
         public static final int spinCancoder1Id = 26;
-        public static final double spinCancoder1Offset = -0.505859375;
+        public static final double spinCancoder1Offset = -0.296630859375;
 
         public static final int spinCancoder2Id = 27;
-        public static final double spinCancoder2Offset = -0.604248046875;
+        public static final double spinCancoder2Offset = -0.010986328125;
         
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;

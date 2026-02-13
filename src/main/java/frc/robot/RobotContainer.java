@@ -22,16 +22,21 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
 import frc.robot.commands.TurretTest;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.Northstar.NorthstarIO;
+import frc.robot.subsystems.Northstar.NorthstarInterface;
+import frc.robot.subsystems.Northstar.VisionNorthstar;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
 
 public class RobotContainer {
@@ -48,9 +53,10 @@ public class RobotContainer {
 
     private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-    // public final PoseEstimatorSubsystem poseEstimatorSubsystem;
+    public final PoseEstimatorSubsystem poseEstimatorSubsystem;
+    public final VisionNorthstar northstar;
 
-    // private final SendableChooser<Command> autoChooser;
+    private final SendableChooser<Command> autoChooser;
 
     private final Turret turret;
     private final Indexer indexer;
@@ -62,22 +68,25 @@ public class RobotContainer {
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
         gyroController.setIntegratorRange(-2.0, 2.0);
 
-        // poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
+        poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
+        northstar = new VisionNorthstar(this::getSelectedAprilTagLayout, () -> drivetrain, 
+            new NorthstarIO(this::getSelectedAprilTagLayout, 0)
+        );
       
-        // autoChooser = AutoBuilder.buildAutoChooser("Tests");
-        // SmartDashboard.putData("Auto Mode", autoChooser);
+        autoChooser = AutoBuilder.buildAutoChooser("Tests");
+        SmartDashboard.putData("Auto Mode", autoChooser);
 
         turret = new Turret(
             () -> drivetrain.getState().Pose, 
             () -> ChassisSpeeds.fromRobotRelativeSpeeds(drivetrain.getState().Speeds, drivetrain.getState().Pose.getRotation()),
             () -> DriverStation.getAlliance().orElse(Alliance.Red),
-            () -> true // Turn off turret when false
+            () -> true // false when robot is climbing
         );
         // turret = new Turret(
         //     () -> new Pose2d(), 
         //     () -> new ChassisSpeeds(),
         //     () -> DriverStation.getAlliance().orElse(Alliance.Red),
-        //     () -> true // Turn off turret when false
+        //     () -> true // false when robot is climbing
         // );
 
         indexer = new Indexer();
@@ -88,17 +97,17 @@ public class RobotContainer {
         configureBindings();
 
         // Warmup PathPlanner to avoid Java pauses
-        // FollowPathCommand.warmupCommand().schedule();
+        CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     }
 
     private void configureBindings() {
         // Reset the field-centric heading on left bumper press.
-        // joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        joystick.y().whileTrue(new TurretTest(turret, 85, 2.5));
-        joystick.b().whileTrue(new TurretTest(turret, 70, 2.5));
-        joystick.a().whileTrue(new TurretTest(turret, 50, 2.5));
-        joystick.x().whileTrue(new TurretTest(turret, 31, 2));
+        // joystick.y().whileTrue(new TurretTest(turret, 85, 2.5));
+        // joystick.b().whileTrue(new TurretTest(turret, 70, 2.5));
+        // joystick.a().whileTrue(new TurretTest(turret, 50, 2.5));
+        // joystick.x().whileTrue(new TurretTest(turret, 31, 2));
 
         joystick.rightBumper().whileTrue(new IndexerCommand(indexer, () -> 1.0));
 
@@ -111,23 +120,23 @@ public class RobotContainer {
     private void configureDefaultCommands() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
-        // drivetrain.setDefaultCommand(
-        //     // Drivetrain will execute this command periodically
-        //     drivetrain.applyRequest(() ->
-        //         drive.withVelocityX(-joystick.getRightY() * MaxSpeed) // Drive forward with negative Y (forward)
-        //             .withVelocityY(-joystick.getRightX() * MaxSpeed) // Drive left with negative X (left)
-        //             .withRotationalRate(calcAutoTurn()) // Drive counterclockwise with negative X (left)
-        //     )
-        // );
+        drivetrain.setDefaultCommand(
+            // Drivetrain will execute this command periodically
+            drivetrain.applyRequest(() ->
+                drive.withVelocityX(-joystick.getRightY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-joystick.getRightX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(calcAutoTurn()) // Drive counterclockwise with negative X (left)
+            )
+        );
 
         // // Idle while the robot is disabled. This ensures the configured
         // // neutral mode is applied to the drive motors while disabled.
-        // final var idle = new SwerveRequest.Idle();
-        // RobotModeTriggers.disabled().whileTrue(
-        //     drivetrain.applyRequest(() -> idle).ignoringDisable(true)
-        // );
+        final var idle = new SwerveRequest.Idle();
+        RobotModeTriggers.disabled().whileTrue(
+            drivetrain.applyRequest(() -> idle).ignoringDisable(true)
+        );
         
-        // drivetrain.registerTelemetry(logger::telemeterize);
+        drivetrain.registerTelemetry(logger::telemeterize);
     }
 
     // private void configureSysid() {
@@ -140,17 +149,22 @@ public class RobotContainer {
     // }
 
     public Command getAutonomousCommand() {
-        // return autoChooser.getSelected();
-        return null;
+        return autoChooser.getSelected();
+        // return null;
     }
 
-    // private double calcAutoTurn() {
-    //     if (Math.abs(joystick.getLeftX()) > 0.01) {
-    //         target += (joystick.getLeftX() * Math.toRadians(5));
-    //     }
+    private double calcAutoTurn() {
+        if (Math.abs(joystick.getLeftX()) > 0.01) {
+            target += (joystick.getLeftX() * Math.toRadians(5));
+        }
 
-    //     double output = gyroController.calculate(drivetrain.getState().Pose.getRotation().getRadians(), target);
+        double output = gyroController.calculate(drivetrain.getState().Pose.getRotation().getRadians(), target);
 
-    //     return MathUtil.clamp(output, -MaxAngularRate, MaxAngularRate);
-    // }
+        return MathUtil.clamp(output, -MaxAngularRate, MaxAngularRate);
+    }
+
+    /** Returns the current AprilTag layout type. */
+    public AprilTagLayoutType getSelectedAprilTagLayout() {
+        return FieldConstants.defaultAprilTagType;
+    }
 }

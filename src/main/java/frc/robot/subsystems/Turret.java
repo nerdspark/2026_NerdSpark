@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.TurretUtil.*;
 
 import java.util.function.Supplier;
@@ -17,12 +18,14 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
@@ -35,7 +38,9 @@ import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.util.ShooterParams;
 import frc.robot.Constants.TurretConfig;
@@ -55,7 +60,7 @@ public class Turret extends SubsystemBase {
     private MotionMagicVoltage hoodPose = new MotionMagicVoltage(0);
     private MotionMagicVoltage spinPose = new MotionMagicVoltage(0);
 
-    // private VoltageOut sysId = new VoltageOut(0);
+    private VoltageOut sysId = new VoltageOut(0);
 
     private Supplier<Pose2d> pose;
     private Supplier<ChassisSpeeds> speed;
@@ -86,10 +91,10 @@ public class Turret extends SubsystemBase {
         canivore = new CANBus(Constants.CANbus);
         
         spinMotor = new TalonFX(TurretConfig.spinMotorId, canivore);
-        hoodMotor1 = new TalonFX(TurretConfig.hoodMotor1Id, canivore);
-        hoodMotor2 = new TalonFX(TurretConfig.hoodMotor2Id, canivore);
-        shootMotor1 = new TalonFX(TurretConfig.shootMotor1Id, canivore);
-        shootMotor2 = new TalonFX(TurretConfig.shootMotor2Id, canivore);
+        // hoodMotor1 = new TalonFX(TurretConfig.hoodMotor1Id, canivore);
+        // hoodMotor2 = new TalonFX(TurretConfig.hoodMotor2Id, canivore);
+        // shootMotor1 = new TalonFX(TurretConfig.shootMotor1Id, canivore);
+        // shootMotor2 = new TalonFX(TurretConfig.shootMotor2Id, canivore);
 
         spinCancoder1 = new CANcoder(TurretConfig.spinCancoder1Id, canivore);
         spinCancoder2 = new CANcoder(TurretConfig.spinCancoder2Id, canivore);
@@ -211,25 +216,25 @@ public class Turret extends SubsystemBase {
         ;
 
         spinMotor.getConfigurator().apply(spinConfig);
-        hoodMotor1.getConfigurator().apply(hoodConfig1);
-        hoodMotor2.getConfigurator().apply(hoodConfig2);
-        shootMotor1.getConfigurator().apply(shootConfig1);
-        shootMotor2.getConfigurator().apply(shootConfig2);
+        // hoodMotor1.getConfigurator().apply(hoodConfig1);
+        // hoodMotor2.getConfigurator().apply(hoodConfig2);
+        // shootMotor1.getConfigurator().apply(shootConfig1);
+        // shootMotor2.getConfigurator().apply(shootConfig2);
 
         spinCancoder1.getConfigurator().apply(spinCancoder1Config);
         spinCancoder2.getConfigurator().apply(spinCancoder2Config);
 
-        hoodMotor2.setControl(new Follower(TurretConfig.hoodMotor1Id, MotorAlignmentValue.Opposed));
-        shootMotor2.setControl(new Follower(TurretConfig.shootMotor1Id, MotorAlignmentValue.Opposed));
+        // hoodMotor2.setControl(new Follower(TurretConfig.hoodMotor1Id, MotorAlignmentValue.Opposed));
+        // shootMotor2.setControl(new Follower(TurretConfig.shootMotor1Id, MotorAlignmentValue.Opposed));
 
-        hoodMotor1.setPosition(0);
-        hoodMotor2.setPosition(0);
+        // hoodMotor1.setPosition(0);
+        // hoodMotor2.setPosition(0);
     }
 
     // private final SysIdRoutine spin = new SysIdRoutine(
     //     new SysIdRoutine.Config(
     //         null, // Use default ramp rate (1 V/s)
-    //         Volts.of(6), // Reduce dynamic step voltage to 5 V to prevent brownout
+    //         Volts.of(7), // Reduce dynamic step voltage to 5 V to prevent brownout
     //         null, // Use 5s timeout
     //         state -> SignalLogger.writeString("SysIdSpin_State", state.toString())
     //     ), 
@@ -477,18 +482,18 @@ public class Turret extends SubsystemBase {
         }
 
         spinMotor.setControl(spinPose);
-        hoodMotor1.setControl(hoodPose);
-        SmartDashboard.putNumber("Hood Motor 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Hood Motor 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
+        // hoodMotor1.setControl(hoodPose);
+        // SmartDashboard.putNumber("Hood Motor 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
+        // SmartDashboard.putNumber("Hood Motor 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
         
-        switch (mode) {
-            case DUTY_CYCLE_BANG_BANG: shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
-                break;
-            case TORQUE_CURRENT_BANG_BANG: shootMotor1.setControl(shootTorqueBang.withVelocity(velocity));
-                break;
-            case COAST: shootMotor1.set(0);
-                break;
-        }
+        // switch (mode) {
+        //     case DUTY_CYCLE_BANG_BANG: shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
+        //         break;
+        //     case TORQUE_CURRENT_BANG_BANG: shootMotor1.setControl(shootTorqueBang.withVelocity(velocity));
+        //         break;
+        //     case COAST: shootMotor1.set(0);
+        //         break;
+        // }
     }
 
     /**
