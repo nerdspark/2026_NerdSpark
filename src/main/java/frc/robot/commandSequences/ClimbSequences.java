@@ -31,6 +31,13 @@ public class ClimbSequences {
                 shortClimb.shortGoToPosition(() -> 0.0));
     }
 
+
+    public static Command tallArmUp(TallClimb tallClimb, ShortClimb shortClimb) {
+       return new SequentialCommandGroup(
+        tallClimb.tallGoToPosition(() -> ClimbConstants.l1Position)
+       );
+    }
+
     public static Command climbToL1TeleOp(TallClimb tallClimb, ShortClimb shortClimb) {
 
         // L1-------------------------
@@ -38,11 +45,12 @@ public class ClimbSequences {
         // highest position
         // Tall Arm pulls down until small arm then small arm hooks on first rung and
         return new SequentialCommandGroup(
-                tallClimb.tallGoToPosition(() -> ClimbConstants.l1Position),
                 new WaitCommand(0.3),
                 new ParallelCommandGroup(
                         tallClimb.tallGoToPosition(() -> 0.0),
-                        shortClimb.shortGoToPosition(() -> ClimbConstants.l1ShortPosition)));
+                        shortClimb.shortGoToPosition(() -> ClimbConstants.l1ShortPosition)),
+                new WaitCommand(2),
+                shortClimb.shortGoToPosition(() -> 0.0));
     }
 
     public static Command climbToL2(TallClimb tallClimb, ShortClimb shortClimb) {
@@ -85,8 +93,12 @@ public class ClimbSequences {
 
     public static Command fullTeleopClimb(TallClimb tallClimb, ShortClimb shortClimb) {
         return new SequentialCommandGroup(
-                climbToL1TeleOp(tallClimb, shortClimb));
+                climbToL1TeleOp(tallClimb, shortClimb));               
                 // climbToL2(tallClimb, shortClimb),
-                // climbToL3(tallClimb, shortClimb)
+                // climbToL3(tallClimb, shortClimb));
+                // new WaitCommand(5),
+                // tallClimb.tallGoToPosition(() -> ClimbConstants.l1ComeBackDownPosition));
+        
+
     }
 }

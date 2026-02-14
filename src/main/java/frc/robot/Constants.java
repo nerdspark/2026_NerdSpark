@@ -169,16 +169,18 @@ public static class Vision {
 
     // dummy
     public static final double l1ShortInches = 12.5;
+    public static final double l1ComeBackDownInches = 1;
 
     public static final double l1Position = inchesToRotations(l1HeightInches, pitchDiameterMeters);
     public static final double l2Position = inchesToRotations(l2HeightInches, pitchDiameterMeters);
     public static final double l3Position = inchesToRotations(l3HeightInches, pitchDiameterMeters);
     public static final double l1ShortPosition = inchesToRotations(l1ShortInches, pitchDiameterMeters);
+    public static final double l1ComeBackDownPosition = inchesToRotations(l1ComeBackDownInches, pitchDiameterMeters);
 
     public static final double positionToleranceRotations = 0.25;
 
-    public static final double motionMagicCruiseVelocity = 50;
-    public static final double motionMagicAcceleration = 200;
+    public static final double motionMagicCruiseVelocity = 20;
+    public static final double motionMagicAcceleration = 80;
     public static final double motionMagicJerk = 0.0;
 
     public static final double sensorToMechanismRatio = 15.0;
