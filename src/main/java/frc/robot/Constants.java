@@ -142,7 +142,7 @@ public final class Constants {
         public static final double shooterMaxMotorRps = 4000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = 1.0;
-        public static final double targetHeightMeters = 2.64;
+        public static final double targetHeightMeters = 1.83;
         public static final double ballMassKg = 0.2268;
         public static final double ballDiameterMeters = 0.1501;
         public static final int shotTrajectoryPoints = 25;

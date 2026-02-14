@@ -95,10 +95,16 @@ public class SimFuelSubsystem extends SubsystemBase {
         double unitX = dx / distance;
         double unitY = dy / distance;
 
-        return new Translation3d(
+        Translation3d fieldVelocity = new Translation3d(
             unitX * horizontalSpeed,
             unitY * horizontalSpeed,
             verticalSpeed
+        );
+        ChassisSpeeds fieldSpeeds = speedsSupplier.get();
+        return new Translation3d(
+            fieldVelocity.getX() - fieldSpeeds.vxMetersPerSecond,
+            fieldVelocity.getY() - fieldSpeeds.vyMetersPerSecond,
+            fieldVelocity.getZ()
         );
     }
 
