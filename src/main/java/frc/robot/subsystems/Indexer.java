@@ -16,14 +16,17 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Constants.field;
 import frc.robot.Constants.indexerConstants;
 import frc.robot.Constants.turretConstants;
+import frc.robot.commands.IndexerCommand;
 
 public class Indexer implements Subsystem {
 
     private TalonFX conveyorMotor, DrumMotor;
+    private Supplier<Double> rollerSpeed = () -> 0.0;
     
 
     public Indexer() {
@@ -59,6 +62,9 @@ public class Indexer implements Subsystem {
     
     // Moves the the pass through motors and spins the conveyer belt.
     public void passThrough(Supplier<Boolean> isActive, Supplier<Double> rollerSpeed) {
+        
+        this.rollerSpeed = rollerSpeed;
+
         if(isActive.get()){
             conveyorMotor.set(rollerSpeed.get());
         } else {
@@ -74,6 +80,13 @@ public class Indexer implements Subsystem {
         } else {
             DrumMotor.set(0.0);
         }
+    }
+
+    public Command incrementSpeed(Supplier<Boolean> isActive, Supplier<Double> increment) {
+        
+        Supplier<Double> newRollerSpeed = () -> rollerSpeed.get() + increment.get();
+
+        return new IndexerCommand(this, isActive,newRollerSpeed);
     }
 
     @Override

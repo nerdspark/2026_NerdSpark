@@ -9,9 +9,10 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.Indexer;
 
-public class IndexerCommand extends Command {
+public class IndexerCommand extends InstantCommand {
 
     Indexer indexer;
     Supplier<Boolean> isActive;
@@ -24,6 +25,16 @@ public class IndexerCommand extends Command {
 
         addRequirements(indexer);
     }
+
+    public void changeRollerSpeed(double value){
+        rollerSpeed = () -> value;
+    }
+
+    public Supplier<Double> getRollerSpeed(){
+        return rollerSpeed;
+    }
+
+    
 
      @Override
     public void initialize() {

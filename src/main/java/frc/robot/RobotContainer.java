@@ -6,6 +6,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -19,9 +21,12 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AimChassisCommand;
+import frc.robot.commands.IndexerCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Turret;
+
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -39,6 +44,10 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     private final SendableChooser<Command> autoChooser;
+
+    private final Indexer indexer = new Indexer();
+
+
 
     private final Turret turret = new Turret(
         () -> drivetrain.getState().Pose, 
@@ -62,6 +71,12 @@ public class RobotContainer {
 
         // Rotate chassis to allow turret to shoot
         joystick.rightBumper().whileTrue(new AimChassisCommand(turret, drivetrain));
+
+        joystick.a().onTrue(indexer.incrementSpeed(() -> true, () -> 0.1)); //TODO add logic for this stuff
+        joystick.b().onTrue(indexer.incrementSpeed(()-> true, () -> -0.1));
+        joystick.rightTrigger().whileTrue(new IndexerCommand(indexer, () -> true, () -> Constants.indexerConstants.PASSTHROUGH_SPEED));
+        joystick.rightTrigger().whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+    
     }
 
     private void configureDefaultCommands() {

@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 
@@ -38,6 +40,10 @@ public class Constants {
 
     public final class indexerConstants {
 
+        
+        public static Supplier<Boolean> isActive = () -> true;
+
+        public final static double PASSTHROUGH_SPEED = 0.7; //TODO tune this
         public final static double DRUM_MOTOR_SPEED = 1.0;
     }
 }
