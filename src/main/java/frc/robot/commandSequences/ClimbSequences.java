@@ -85,8 +85,8 @@ public class ClimbSequences {
 
     public static Command fullTeleopClimb(TallClimb tallClimb, ShortClimb shortClimb) {
         return new SequentialCommandGroup(
-                climbToL1TeleOp(tallClimb, shortClimb),
-                climbToL2(tallClimb, shortClimb),
-                climbToL3(tallClimb, shortClimb));
+                climbToL1TeleOp(tallClimb, shortClimb));
+                // climbToL2(tallClimb, shortClimb),
+                // climbToL3(tallClimb, shortClimb)
     }
 }
