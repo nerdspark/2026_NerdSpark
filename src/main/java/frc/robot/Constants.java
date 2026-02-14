@@ -10,13 +10,17 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
-import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 
 public final class Constants {
+    public static final double gyroP = 2;
+    public static final double gyroI = 0.0;
+    public static final double gyroD = 0.0;
+
+    public static final String CANbus = "canivore1";
+
     public static class Vision {
 
         public static boolean DOGLOG_ENABLED = false;
@@ -79,22 +83,12 @@ public final class Constants {
 
         public static final double kPoseAmbiguityThreshold = 0.2;
         public static final double kSingleTagDistanceThreshold = 2.0;
-
-        
     }
-
-    public static final double gyroP = 2;
-    public static final double gyroI = 0.0;
-    public static final double gyroD = 0.00;
-
-    public static final String pigeonCanBus = "canivore1";
 
     public enum AutoDrivePoses {
         LEFT(new Pose2d(FieldConstants.Hub.innerCenterPoint2D.plus(new Translation2d(Units.inchesToMeters(-96), Units.inchesToMeters(-72))), Rotation2d.fromDegrees(0)), 2.4397e6),
         CENTER(new Pose2d(FieldConstants.Hub.innerCenterPoint2D.plus(new Translation2d(Units.inchesToMeters(-96), 0)), Rotation2d.fromDegrees(0)), 2.4397e6),
         RIGHT(new Pose2d(FieldConstants.Hub.innerCenterPoint2D.plus(new Translation2d(Units.inchesToMeters(-96), Units.inchesToMeters(72))), Rotation2d.fromDegrees(0)), 2.4397e6),
-        // CLIMB_LEFT(new Pose2d(FieldConstants.Tower.leftUpright.getX() + Units.inchesToMeters(13), FieldConstants.Tower.leftUpright.getY(), Rotation2d.fromDegrees(180)), 2.4397e6), //RELATIVE TO DRIVER STATION
-        // CLIMB_RIGHT(new Pose2d(FieldConstants.Tower.rightUpright.getX() + Units.inchesToMeters(13), FieldConstants.Tower.rightUpright.getY(), Rotation2d.fromDegrees(180)), 2.4397e6);   //RELATIVE TO DRIVER STATION
         CLIMB_LEFT(new Pose2d(FieldConstants.Tower.leftUpright.plus(new Translation2d(Units.inchesToMeters(13), 0)), Rotation2d.fromDegrees(180)), 2.4397e6),  //RELATIVE TO DRIVER STATION
         CLIMB_RIGHT(new Pose2d(FieldConstants.Tower.rightUpright.plus(new Translation2d(Units.inchesToMeters(13), 0)), Rotation2d.fromDegrees(180)), 2.4397e6);   //RELATIVE TO DRIVER STATION
 
@@ -108,43 +102,35 @@ public final class Constants {
          public Pose2d getPose() {
             return this.pose;
          }
-
     }
+
     public static final class TurretConstants {
-        public static final int spinMotorId = 30;
-        public static final int hoodMotorId = 31;
-        public static final int shootMotorId = 32;
-        public static final double spinKp = 0.0; // 0.02 What currently works in the sim might need to change in real life
-        public static final double spinKi = 0.0;
-        public static final double spinKd = 0.0; // 0.01 What currently works in the sim might need to change in real life
-        public static final double spinStatorCurrentLimit = 40.0;
+        public static final double spinRatio = 210 / 21.0;
+        public static final double spinTeeth = 210;
+        public static final double spinCancoder1Teeth = 15;
+        public static final double spinCancoder2Teeth = 14;
+        public static final double spinCancoder1Ratio = spinTeeth / spinCancoder1Teeth;
+        public static final double spinCancoder2Ratio = spinTeeth / spinCancoder2Teeth;
 
-        public static final double hoodKp = 0.0; // Keep for trim if needed
-        public static final double hoodKi = 0.0;
-        public static final double hoodKd = 0.0;
-        public static final double hoodKsVolts = 0.0;
-        public static final double hoodKgVolts = 0.0;
-        public static final double hoodKvVolts = 0.0;
-        public static final double hoodKaVolts = 0.0;
-        public static final double hoodFeedforwardOffsetRad = 0.0;
-        public static final double hoodStatorCurrentLimit = 40.0;
+        public static final double hoodRatio = 50;
 
-        public static final double shootKp = 0.0;
-        public static final double shootKi = 0.0;
-        public static final double shootKd = 0.0;
-        public static final double shootStatorCurrentLimit = 60.0;
-        public static final double spinRatio = 20;
-        public static final double hoodRatio = 30;
-        public static final double spinCancoder1Ratio = 200/19.0; // Turret gear teeth / encoder A gear teeth
-        public static final double spinCancoder2Ratio = 200/17.0; // Turret gear teeth / encoder B gear teeth
-        public static final double shooterRatio = 2;
-        public static final double shooterWheelRadius = 0.1016; // 4 in in meters
+        public static final double shooterWheelRadius = Units.inchesToMeters(4);
+        public static final double shooterRatio = 2.0;
         public static final double shooterMaxMotorRps = 4000.0 / 60.0;
+
+        public static final Translation2d robotToTurret = new Translation2d(0, 0); // TODO
+
+        public static final double delay = 0.0011; // in seconds
+        public static final double maxDelay = 0.25; // in seconds TODO
+        // Fast to rise, slow to fall (IMPORTANT)
+        public static final double riseTime = 0.05; // seconds TODO
+        public static final double fallTime = 0.20; // seconds TODO
+
         public static final double shotAngleStepDeg = 0.5;
-        public static final double shooterMuzzleHeightMeters = 1.0;
-        public static final double targetHeightMeters = 1.83;
+        public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(30);
+        public static final double targetHeightMeters = Units.inchesToMeters(72);
         public static final double ballMassKg = 0.2268;
-        public static final double ballDiameterMeters = 0.1501;
+        public static final double ballDiameterMeters = Units.inchesToMeters(5.91);
         public static final int shotTrajectoryPoints = 25;
 
         public static final double hoodStow = 0.0;
@@ -157,28 +143,61 @@ public final class Constants {
         public static final double blueHubMaxX = 4.5;
         public static final double redHubMinX = 12.0;
         public static final double turretOffset = 0.0; // In radians
-        
-        public static InterpolatingTreeMap<Double, double[]> shooterMap =  new InterpolatingTreeMap<>(
-            // inverseInterpolator for Double keys
-            InverseInterpolator.forDouble(),
 
-            // interpolator for Double[] values
-            (lower, upper, t) -> {
-                double[] result = new double[lower.length];
-                for (int i = 0; i < lower.length; i++) {
-                    result[i] = lower[i] + t * (upper[i] - lower[i]);
-                }
-                return result;
-            }
-        );
-
-        // Add numbers to hash map here, Distance, [Hood Pose, Wheel Speed (motor RPS)]
-        static {
-            // shooterMap.put(, new double[] {});
-        }
+        // Physics-based solver is used for shots; no lookup map required.
     }
 
-    public static final class turretTelemetryConstants {
+    public enum ShootMode {
+        COAST,
+        DUTY_CYCLE_BANG_BANG,
+        TORQUE_CURRENT_BANG_BANG
+    }
+
+    public static final class TurretConfig {
+        public static final int spinMotorId = 25;
+        public static final double spinKp = 66.608;
+        public static final double spinKi = 0.0;
+        public static final double spinKd = 1.8545;
+        public static final double spinKs = 0.78431;
+        public static final double spinKv = 0.1309;
+        public static final double spinKa = 0.02865;
+        public static final double spinStatorCurrentLimit = 50.0;
+        public static final double spinVelocity = 50;
+        public static final double spinAccel = 400;
+
+        public static final int spinCancoder1Id = 26;
+        public static final double spinCancoder1Offset = -0.296630859375;
+
+        public static final int spinCancoder2Id = 27;
+        public static final double spinCancoder2Offset = -0.010986328125;
+
+        public static final int hoodMotor1Id = 28;
+        public static final int hoodMotor2Id = 29;
+        public static final double hoodKp1 = 5;
+        public static final double hoodKp2 = 5;
+        public static final double hoodKi1 = 0.0;
+        public static final double hoodKi2 = 0.0;
+        public static final double hoodKd1 = 0.0;
+        public static final double hoodKd2 = 0.0;
+        public static final double hoodKs1 = 0;
+        public static final double hoodKs2 = 0;
+        public static final double hoodKv1 = 0;
+        public static final double hoodKv2 = 0;
+        public static final double hoodKa1 = 0;
+        public static final double hoodKa2 = 0;
+        public static final double hoodStatorCurrentLimit = 40.0;
+        public static final double hoodVelocity = 50;
+        public static final double hoodAccel = 150;
+
+        public static final int shootMotor1Id = 30;
+        public static final int shootMotor2Id = 31;
+        public static final double bangbangKp = 999999;
+        public static final double peakDutyCycle = 1;
+        public static final double peakTorque = 40;
+        public static final double shootStatorCurrentLimit = 60.0;
+    }
+
+    public static final class TurretTelemetryConstants {
         public static final String withinLimitKey = "Turret Within Limit?";
         public static final String angleDegKey = "Turret/AngleDeg";
         public static final String spinSetpointRotKey = "Turret/SpinSetpointRot";
@@ -204,9 +223,9 @@ public final class Constants {
         public static final String setpointDegKey = "TurretTune/SetpointDeg";
         public static final boolean defaultEnable = false;
         public static final boolean defaultZero = false;
-        public static final double defaultKP = 0.0;
-        public static final double defaultKI = 0.0;
-        public static final double defaultKD = 0.0;
+        public static final double defaultKP = TurretConfig.spinKp;
+        public static final double defaultKI = TurretConfig.spinKi;
+        public static final double defaultKD = TurretConfig.spinKd;
         public static final double defaultSetpointDeg = 0.0;
     }
 
@@ -215,8 +234,8 @@ public final class Constants {
         public static final String targetXKey = "TurretTarget/X";
         public static final String targetYKey = "TurretTarget/Y";
         public static final boolean defaultEnable = false;
-        public static final double defaultTargetX = field.blueHub.getX();
-        public static final double defaultTargetY = field.blueHub.getY();
+        public static final double defaultTargetX = Field.blueHub.getX();
+        public static final double defaultTargetY = Field.blueHub.getY();
     }
 
     public static final class hoodTuningConstants {
@@ -229,9 +248,9 @@ public final class Constants {
         public static final String setpointDegKey = "HoodTune/SetpointDeg";
         public static final boolean defaultEnable = false;
         public static final boolean defaultZero = false;
-        public static final double defaultKP = 0.0;
-        public static final double defaultKI = 0.0;
-        public static final double defaultKD = 0.0;
+        public static final double defaultKP = TurretConfig.hoodKp1;
+        public static final double defaultKI = TurretConfig.hoodKi1;
+        public static final double defaultKD = TurretConfig.hoodKd1;
         public static final double defaultSetpointDeg = 0.0;
     }
 
@@ -240,14 +259,28 @@ public final class Constants {
         public static final double turretJ = 0.004;
         public static final double hoodJ = 0.002;
         public static final double shooterJ = 0.001;
-        public static final int motorCount = 1;
+        public static final int spinMotorCount = 1;
+        public static final int hoodMotorCount = 2;
+        public static final int shooterMotorCount = 2;
     }
 
-    public static final class field {
+    public static final class PassThroughConfig {
+        public static final int passThroughId = 32;
+        public static final double passThroughStatorCurrentLimit = 40;
+    }
+
+    public static final class Field {
         public static final Translation2d blueHub = new Translation2d(4.615, 4.040); // May need to redo
         public static final Translation2d redHub = new Translation2d(11.915, 4.040); // May need to redo
 
-        public static final Translation2d leftPass = new Translation2d();
-        public static final Translation2d rightPass = new Translation2d();
+        public static final double blueShootThreshold = 3.8; // Double check
+        public static final double bluePassThreshold = 5.5; // Double check
+        public static final double redShootThreshold = 12.8; // Double check
+        public static final double redPassThreshold = 11; // Double check
+
+        public static final Translation2d blueLeftPass = new Translation2d(); // May need to redo
+        public static final Translation2d blueRightPass = new Translation2d(); // May need to redo
+        public static final Translation2d redLeftPass = new Translation2d(); // May need to redo
+        public static final Translation2d redRightPass = new Translation2d(); // May need to redo
     }
 }

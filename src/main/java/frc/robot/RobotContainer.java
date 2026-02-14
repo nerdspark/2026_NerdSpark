@@ -33,7 +33,7 @@ import frc.robot.subsystems.SimPoseSubsystem;
 import frc.robot.subsystems.SimFuelSubsystem;
 import frc.robot.subsystems.Turret;
 import frc.robot.util.FuelSim;
-import frc.robot.Constants.field;
+import frc.robot.Constants.Field;
 
 public class RobotContainer {
     private static final int kSimKeyboardPort = 1;
@@ -144,8 +144,8 @@ public class RobotContainer {
 
     private void spawnFuelToHubTarget() {
         Translation2d target = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-            ? field.redHub
-            : field.blueHub;
+            ? Field.redHub
+            : Field.blueHub;
         Translation3d launchPosition = fuelSim.getRobotLaunchPosition();
         Translation3d baseVelocity = fuelSim.computeLaunchVelocityToTarget(target);
         Translation3d launchVelocity = fuelSim.launchVel(baseVelocity);

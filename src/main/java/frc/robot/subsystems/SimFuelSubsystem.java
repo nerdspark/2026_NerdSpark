@@ -16,8 +16,6 @@ import frc.robot.util.FuelSim;
 
 public class SimFuelSubsystem extends SubsystemBase {
     private static final double GRAVITY = 9.80665;
-    private static final double kLaunchHeightMeters = Units.inchesToMeters(30);
-
     private final Supplier<Pose2d> poseSupplier;
     private final Supplier<ChassisSpeeds> speedsSupplier;
 
@@ -60,7 +58,13 @@ public class SimFuelSubsystem extends SubsystemBase {
 
     public Translation3d getRobotLaunchPosition() {
         Pose2d pose = poseSupplier.get();
-        return new Translation3d(pose.getX(), pose.getY(), kLaunchHeightMeters);
+        Translation2d turretTranslation = pose.getTranslation()
+            .plus(TurretConstants.robotToTurret.rotateBy(pose.getRotation()));
+        return new Translation3d(
+            turretTranslation.getX(),
+            turretTranslation.getY(),
+            TurretConstants.shooterMuzzleHeightMeters
+        );
     }
 
     public Translation3d launchVel(Translation3d fieldRelativeVelocity) {
@@ -74,8 +78,10 @@ public class SimFuelSubsystem extends SubsystemBase {
 
     public Translation3d computeLaunchVelocityToTarget(Translation2d target) {
         Pose2d pose = poseSupplier.get();
-        double dx = target.getX() - pose.getX();
-        double dy = target.getY() - pose.getY();
+        Translation2d turretTranslation = pose.getTranslation()
+            .plus(TurretConstants.robotToTurret.rotateBy(pose.getRotation()));
+        double dx = target.getX() - turretTranslation.getX();
+        double dy = target.getY() - turretTranslation.getY();
         double distance = Math.hypot(dx, dy);
         if (distance <= 1e-6) {
             return new Translation3d();
