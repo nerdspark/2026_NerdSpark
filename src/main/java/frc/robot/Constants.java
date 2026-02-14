@@ -163,12 +163,12 @@ public static class Vision {
     public static final double pitchDiameterInches = 1.214;
     public static final double pitchDiameterMeters = Units.inchesToMeters(pitchDiameterInches);
 
-    public static final double l1HeightInches = 5;
+    public static final double l1HeightInches = 6;
     public static final double l2HeightInches = 72;
     public static final double l3HeightInches = 80;
 
     // dummy
-    public static final double l1ShortInches = 5;
+    public static final double l1ShortInches = 10;
 
     public static final double l1Position = inchesToRotations(l1HeightInches, pitchDiameterMeters);
     public static final double l2Position = inchesToRotations(l2HeightInches, pitchDiameterMeters);
