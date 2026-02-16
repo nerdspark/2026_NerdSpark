@@ -99,8 +99,8 @@ public class RobotContainer {
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
         joystick.a().onTrue(
             new InstantCommand(
-                () -> intake.setDeployPosition(() -> IntakeConstants.deployPos), 
-                intake
+                //() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), 
+                //intake
             ).andThen(
                 new InstantCommand(
                     () -> intake.setRollerPower(MaxSpeed),
@@ -110,16 +110,17 @@ public class RobotContainer {
         );
 
         joystick.x().onTrue(
-            new InstantCommand(
-                () -> intake.setDeployPosition(() -> IntakeConstants.homePos), 
-                intake
-            ).andThen(
+            //new InstantCommand(
+                //() -> intake.setDeployPosition(() -> IntakeConstants.homePos), 
+                //intake
+            
                 new InstantCommand(
                     () -> intake.setRollerPower(0.0),
                     intake
                 )
-            )
-        );
+            );
+                
+        
         
         drivetrain.registerTelemetry(logger::telemeterize);
     }
