@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.TurretUtil.*;
 
@@ -33,10 +34,12 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -80,6 +83,8 @@ public class Turret extends SubsystemBase {
     private Debouncer torqueCurrentDebouncer = new Debouncer(0.02, DebounceType.kFalling);
     private ShootMode mode = ShootMode.COAST;
     private double veloTest = 0;
+
+    private final Field2d m_field = new Field2d();
 
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<DriverStation.Alliance> driverAlliance,
         Supplier<Boolean> climbing) {
@@ -204,14 +209,14 @@ public class Turret extends SubsystemBase {
             .withMagnetSensor(new MagnetSensorConfigs()
                 .withAbsoluteSensorDiscontinuityPoint(1)
                 .withMagnetOffset(TurretConfig.spinCancoder1Offset)
-                .withSensorDirection(SensorDirectionValue.Clockwise_Positive)
+                .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
             )
         ;
         CANcoderConfiguration spinCancoder2Config = new CANcoderConfiguration()
             .withMagnetSensor(new MagnetSensorConfigs()
                 .withAbsoluteSensorDiscontinuityPoint(1)
                 .withMagnetOffset(TurretConfig.spinCancoder2Offset)
-                .withSensorDirection(SensorDirectionValue.Clockwise_Positive)
+                .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
             )
         ;
 
@@ -234,8 +239,8 @@ public class Turret extends SubsystemBase {
     // private final SysIdRoutine spin = new SysIdRoutine(
     //     new SysIdRoutine.Config(
     //         null, // Use default ramp rate (1 V/s)
-    //         Volts.of(7), // Reduce dynamic step voltage to 5 V to prevent brownout
-    //         null, // Use 5s timeout
+    //         Volts.of(5), // Reduce dynamic step voltage to 5 V to prevent brownout
+    //         Seconds.of(7), // Use 5s timeout
     //         state -> SignalLogger.writeString("SysIdSpin_State", state.toString())
     //     ), 
     //     new SysIdRoutine.Mechanism(
@@ -256,14 +261,13 @@ public class Turret extends SubsystemBase {
      * @param dtSec             Loop period in seconds
      */
     private void estimateTurretPhaseDelaySec(double desiredAngleRad, double currentAngleRad, double motorVelRadPerSec, 
-        double dtSec
-    ) {
+        double dtSec) {
         /* ---------------- Raw delay estimate ---------------- */
         // Shortest angular error
         double error = MathUtil.angleModulus(desiredAngleRad - currentAngleRad);
 
         // Prevent divide-by-zero
-        double effectiveVel = Math.max(Math.abs(motorVelRadPerSec), 0.01);
+        double effectiveVel = Math.max(Math.abs(motorVelRadPerSec), 0.0001);
 
         double rawDelaySec = Math.abs(error) / effectiveVel;
 
@@ -378,8 +382,10 @@ public class Turret extends SubsystemBase {
 
         // Normalize to -pi to pi
         turretAngle = normalizeRadians(turretAngle);
+        SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
 
         neededAngle = normalizeRadians(neededAngle);
+        SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
 
         // Update phase delay here, 20ms loop
         estimateTurretPhaseDelaySec(
@@ -427,17 +433,33 @@ public class Turret extends SubsystemBase {
         double velocity = veloTest;
         ChassisSpeeds speeds = speed.get();
         Pose2d currPose = pose.get();
+        m_field.setRobotPose(currPose);
         Pose2d delayPose = currPose.exp(new Twist2d( // Account for phase delay
             speeds.vxMetersPerSecond * filteredTurretDelaySec, 
             speeds.vyMetersPerSecond * filteredTurretDelaySec,
             speeds.omegaRadiansPerSecond * filteredTurretDelaySec
         ));
+        SmartDashboard.putNumber("Phase Delay", filteredTurretDelaySec);
+        m_field.getObject("Delay Pose").setPose(delayPose);
         Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(delayPose.getRotation());
         Pose2d turretPose = new Pose2d(delayPose.getTranslation().plus(rotationOffset), delayPose.getRotation());
 
         boolean isBlue = alliance.get() == DriverStation.Alliance.Blue;
-        boolean shoot = turretPose.getX() <= (isBlue ? Field.blueShootThreshold : Field.redShootThreshold);
-        boolean pass = turretPose.getX() <= (isBlue ? Field.bluePassThreshold : Field.redPassThreshold);
+        SmartDashboard.putBoolean("Is Blue", isBlue);
+        boolean shoot; 
+        if (isBlue) {
+            shoot = turretPose.getX() <= Field.blueShootThreshold;
+        } else {
+            shoot = turretPose.getX() >= Field.redShootThreshold;
+        }
+        SmartDashboard.putBoolean("Shoot", shoot);
+        boolean pass;
+        if (isBlue) {
+            pass = turretPose.getX() >= Field.bluePassThreshold;
+        } else {
+            pass = turretPose.getX() <= Field.redPassThreshold;
+        }
+        SmartDashboard.putBoolean("Pass", pass);
 
         if (shoot || pass) {
             delaySum += filteredTurretDelaySec;
@@ -455,6 +477,7 @@ public class Turret extends SubsystemBase {
             }
 
             Translation2d targetPose = shoot ? goalPose : passPose;
+            m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
             double distance = turretPose.getTranslation().getDistance(targetPose);
 
             double tof = TurretConstants.map.get(distance).tof; // Lookup TOF from table
@@ -470,6 +493,7 @@ public class Turret extends SubsystemBase {
                 distance = lookaheadTurretPos.getDistance(targetPose); // Recompute distance
                 tof = TurretConstants.map.get(distance).tof;       // Recompute TOF for new distance
             }
+            // m_field.getObject("Look Ahead Pose").setPose(lookaheadTurretPos.getMeasureX(), lookaheadTurretPos.getMeasureY(), new Rotation2d());
 
             double xError = targetPose.getX() - lookaheadTurretPos.getX();
             double yError = targetPose.getY() - lookaheadTurretPos.getY();
@@ -482,6 +506,7 @@ public class Turret extends SubsystemBase {
         }
 
         spinMotor.setControl(spinPose);
+        SmartDashboard.putNumber("Spin Motor Voltage", spinMotor.getMotorVoltage().getValueAsDouble());
         // hoodMotor1.setControl(hoodPose);
         // SmartDashboard.putNumber("Hood Motor 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
         // SmartDashboard.putNumber("Hood Motor 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
@@ -494,6 +519,8 @@ public class Turret extends SubsystemBase {
         //     case COAST: shootMotor1.set(0);
         //         break;
         // }
+
+        SmartDashboard.putData("Turret Field", m_field);
     }
 
     /**

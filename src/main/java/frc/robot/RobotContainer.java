@@ -35,7 +35,6 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Northstar.NorthstarIO;
-import frc.robot.subsystems.Northstar.NorthstarInterface;
 import frc.robot.subsystems.Northstar.VisionNorthstar;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
 
@@ -54,12 +53,12 @@ public class RobotContainer {
     private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     public final PoseEstimatorSubsystem poseEstimatorSubsystem;
-    public final VisionNorthstar northstar;
+    // public final VisionNorthstar northstar;
 
     private final SendableChooser<Command> autoChooser;
 
     private final Turret turret;
-    private final Indexer indexer;
+    // private final Indexer indexer;
 
     private final PIDController gyroController = new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
     private double target = 0.0;
@@ -69,9 +68,9 @@ public class RobotContainer {
         gyroController.setIntegratorRange(-2.0, 2.0);
 
         poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
-        northstar = new VisionNorthstar(this::getSelectedAprilTagLayout, () -> drivetrain, 
-            new NorthstarIO(this::getSelectedAprilTagLayout, 0)
-        );
+        // northstar = new VisionNorthstar(this::getSelectedAprilTagLayout, () -> drivetrain, 
+        //     new NorthstarIO(this::getSelectedAprilTagLayout, 0)
+        // );
       
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -89,10 +88,10 @@ public class RobotContainer {
         //     () -> true // false when robot is climbing
         // );
 
-        indexer = new Indexer();
+        // indexer = new Indexer();
 
         configureDefaultCommands();
-        // configureSysid();
+        configureSysid();
 
         configureBindings();
 
@@ -109,12 +108,12 @@ public class RobotContainer {
         // joystick.a().whileTrue(new TurretTest(turret, 50, 2.5));
         // joystick.x().whileTrue(new TurretTest(turret, 31, 2));
 
-        joystick.rightBumper().whileTrue(new IndexerCommand(indexer, () -> 1.0));
+        // joystick.rightBumper().whileTrue(new IndexerCommand(indexer, () -> 1.0));
 
-        joystick.povUp().onTrue(new InstantCommand(() -> target = 0.0));
-        joystick.povLeft().onTrue(new InstantCommand(() -> target = Math.PI/2));
-        joystick.povDown().onTrue(new InstantCommand(() -> target = Math.PI));
-        joystick.povRight().onTrue(new InstantCommand(() -> target = -Math.PI/2));
+        // joystick.povUp().onTrue(new InstantCommand(() -> target = 0.0));
+        // joystick.povLeft().onTrue(new InstantCommand(() -> target = Math.PI/2));
+        // joystick.povDown().onTrue(new InstantCommand(() -> target = Math.PI));
+        // joystick.povRight().onTrue(new InstantCommand(() -> target = -Math.PI/2));
     }
 
     private void configureDefaultCommands() {
@@ -129,8 +128,8 @@ public class RobotContainer {
             )
         );
 
-        // // Idle while the robot is disabled. This ensures the configured
-        // // neutral mode is applied to the drive motors while disabled.
+        // Idle while the robot is disabled. This ensures the configured
+        // neutral mode is applied to the drive motors while disabled.
         final var idle = new SwerveRequest.Idle();
         RobotModeTriggers.disabled().whileTrue(
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
@@ -139,14 +138,14 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    // private void configureSysid() {
-    //     // Run SysId routines when holding back/start and X/Y.
-    //     // Note that each routine should be run exactly once in a single log.
-    //     joystick.back().and(joystick.y()).whileTrue(turret.sysIdDynamic(Direction.kForward));
-    //     joystick.back().and(joystick.x()).whileTrue(turret.sysIdDynamic(Direction.kReverse));
-    //     joystick.start().and(joystick.y()).whileTrue(turret.sysIdQuasistatic(Direction.kForward));
-    //     joystick.start().and(joystick.x()).whileTrue(turret.sysIdQuasistatic(Direction.kReverse));
-    // }
+    private void configureSysid() {
+        // Run SysId routines when holding back/start and X/Y.
+        // Note that each routine should be run exactly once in a single log.
+        // joystick.back().and(joystick.y()).whileTrue(turret.sysIdDynamic(Direction.kForward));
+        // joystick.back().and(joystick.x()).whileTrue(turret.sysIdDynamic(Direction.kReverse));
+        // joystick.start().and(joystick.y()).whileTrue(turret.sysIdQuasistatic(Direction.kForward));
+        // joystick.start().and(joystick.x()).whileTrue(turret.sysIdQuasistatic(Direction.kReverse));
+    }
 
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();

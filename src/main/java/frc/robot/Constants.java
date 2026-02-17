@@ -115,8 +115,8 @@ public final class Constants {
         public static final double delay = 0.0011; // in seconds
         public static final double maxDelay = 0.25; // in seconds TODO
         // Fast to rise, slow to fall (IMPORTANT)
-        public static final double riseTime = 0.05; // seconds TODO
-        public static final double fallTime = 0.20; // seconds TODO
+        public static final double riseTime = 0.04; // seconds TODO
+        public static final double fallTime = 0.18; // seconds TODO
         
         public static InterpolatingTreeMap<Double, ShooterParams> climbMap =  new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
@@ -149,21 +149,21 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 66.608;
+        public static final double spinKp = 16;
         public static final double spinKi = 0.0;
-        public static final double spinKd = 1.8545;
-        public static final double spinKs = 0.78431;
-        public static final double spinKv = 0.1309;
-        public static final double spinKa = 0.02865;
+        public static final double spinKd = 2.5488;
+        public static final double spinKs = 0.43872;
+        public static final double spinKv = 0.13663;
+        public static final double spinKa = 0.051848;
         public static final double spinStatorCurrentLimit = 50.0;
-        public static final double spinVelocity = 50;
+        public static final double spinVelocity = 150;
         public static final double spinAccel = 400;
 
         public static final int spinCancoder1Id = 26;
-        public static final double spinCancoder1Offset = -0.296630859375;
+        public static final double spinCancoder1Offset = -0.614013671875;
 
         public static final int spinCancoder2Id = 27;
-        public static final double spinCancoder2Offset = -0.010986328125;
+        public static final double spinCancoder2Offset = -0.89794921875;
         
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
@@ -191,30 +191,23 @@ public final class Constants {
         public static final double shootStatorCurrentLimit = 60.0;
     }
 
-    public static final class TurretTelemetryConstants {
-        public static final String hoodAngleDegKey = "Hood/AngleDeg";
-        public static final String hoodSetpointRotKey = "Hood/SetpointRot";
-        public static final String hoodClosedLoopOutputKey = "Hood/ClosedLoopOutput";
-        public static final String hoodMotorVoltsKey = "Hood/MotorVolts";
-    }
-
     public static final class PassThroughConfig {
         public static final int passThroughId = 32;
         public static final double passThroughStatorCurrentLimit = 40;
     }
 
     public static final class Field {
-        public static final Translation2d blueHub = new Translation2d(4.615, 4.040); // May need to redo
-        public static final Translation2d redHub = new Translation2d(11.915, 4.040); // May need to redo
+        public static final Translation2d blueHub = FieldConstants.Hub.topCenterPoint.toTranslation2d();
+        public static final Translation2d redHub = FieldConstants.Hub.oppTopCenterPoint.toTranslation2d();
 
-        public static final double blueShootThreshold = 3.8; // Double check
-        public static final double bluePassThreshold = 5.5; // Double check
-        public static final double redShootThreshold = 12.8; // Double check
-        public static final double redPassThreshold = 11; // Double check
+        public static final double blueShootThreshold = FieldConstants.LinesVertical.allianceZone;
+        public static final double bluePassThreshold = FieldConstants.LinesVertical.neutralZoneNear;
+        public static final double redShootThreshold = FieldConstants.LinesVertical.oppAllianceZone;
+        public static final double redPassThreshold = FieldConstants.LinesVertical.neutralZoneFar;
 
-        public static final Translation2d blueLeftPass = new Translation2d(); // May need to redo
-        public static final Translation2d blueRightPass = new Translation2d(); // May need to redo
-        public static final Translation2d redLeftPass = new Translation2d(); // May need to redo
-        public static final Translation2d redRightPass = new Translation2d(); // May need to redo
+        public static final Translation2d blueLeftPass = FieldConstants.LeftBump.nearLeftCorner;
+        public static final Translation2d blueRightPass = FieldConstants.RightBump.nearLeftCorner;
+        public static final Translation2d redLeftPass = FieldConstants.LeftBump.oppNearLeftCorner;
+        public static final Translation2d redRightPass = FieldConstants.RightBump.oppNearLeftCorner;
     }
 }

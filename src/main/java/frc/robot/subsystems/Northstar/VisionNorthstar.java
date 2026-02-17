@@ -35,8 +35,8 @@ public class VisionNorthstar extends VirtualSubsystem {
   private final VisionIOInputsAutoLogged[] inputs;
   private final AprilTagVisionIOInputsAutoLogged[] aprilTagInputs;
   private final ObjDetectVisionIOInputsAutoLogged[] objDetectInputs;
-  private static final LoggedNetworkBoolean recordingRequest =
-      new LoggedNetworkBoolean("/SmartDashboard/Enable Recording", false);
+  private static final LoggedNetworkBoolean recordingRequest = 
+    new LoggedNetworkBoolean("/SmartDashboard/Enable Recording", false);
   
   private final Supplier<CommandSwerveDrivetrain> drivetrain;
 
@@ -47,7 +47,9 @@ public class VisionNorthstar extends VirtualSubsystem {
   private final Timer[] disconnectedTimers;
   private final Alert[] disconnectedAlerts;
 
-  public VisionNorthstar(Supplier<AprilTagLayoutType> aprilTagLayoutSupplier, Supplier<CommandSwerveDrivetrain> drive, NorthstarInterface... io) {
+  public VisionNorthstar(Supplier<AprilTagLayoutType> aprilTagLayoutSupplier, Supplier<CommandSwerveDrivetrain> drive, 
+    NorthstarInterface... io
+  ) {
     this.aprilTagLayoutSupplier = aprilTagLayoutSupplier;
     this.io = io;
     this.drivetrain = drive;

@@ -13,6 +13,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Filesystem;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import lombok.Getter;
@@ -41,17 +43,13 @@ public class FieldConstants {
    */
   public static class LinesVertical {
     public static final double center = fieldLength / 2.0;
-    public static final double starting =
-        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(26).get().getX();
+    public static final double starting = AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(26).get().getX();
     public static final double allianceZone = starting;
-    public static final double hubCenter =
-        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(26).get().getX() + Hub.width / 2.0;
+    public static final double hubCenter = AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(26).get().getX() + Hub.width / 2.0;
     public static final double neutralZoneNear = center - Units.inchesToMeters(120);
     public static final double neutralZoneFar = center + Units.inchesToMeters(120);
-    public static final double oppHubCenter =
-        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX() + Hub.width / 2.0;
-    public static final double oppAllianceZone =
-        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(10).get().getX();
+    public static final double oppHubCenter = AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX() + Hub.width / 2.0;
+    public static final double oppAllianceZone = AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(10).get().getX();
   }
 
   /**
@@ -333,12 +331,10 @@ public class FieldConstants {
             try {
               Path p =
                   Path.of(
-                          "src",
-                          "main",
-                          "deploy",
-                          "apriltags",
-                          fieldType.getJsonFolder(),
-                          name + ".json");
+                    Filesystem.getDeployDirectory().getPath(),
+                    "apriltags",
+                    fieldType.getJsonFolder(),
+                    name + ".json");
               layout = new AprilTagFieldLayout(p);
               layoutString = new ObjectMapper().writeValueAsString(layout);
             } catch (IOException e) {

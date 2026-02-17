@@ -44,7 +44,7 @@ public class NorthstarConstants {
                   Units.degreesToRadians(-152.5))));
         })
         .id("cam_name")
-        .width(1600)
+        .width(1600) 
         .height(1200)
         .exposure(monoExposure)
         .gain(monoGain)
