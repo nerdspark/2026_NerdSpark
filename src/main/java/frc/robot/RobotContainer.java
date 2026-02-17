@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -61,6 +62,8 @@ public class RobotContainer {
 
         // Warmup PathPlanner to avoid Java pauses
         FollowPathCommand.warmupCommand().schedule();
+
+        NamedCommands.registerCommand("Climb to L1", ClimbSequences.climbToL1(tallClimb, shortClimb));
     }
 
     private void configureBindings() {
