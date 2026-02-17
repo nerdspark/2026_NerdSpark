@@ -5,7 +5,9 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -75,12 +77,16 @@ public class Telemetry {
     private final DoubleArrayPublisher fieldShotTrajectoryPub = fieldTable.getDoubleArrayTopic("ShotTrajectory").publish();
     private final DoubleArrayPublisher fieldShotTargetPub = fieldTable.getDoubleArrayTopic("ShotTarget").publish();
     private final DoubleArrayPublisher fieldShotLandingPub = fieldTable.getDoubleArrayTopic("ShotLanding").publish();
+    private final DoubleArrayPublisher fieldPassTargetPub = fieldTable.getDoubleArrayTopic("PassTarget").publish();
+    private final DoubleArrayPublisher fieldPassTargetRingPub = fieldTable.getDoubleArrayTopic("PassTargetRing").publish();
 
     /* Mechanisms to represent the swerve module states */
     private final Field2d m_field = new Field2d();
     private final FieldObject2d m_shotTrajectory = m_field.getObject("ShotTrajectory");
     private final FieldObject2d m_shotTarget = m_field.getObject("ShotTarget");
     private final FieldObject2d m_shotLanding = m_field.getObject("ShotLanding");
+    private final FieldObject2d m_passTarget = m_field.getObject("PassTarget");
+    private final FieldObject2d m_passTargetRing = m_field.getObject("PassTargetRing");
     private final Mechanism2d[] m_moduleMechanisms = new Mechanism2d[] {
         new Mechanism2d(1, 1),
         new Mechanism2d(1, 1),
@@ -170,6 +176,32 @@ public class Telemetry {
     public void setShotLanding(Pose2d[] poses) {
         m_shotLanding.setPoses(poses);
         fieldShotLandingPub.set(toPoseArray(poses));
+    }
+
+    public void setPassTarget(Translation2d center, double radiusMeters, int points) {
+        if (center == null || points < 3 || radiusMeters <= 0.0) {
+            clearPassTarget();
+            return;
+        }
+        Pose2d centerPose = new Pose2d(center, new Rotation2d());
+        Pose2d[] ring = new Pose2d[points];
+        for (int i = 0; i < points; i++) {
+            double angle = (2.0 * Math.PI * i) / points;
+            double x = center.getX() + radiusMeters * Math.cos(angle);
+            double y = center.getY() + radiusMeters * Math.sin(angle);
+            ring[i] = new Pose2d(x, y, new Rotation2d());
+        }
+        m_passTarget.setPoses(centerPose);
+        m_passTargetRing.setPoses(ring);
+        fieldPassTargetPub.set(toPoseArray(new Pose2d[] { centerPose }));
+        fieldPassTargetRingPub.set(toPoseArray(ring));
+    }
+
+    public void clearPassTarget() {
+        m_passTarget.setPoses();
+        m_passTargetRing.setPoses();
+        fieldPassTargetPub.set(new double[] {});
+        fieldPassTargetRingPub.set(new double[] {});
     }
 
     private static double[] toPoseArray(Pose2d[] poses) {

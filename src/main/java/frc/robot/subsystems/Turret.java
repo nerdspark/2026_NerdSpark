@@ -454,6 +454,13 @@ public class Turret extends SubsystemBase {
                     turretTargetConstants.targetYKey,
                     turretTargetConstants.defaultTargetY
                 );
+                if (telemetry != null) {
+                    telemetry.setPassTarget(
+                        new Translation2d(targetX, targetY),
+                        TurretConstants.passTargetRadiusMeters,
+                        TurretConstants.passTargetCirclePoints
+                    );
+                }
                 double xError = targetX - turretTranslation.getX();
                 double yError = targetY - turretTranslation.getY();
                 double targetRadians = Math.atan2(yError, xError);
@@ -462,6 +469,9 @@ public class Turret extends SubsystemBase {
                 ShotSolution solution = aimHood(Math.hypot(yError, xError));
                 updateShotVisualization(currPose, targetX, targetY, solution);
             } else if (alliance.get() == DriverStation.Alliance.Blue) {
+                if (telemetry != null) {
+                    telemetry.clearPassTarget();
+                }
                 if (currPose.getX() <= TurretConstants.blueHubMaxX) {
                     double xError = Field.blueHub.getX() - turretTranslation.getX();
                     double yError = Field.blueHub.getY() - turretTranslation.getY();
@@ -476,6 +486,9 @@ public class Turret extends SubsystemBase {
                     clearShotVisualization();
                 }
             } else {
+                if (telemetry != null) {
+                    telemetry.clearPassTarget();
+                }
                 if (currPose.getX() >= TurretConstants.redHubMinX) {
                     double xError = Field.redHub.getX() - turretTranslation.getX();
                     double yError = Field.redHub.getY() - turretTranslation.getY();
@@ -492,6 +505,9 @@ public class Turret extends SubsystemBase {
             }
         } else {
             hoodZero();
+            if (telemetry != null) {
+                telemetry.clearPassTarget();
+            }
             clearShotVisualization();
         }
 

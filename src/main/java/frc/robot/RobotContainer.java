@@ -28,12 +28,15 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.TuneTurretCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.PassTargetSelectorSubsystem;
 import frc.robot.subsystems.RealFuelSubsystem;
 import frc.robot.subsystems.SimPoseSubsystem;
 import frc.robot.subsystems.SimFuelSubsystem;
 import frc.robot.subsystems.Turret;
 import frc.robot.util.FuelSim;
 import frc.robot.Constants.Field;
+import frc.robot.Constants.turretTargetConstants;
+import frc.robot.Constants.PassTargetConstants;
 
 public class RobotContainer {
     private static final int kSimKeyboardPort = 1;
@@ -59,6 +62,7 @@ public class RobotContainer {
     private final SimFuelSubsystem fuelSim;
     private final SimPoseSubsystem simPose;
     private final RealFuelSubsystem fuelReal;
+    private final PassTargetSelectorSubsystem passTargetSelector;
 
     public RobotContainer() {
         autoChooser = AutoBuilder.buildAutoChooser();
@@ -82,6 +86,9 @@ public class RobotContainer {
         simPose = RobotBase.isSimulation()
             ? new SimPoseSubsystem(drivetrain)
             : null;
+        passTargetSelector = RobotBase.isSimulation()
+            ? new PassTargetSelectorSubsystem()
+            : null;
         fuelReal = RobotBase.isSimulation()
             ? null
             : new RealFuelSubsystem();
@@ -95,6 +102,15 @@ public class RobotContainer {
     private void configureBindings() {
         // Reset the field-centric heading on left bumper press.
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        if (passTargetSelector != null) {
+            joystick.y().onTrue(Commands.runOnce(() -> {
+                boolean enabled = SmartDashboard.getBoolean(
+                    PassTargetConstants.enableKey,
+                    PassTargetConstants.defaultEnable
+                );
+                SmartDashboard.putBoolean(PassTargetConstants.enableKey, !enabled);
+            }));
+        }
         if (fuelSim != null) {
             Command shootFuelCommand = new InstantCommand(this::spawnFuelToHubTarget)
                 .andThen(Commands.waitSeconds(0.25))
@@ -143,9 +159,26 @@ public class RobotContainer {
     }
 
     private void spawnFuelToHubTarget() {
-        Translation2d target = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-            ? Field.redHub
-            : Field.blueHub;
+        boolean useLiveTarget = SmartDashboard.getBoolean(
+            turretTargetConstants.enableKey,
+            turretTargetConstants.defaultEnable
+        );
+        Translation2d target;
+        if (useLiveTarget) {
+            double targetX = SmartDashboard.getNumber(
+                turretTargetConstants.targetXKey,
+                turretTargetConstants.defaultTargetX
+            );
+            double targetY = SmartDashboard.getNumber(
+                turretTargetConstants.targetYKey,
+                turretTargetConstants.defaultTargetY
+            );
+            target = new Translation2d(targetX, targetY);
+        } else {
+            target = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                ? Field.redHub
+                : Field.blueHub;
+        }
         Translation3d launchPosition = fuelSim.getRobotLaunchPosition();
         Translation3d baseVelocity = fuelSim.computeLaunchVelocityToTarget(target);
         Translation3d launchVelocity = fuelSim.launchVel(baseVelocity);

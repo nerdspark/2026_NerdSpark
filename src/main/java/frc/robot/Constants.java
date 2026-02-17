@@ -132,6 +132,8 @@ public final class Constants {
         public static final double ballMassKg = 0.2268;
         public static final double ballDiameterMeters = Units.inchesToMeters(5.91);
         public static final int shotTrajectoryPoints = 25;
+        public static final double passTargetRadiusMeters = ballDiameterMeters / 2.0;
+        public static final int passTargetCirclePoints = 24;
 
         public static final double hoodStow = 0.0;
         public static final double turretMinDegrees = -90.0;
@@ -233,6 +235,16 @@ public final class Constants {
         public static final String enableKey = "TurretTarget/Enable";
         public static final String targetXKey = "TurretTarget/X";
         public static final String targetYKey = "TurretTarget/Y";
+        public static final boolean defaultEnable = false;
+        public static final double defaultTargetX = Field.blueHub.getX();
+        public static final double defaultTargetY = Field.blueHub.getY();
+    }
+
+    public static final class PassTargetConstants {
+        public static final String enableKey = "PassTarget/Enable";
+        public static final String targetXKey = "PassTarget/X";
+        public static final String targetYKey = "PassTarget/Y";
+        public static final String fieldClickKey = "Field/PassTargetClick";
         public static final boolean defaultEnable = false;
         public static final double defaultTargetX = Field.blueHub.getX();
         public static final double defaultTargetY = Field.blueHub.getY();
