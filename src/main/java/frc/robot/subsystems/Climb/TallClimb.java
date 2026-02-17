@@ -44,71 +44,9 @@ public class TallClimb extends SubsystemBase {
   private MotionMagicConfigs motionMagicConfigs = climbConfig.MotionMagic;
   final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
 
-
-  // Mechanism 2d
-  // private final Mechanism2d climbMech;
-  // // Roots for left and right elevators
-  // private final MechanismRoot2d tallRoot;
-  // private final MechanismRoot2d shortRoot;
-
-  // Elevator ligaments
-  // private final MechanismLigament2d tallMech;
-  // private final MechanismLigament2d shortMech;
-  // End of Mechanism 2d
-  // private final StructPublisher<Pose3d> leftElevatorPoseHub;
-  // private final StructPublisher<Pose3d> rightElevatorPoseHub;
-
-  // Start of Climb Sequence
-  // L1-------------------------
-  // Taller Arm goes to 30 inches and hooks on first rung and Small Arm goes to
-  // highest position
-  // Tall Arm pulls down until small arm then small arm hooks on first rung and
-  // Tall Arm lets go
-  // L2-------------------------
-  // Tall Arm goes to second rung position and hooks on second rung
-  // Small Arm unhooks from first rung
-  // Kicker Arm goes out and pushes robot back and allows clearance
-  // Tall Arm pulls down until small arm then small arm hooks on second rung and
-  // Tall Arm lets go
-  // L3-------------------------
-  // Tall Arm goes to third rung position and hooks on third rung
-  // Small Arm unhooks from second rung
-  // Kicker Arm goes out and pushes robot back and allow clearance
-  // Tall Arm pulls down until small arm then small arm hooks on third rung and
-  // Tall Arm lets go.
-  // End Climb---------------------
-
   /** Creates a new TallClimb. */
   public TallClimb() {
     climbTall = new TalonFX(ClimbConstants.kLeftID, ClimbConstants.canBus);
-    // climbHook = new TalonFX(ClimbConstants.kHookID, ClimbConstants.canBus);
-    // tallSim = climbTall.getSimState();
-    // shortSim = climbShort.getSimState();
-
-    // climbMech = new Mechanism2d(3.0, 3.0);
-    // // Roots at bottom of elevators
-    // tallRoot = climbMech.getRoot("LeftRoot", 1.0, 0.2);
-    // shortRoot = climbMech.getRoot("RightRoot", 2.0, 0.2);
-
-    // // Vertical elevator rails
-    // tallMech = new MechanismLigament2d(
-    //     "LeftElevator",
-    //     0, // initial length
-    //     90, // 90° = vertical
-    //     6,
-    //     new Color8Bit(0, 150, 255));
-
-    // // shortMech = new MechanismLigament2d(
-    // //     "RightElevator",
-    // //     0.,
-    // //     90,
-    // //     6,
-    // //     new Color8Bit(255, 150, 0));
-
-    // tallRoot.append(tallMech);
-    // shortRoot.append(shortMech);
-
-    // SmartDashboard.putData("ClimbMechanism", climbMech);
 
     // Initializing the motor
     climbConfig.CurrentLimits = new CurrentLimitsConfigs()
@@ -146,29 +84,11 @@ public class TallClimb extends SubsystemBase {
     resetTallPosition();
   }
 
-  @Override
-  public void simulationPeriodic() {
-    // // double dt = 0.02;
-
-    // // Read the applied motor voltage
-    // double tallVoltage = tallSim.getMotorVoltage();
-    // double shortVoltage = shortSim.getMotorVoltage();
-
-    // tallSim.addRotorPosition(tallVoltage);
-    // shortSim.addRotorPosition(shortVoltage);
-  }
-
-  // public void robotAngle(Supplier<Double> position) {
-  // setClimbControl(position);
-  // }
-
   public void setClimbTall(Supplier<Double> position) {
     climbTall.setControl(m_request.withPosition(position.get().doubleValue()));
-    // climbHook.setControl(new PositionVoltage(position));
-
   }
 
-  // Check if this function is needed during testing.
+
 
   public void resetTallPosition() {
     // climbTall.setControl(m_request.withPosition(0));
@@ -198,8 +118,8 @@ public class TallClimb extends SubsystemBase {
   }
 
 
-  public double getClimbTallHeightMeters() {
-    return climbTall.getPosition().getValueAsDouble() * ClimbConstants.metersPerRotation(ClimbConstants.pitchDiameterMeters);
+  public double getClimbTallHeightInches() {
+    return climbTall.getPosition().getValueAsDouble() * ClimbConstants.inchesPerRotation(ClimbConstants.pitchDiameterInches);
   }
 
   @Override

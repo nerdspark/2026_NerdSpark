@@ -95,8 +95,7 @@ public class RobotContainer {
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
-        joystick.y().onTrue(ClimbSequences.tallArmUp(tallClimb, shortClimb));
-        joystick.a().onTrue(ClimbSequences.fullTeleopClimb(tallClimb, shortClimb));
+        joystick.a().onTrue(ClimbSequences.climbToL1(tallClimb, shortClimb));
         joystick.b().onTrue(ClimbSequences.climbMasterReset(tallClimb, shortClimb));
 
         // climb.setDefaultCommand();

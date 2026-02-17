@@ -140,15 +140,15 @@ public static class Vision {
   public static class ClimbConstants {
     public static final int kLeftID = 6;
     public static final int kRightID = 7;
-    public static final int kKickerID = 3;
+//     public static final int kKickerID = 3;
     public static final double climbCurrentLimit = 100.0;
     public static final double holdCurrentLimit = 8;
     public static final double hookCurrentLimit = 8;
     // public static final double ampTriggeredCurrentLimit = 2;
     public static final double power = 0.20;
-    public static final double deployPosition = 0; // rot
-    public static final double climbedPosition = 0; // rot
-    public static final double rampRate = 15;
+//     public static final double deployPosition = 0; // rot
+//     public static final double climbedPosition = 0; // rot
+//     public static final double rampRate = 15;
     public static final double kP = 50.0;
     public static final double kI = 0.0;
     public static final double kD = 0.0;
@@ -161,21 +161,15 @@ public static class Vision {
     // public static final double servoCloseposition = 0.0;
 
     public static final double pitchDiameterInches = 1.214;
-    public static final double pitchDiameterMeters = Units.inchesToMeters(pitchDiameterInches);
+//     public static final double pitchDiameterMeters = Units.inchesToMeters(pitchDiameterInches);
 
     public static final double l1HeightInches = 12.5;
-    public static final double l2HeightInches = 72;
-    public static final double l3HeightInches = 80;
+//     public static final double l2HeightInches = 72;
+//     public static final double l3HeightInches = 80;
 
-    // dummy
-    public static final double l1ShortInches = 12.5;
-    public static final double l1ComeBackDownInches = 1;
-
-    public static final double l1Position = inchesToRotations(l1HeightInches, pitchDiameterMeters);
-    public static final double l2Position = inchesToRotations(l2HeightInches, pitchDiameterMeters);
-    public static final double l3Position = inchesToRotations(l3HeightInches, pitchDiameterMeters);
-    public static final double l1ShortPosition = inchesToRotations(l1ShortInches, pitchDiameterMeters);
-    public static final double l1ComeBackDownPosition = inchesToRotations(l1ComeBackDownInches, pitchDiameterMeters);
+    public static final double l1Position = inchesToRotations(l1HeightInches, pitchDiameterInches);
+//     public static final double l2Position = inchesToRotations(l2HeightInches, pitchDiameterMeters);
+//     public static final double l3Position = inchesToRotations(l3HeightInches, pitchDiameterMeters);
 
     public static final double positionToleranceRotations = 0.25;
 
@@ -185,13 +179,13 @@ public static class Vision {
 
     public static final double sensorToMechanismRatio = 15.0;
 
-    public static double metersPerRotation(double pitchDiameterMeters) {
-        return Math.PI * pitchDiameterMeters;
+    public static double inchesPerRotation(double pitchDiameterInches) {
+        return Math.PI * pitchDiameterInches;
     }
 
 
-    public static double inchesToRotations(double inches, double pitchDiameterMeters) {
-      return Units.inchesToMeters(inches) / metersPerRotation(pitchDiameterMeters);
+    public static double inchesToRotations(double inches, double pitchDiameterInches) {
+      return inches / inchesPerRotation(pitchDiameterInches);
     }
   }
 }

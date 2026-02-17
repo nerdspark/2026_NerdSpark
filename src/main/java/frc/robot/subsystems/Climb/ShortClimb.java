@@ -41,39 +41,9 @@ public class ShortClimb extends SubsystemBase {
   private MotionMagicConfigs motionMagicConfigs = climbConfig.MotionMagic;
   final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
 
-
-  // Mechanism 2d
-  // private final Mechanism2d climbMech;
-  // Roots for left and right elevators
-
-  // End of Mechanism 2d
-  // private final StructPublisher<Pose3d> leftElevatorPoseHub;
-  // private final StructPublisher<Pose3d> rightElevatorPoseHub;
-
-  // Start of Climb Sequence
-  // L1-------------------------
-  // Taller Arm goes to 30 inches and hooks on first rung and Small Arm goes to
-  // highest position
-  // Tall Arm pulls down until small arm then small arm hooks on first rung and
-  // Tall Arm lets go
-  // L2-------------------------
-  // Tall Arm goes to second rung position and hooks on second rung
-  // Small Arm unhooks from first rung
-  // Kicker Arm goes out and pushes robot back and allows clearance
-  // Tall Arm pulls down until small arm then small arm hooks on second rung and
-  // Tall Arm lets go
-  // L3-------------------------
-  // Tall Arm goes to third rung position and hooks on third rung
-  // Small Arm unhooks from second rung
-  // Kicker Arm goes out and pushes robot back and allow clearance
-  // Tall Arm pulls down until small arm then small arm hooks on third rung and
-  // Tall Arm lets go.
-  // End Climb---------------------
-
   /** Creates a new Climb. */
   public ShortClimb() {
     climbShort = new TalonFX(ClimbConstants.kRightID, ClimbConstants.canBus);
-    // climbHook = new TalonFX(ClimbConstants.kHookID, ClimbConstants.canBus);
     // shortSim = climbShort.getSimState();
 
     // climbMech = new Mechanism2d(3.0, 3.0);
@@ -118,22 +88,6 @@ public class ShortClimb extends SubsystemBase {
     resetShortPosition();
   }
 
-  @Override
-  public void simulationPeriodic() {
-    // // double dt = 0.02;
-
-    // // Read the applied motor voltage
-    // double tallVoltage = tallSim.getMotorVoltage();
-    // double shortVoltage = shortSim.getMotorVoltage();
-
-    // tallSim.addRotorPosition(tallVoltage);
-    // shortSim.addRotorPosition(shortVoltage);
-  }
-
-  // public void robotAngle(Supplier<Double> position) {
-  // setClimbControl(position);
-  // }
-
   public void setClimbShort(Supplier<Double> position) {
     climbShort.setControl(m_request.withPosition(position.get().doubleValue()));
   } 
@@ -164,22 +118,12 @@ public class ShortClimb extends SubsystemBase {
     return new InstantCommand(() -> resetShortPosition(), this);
   }
 
-  public double getClimbShortHeightMeters() {
-    return climbShort.getPosition().getValueAsDouble() * ClimbConstants.metersPerRotation(ClimbConstants.pitchDiameterMeters);
+  public double getClimbShortHeightInches() {
+    return climbShort.getPosition().getValueAsDouble() * ClimbConstants.inchesPerRotation(ClimbConstants.pitchDiameterInches);
   }
 
   @Override
   public void periodic() {
-    // // This method will be called once per scheduler run
-    // // Fake elevator motion using sine wave for simulation
-    // double time = Timer.getFPGATimestamp();
-
-    // // Height varies between 0.2m and 1.2m
-    // double heightTall = 0.7 + 0.5 * Math.sin(time);
-    // double heightShort = 0.5 + 0.1 * Math.sin(time);
-
-    // shortMech.setLength(getClimbShortHeightMeters());
-
     SmartDashboard.putNumber("climb right position", climbShort.getPosition().getValueAsDouble());
     SmartDashboard.putNumber("climb right current (amps)", climbShort.getStatorCurrent().getValueAsDouble());
     SmartDashboard.putNumber("target position", ClimbConstants.l1Position);
