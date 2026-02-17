@@ -39,10 +39,12 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.util.ShooterParams;
@@ -63,11 +65,10 @@ public class Turret extends SubsystemBase {
     private MotionMagicVoltage hoodPose = new MotionMagicVoltage(0);
     private MotionMagicVoltage spinPose = new MotionMagicVoltage(0);
 
-    private VoltageOut sysId = new VoltageOut(0);
+    // private VoltageOut sysId = new VoltageOut(0);
 
     private Supplier<Pose2d> pose;
     private Supplier<ChassisSpeeds> speed;
-    private Supplier<DriverStation.Alliance> alliance;
     private Supplier<Boolean> climb;
 
     private boolean shortPathCrossesWrap;
@@ -86,11 +87,9 @@ public class Turret extends SubsystemBase {
 
     private final Field2d m_field = new Field2d();
 
-    public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<DriverStation.Alliance> driverAlliance,
-        Supplier<Boolean> climbing) {
+    public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> climbing) {
         pose = robotPose;
         speed = speeds;
-        alliance = driverAlliance;
         climb = climbing;
 
         canivore = new CANBus(Constants.CANbus);
@@ -262,7 +261,8 @@ public class Turret extends SubsystemBase {
      */
     private void estimateTurretPhaseDelaySec(double desiredAngleRad, double currentAngleRad, double motorVelRadPerSec, 
         double dtSec) {
-        /* ---------------- Raw delay estimate ---------------- */
+        if (!DriverStation.isDisabled()) {
+            /* ---------------- Raw delay estimate ---------------- */
         // Shortest angular error
         double error = MathUtil.angleModulus(desiredAngleRad - currentAngleRad);
 
@@ -284,6 +284,7 @@ public class Turret extends SubsystemBase {
         alpha = MathUtil.clamp(alpha, 0.0, 1.0);
 
         filteredTurretDelaySec += alpha * (rawDelaySec - filteredTurretDelaySec);
+        }
     }
 
     
@@ -444,21 +445,18 @@ public class Turret extends SubsystemBase {
         Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(delayPose.getRotation());
         Pose2d turretPose = new Pose2d(delayPose.getTranslation().plus(rotationOffset), delayPose.getRotation());
 
-        boolean isBlue = alliance.get() == DriverStation.Alliance.Blue;
+        boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
         SmartDashboard.putBoolean("Is Blue", isBlue);
-        boolean shoot; 
+        boolean shoot;
+        boolean pass; 
         if (isBlue) {
             shoot = turretPose.getX() <= Field.blueShootThreshold;
-        } else {
-            shoot = turretPose.getX() >= Field.redShootThreshold;
-        }
-        SmartDashboard.putBoolean("Shoot", shoot);
-        boolean pass;
-        if (isBlue) {
             pass = turretPose.getX() >= Field.bluePassThreshold;
         } else {
+            shoot = turretPose.getX() >= Field.redShootThreshold;
             pass = turretPose.getX() <= Field.redPassThreshold;
         }
+        SmartDashboard.putBoolean("Shoot", shoot);
         SmartDashboard.putBoolean("Pass", pass);
 
         if (shoot || pass) {
@@ -483,7 +481,7 @@ public class Turret extends SubsystemBase {
             double tof = TurretConstants.map.get(distance).tof; // Lookup TOF from table
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
 
-            for (int i = 0; i < 8; i++) {
+            for (int i = 0; i < 10; i++) {
                 Translation2d robotFieldVelocity = new Translation2d(
                     speeds.vxMetersPerSecond,
                     speeds.vyMetersPerSecond

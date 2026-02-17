@@ -78,13 +78,11 @@ public class RobotContainer {
         turret = new Turret(
             () -> drivetrain.getState().Pose, 
             () -> ChassisSpeeds.fromRobotRelativeSpeeds(drivetrain.getState().Speeds, drivetrain.getState().Pose.getRotation()),
-            () -> DriverStation.getAlliance().orElse(Alliance.Red),
             () -> true // false when robot is climbing
         );
         // turret = new Turret(
         //     () -> new Pose2d(), 
         //     () -> new ChassisSpeeds(),
-        //     () -> DriverStation.getAlliance().orElse(Alliance.Red),
         //     () -> true // false when robot is climbing
         // );
 
