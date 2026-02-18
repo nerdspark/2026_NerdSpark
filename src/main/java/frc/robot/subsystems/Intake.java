@@ -70,7 +70,7 @@ public class Intake extends SubsystemBase {
     }
     
     public void setDeployPosition(Supplier<Double> rotations) {
-        //intakeMotorDeploy.setControl(m_mmRequest.withPosition(rotations.get().doubleValue()));
+        intakeMotorDeploy.setControl(m_mmRequest.withPosition(rotations.get().doubleValue()));
     }
     
     public void setRollerPower(double power) {
