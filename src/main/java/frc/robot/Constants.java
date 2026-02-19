@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-<<<<<<< HEAD
-=======
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -14,7 +12,6 @@ import java.util.Map;
 import com.ctre.phoenix6.CANBus;
 
 import dev.doglog.DogLog;
->>>>>>> develop_intake_ethan
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
@@ -121,7 +118,6 @@ public final class Constants {
 
         public static final double shooterWheelRadius = Units.inchesToMeters(4);
 
-<<<<<<< HEAD
         public static final Translation2d robotToTurret = new Translation2d(0,0); // TODO
         
         public static final double delay = 0.0011; // in seconds
@@ -134,35 +130,6 @@ public final class Constants {
             InverseInterpolator.forDouble(),
             (start, end, t) -> start.interpolate(end, t) // value interpolation
         );
-=======
-    public static class IntakeConstants { 
-        public static final CANBus CANBus = new CANBus("canivore1");
-
-        public static final int roller1id = 34;
-        public static final int roller2id = 35;
-        public static final int deployIntakeMotorId = 33;
-
-        public static final int intakeCurrentLimit = 40;
-
-
-        public static final int motionMagicAcceleration =150;
-        public static final int motionMagicCruiseVelocity=50;
-        public static final int motionMagicJerk=0;
-        //Constants after tuning in TunerX, works great
-        public static final double kP = 1.5;
-        public static final int kI = 0;
-        public static final double kD = 0.0010000000474974513;
-        public static final int kG = 0;
-        public static final int kS = 0;
-        public static final int kA = 0;
-        public static final int kV = 0;
-
-        public static final double deployPos = -11.9;
-        public static final double homePos = 0;
-
-
-    }
->>>>>>> develop_intake_ethan
 
         public static InterpolatingTreeMap<Double, ShooterParams> map = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
@@ -235,6 +202,34 @@ public final class Constants {
     public static final class PassThroughConfig {
         public static final int passThroughId = 32;
         public static final double passThroughStatorCurrentLimit = 40;
+    }
+
+    public static class IntakeConstants { 
+        public static final CANBus CANBus = new CANBus("canivore1");
+
+        public static final int roller1id = 34;
+        public static final int roller2id = 35;
+        public static final int deployIntakeMotorId = 33;
+
+        public static final int intakeCurrentLimit = 40;
+
+
+        public static final int motionMagicAcceleration =150;
+        public static final int motionMagicCruiseVelocity=50;
+        public static final int motionMagicJerk=0;
+        //Constants after tuning in TunerX, works great
+        public static final double kP = 1.5;
+        public static final int kI = 0;
+        public static final double kD = 0.0010000000474974513;
+        public static final int kG = 0;
+        public static final int kS = 0;
+        public static final int kA = 0;
+        public static final int kV = 0;
+
+        public static final double deployPos = -11.9;
+        public static final double homePos = 0;
+
+
     }
 
     public static final class Field {
