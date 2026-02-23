@@ -13,11 +13,13 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.util.FuelSim;
+import frc.robot.util.ShooterOffsetMap;
 
 public class SimFuelSubsystem extends SubsystemBase {
     private static final double GRAVITY = 9.80665;
     private final Supplier<Pose2d> poseSupplier;
     private final Supplier<ChassisSpeeds> speedsSupplier;
+    private final ShooterOffsetMap offsetMap = new ShooterOffsetMap();
 
     public SimFuelSubsystem(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> speedsSupplier) {
         this.poseSupplier = poseSupplier;
@@ -141,7 +143,14 @@ public class SimFuelSubsystem extends SubsystemBase {
         if (!Double.isFinite(bestAngleDeg)) {
             return null;
         }
-        return new ShotSolution(bestAngleDeg, bestMotorRps);
+        ShooterOffsetMap.Offsets offsets = offsetMap.sample(distanceMeters);
+        double adjustedHood = clamp(bestAngleDeg + offsets.hoodOffsetDeg, minAngle, maxAngle);
+        double adjustedMotorRps = clamp(
+            bestMotorRps + offsets.motorRpsOffset,
+            0.0,
+            TurretConstants.shooterMaxMotorRps
+        );
+        return new ShotSolution(adjustedHood, adjustedMotorRps);
     }
 
     private static double solveBallisticSpeed(double distanceMeters, double angleRad, double deltaHeightMeters) {
@@ -156,6 +165,10 @@ public class SimFuelSubsystem extends SubsystemBase {
         }
         double numerator = GRAVITY * distanceMeters * distanceMeters;
         return Math.sqrt(numerator / denom);
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     private static final class ShotSolution {

@@ -46,6 +46,7 @@ import frc.robot.Constants.TurretTelemetryConstants;
 import frc.robot.Constants.turretSimConstants;
 import frc.robot.Constants.turretTargetConstants;
 import frc.robot.Telemetry;
+import frc.robot.util.ShooterOffsetMap;
 
 public class Turret extends SubsystemBase {
     private static final double TWO_PI = 2.0 * Math.PI;
@@ -78,6 +79,7 @@ public class Turret extends SubsystemBase {
     private final Supplier<DriverStation.Alliance> alliance;
     private final Supplier<Boolean> aimTurret;
     private final Telemetry telemetry;
+    private final ShooterOffsetMap offsetMap = new ShooterOffsetMap();
 
     private boolean manualSpinOverride = false;
     private boolean manualHoodOverride = false;
@@ -629,7 +631,14 @@ public class Turret extends SubsystemBase {
         if (!Double.isFinite(bestAngleDeg)) {
             return null;
         }
-        return new ShotSolution(bestAngleDeg, bestMotorRps);
+        ShooterOffsetMap.Offsets offsets = offsetMap.sample(distanceMeters);
+        double adjustedHood = clamp(bestAngleDeg + offsets.hoodOffsetDeg, minAngle, maxAngle);
+        double adjustedMotorRps = clamp(
+            bestMotorRps + offsets.motorRpsOffset,
+            0.0,
+            TurretConstants.shooterMaxMotorRps
+        );
+        return new ShotSolution(adjustedHood, adjustedMotorRps);
     }
 
     private static double solveBallisticSpeed(double distanceMeters, double angleRad, double deltaHeightMeters) {
@@ -712,6 +721,10 @@ public class Turret extends SubsystemBase {
             degrees += 360.0; // move into -180..180
         }
         return degrees;
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     // Normalizes to [-pi, pi]

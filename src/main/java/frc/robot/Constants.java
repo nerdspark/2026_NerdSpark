@@ -250,6 +250,14 @@ public final class Constants {
         public static final double defaultTargetY = Field.blueHub.getY();
     }
 
+    public static final class ShooterOffsetConstants {
+        public static final String enableKey = "ShooterOffset/Enable";
+        public static final String distancesKey = "ShooterOffset/Distances";
+        public static final String hoodOffsetDegKey = "ShooterOffset/HoodOffsetDeg";
+        public static final String motorRpsOffsetKey = "ShooterOffset/MotorRpsOffset";
+        public static final boolean defaultEnable = false;
+    }
+
     public static final class hoodTuningConstants {
         public static final String enableKey = "HoodTune/Enable";
         public static final String zeroKey = "HoodTune/Zero";
