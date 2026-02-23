@@ -50,6 +50,11 @@ public class FieldConstants {
     public static final double neutralZoneFar = center + Units.inchesToMeters(120);
     public static final double oppHubCenter = AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX() + Hub.width / 2.0;
     public static final double oppAllianceZone = AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(10).get().getX();
+
+    public static final double blueShootLine = AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(23).get().getX();
+    public static final double bluePassLine = AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(22).get().getX();
+    public static final double redShootLine = AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(7).get().getX();
+    public static final double redPassLine = AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(6).get().getX();
   }
 
   /**

@@ -117,6 +117,8 @@ public final class Constants {
         // Fast to rise, slow to fall (IMPORTANT)
         public static final double riseTime = 0.04; // seconds TODO
         public static final double fallTime = 0.18; // seconds TODO
+
+        public static final double hoodRetractTime = 0.1; // in seconds TODO
         
         public static InterpolatingTreeMap<Double, ShooterParams> climbMap =  new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
@@ -128,7 +130,7 @@ public final class Constants {
             (start, end, t) -> start.interpolate(end, t) // value interpolation
         );
 
-        // Add numbers to hash map here (Distance, [Hood Pose, Wheel Speed (motor RPS)])
+        // Add numbers to hash map here (Distance, Hood Pose, Wheel Speed (motor RPS), tof (seconds))
         static {
             // Passing
             map.put(Double.MAX_VALUE, new ShooterParams(0, 0, 0));
@@ -149,21 +151,21 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 16;
+        public static final double spinKp = 32.587;
         public static final double spinKi = 0.0;
-        public static final double spinKd = 2.5488;
-        public static final double spinKs = 0.43872;
-        public static final double spinKv = 0.13663;
-        public static final double spinKa = 0.051848;
+        public static final double spinKd = 1.4534;
+        public static final double spinKs = 0.44674;
+        public static final double spinKv = 0.12958;
+        public static final double spinKa = 0.044218;
         public static final double spinStatorCurrentLimit = 50.0;
         public static final double spinVelocity = 150;
         public static final double spinAccel = 400;
 
         public static final int spinCancoder1Id = 26;
-        public static final double spinCancoder1Offset = -0.614013671875;
+        public static final double spinCancoder1Offset = 0;
 
         public static final int spinCancoder2Id = 27;
-        public static final double spinCancoder2Offset = -0.89794921875;
+        public static final double spinCancoder2Offset = 0;
         
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
@@ -191,23 +193,11 @@ public final class Constants {
         public static final double shootStatorCurrentLimit = 60.0;
     }
 
-    public static final class PassThroughConfig {
+    public static final class IndexConfig {
         public static final int passThroughId = 32;
         public static final double passThroughStatorCurrentLimit = 40;
-    }
 
-    public static final class Field {
-        public static final Translation2d blueHub = FieldConstants.Hub.topCenterPoint.toTranslation2d();
-        public static final Translation2d redHub = FieldConstants.Hub.oppTopCenterPoint.toTranslation2d();
-
-        public static final double blueShootThreshold = FieldConstants.LinesVertical.allianceZone;
-        public static final double bluePassThreshold = FieldConstants.LinesVertical.neutralZoneNear;
-        public static final double redShootThreshold = FieldConstants.LinesVertical.oppAllianceZone;
-        public static final double redPassThreshold = FieldConstants.LinesVertical.neutralZoneFar;
-
-        public static final Translation2d blueLeftPass = FieldConstants.LeftBump.nearLeftCorner;
-        public static final Translation2d blueRightPass = FieldConstants.RightBump.nearLeftCorner;
-        public static final Translation2d redLeftPass = FieldConstants.LeftBump.oppNearLeftCorner;
-        public static final Translation2d redRightPass = FieldConstants.RightBump.oppNearLeftCorner;
+        public static final int indexId = 33;
+        public static final double indexCurretLimit = 40;
     }
 }

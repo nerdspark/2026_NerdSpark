@@ -35,14 +35,15 @@ public class NorthstarIO implements NorthstarInterface {
 
   private final Timer slowPeriodicTimer = new Timer();
 
-  public NorthstarIO(Supplier<AprilTagLayoutType> aprilTagLayoutSupplier, int index) {
+  public NorthstarIO(Supplier<AprilTagLayoutType> aprilTagLayoutSupplier, String can_name) {
     this.aprilTagLayoutSupplier = aprilTagLayoutSupplier;
-    this.deviceId = "northstar_" + index;
+    int index = cam_names.get(can_name);
+    var camera = cameras[index];
+    this.deviceId = "northstar_" + camera.name();
     var northstarTable = NetworkTableInstance.getDefault().getTable(this.deviceId);
     var configTable = northstarTable.getSubTable("config");
-    var camera = cameras[index];
 
-    configTable.getStringTopic("camera_id").publish().set(camera.id());
+    configTable.getStringTopic("camera_name").publish().set(camera.name());
     configTable.getIntegerTopic("camera_resolution_width").publish().set(camera.width());
     configTable.getIntegerTopic("camera_resolution_height").publish().set(camera.height());
     configTable.getIntegerTopic("camera_auto_exposure").publish().set(camera.autoExposure());

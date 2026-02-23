@@ -10,14 +10,12 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -26,10 +24,8 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
-import frc.robot.commands.TurretTest;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
@@ -52,13 +48,13 @@ public class RobotContainer {
 
     private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-    public final PoseEstimatorSubsystem poseEstimatorSubsystem;
-    // public final VisionNorthstar northstar;
+    // public final PoseEstimatorSubsystem poseEstimatorSubsystem;
+    public final VisionNorthstar northstar;
 
     private final SendableChooser<Command> autoChooser;
 
     private final Turret turret;
-    // private final Indexer indexer;
+    private final Indexer indexer;
 
     private final PIDController gyroController = new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
     private double target = 0.0;
@@ -67,10 +63,10 @@ public class RobotContainer {
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
         gyroController.setIntegratorRange(-2.0, 2.0);
 
-        poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
-        // northstar = new VisionNorthstar(this::getSelectedAprilTagLayout, () -> drivetrain, 
-        //     new NorthstarIO(this::getSelectedAprilTagLayout, 0)
-        // );
+        // poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
+        northstar = new VisionNorthstar(this::getSelectedAprilTagLayout, () -> drivetrain, 
+            new NorthstarIO(this::getSelectedAprilTagLayout, "cam_name")
+        );
       
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -80,15 +76,11 @@ public class RobotContainer {
             () -> ChassisSpeeds.fromRobotRelativeSpeeds(drivetrain.getState().Speeds, drivetrain.getState().Pose.getRotation()),
             () -> true // false when robot is climbing
         );
-        // turret = new Turret(
-        //     () -> new Pose2d(), 
-        //     () -> new ChassisSpeeds(),
-        //     () -> true // false when robot is climbing
-        // );
 
-        // indexer = new Indexer();
+        indexer = new Indexer();
 
         configureDefaultCommands();
+        configureNamedCommands();
         configureSysid();
 
         configureBindings();
@@ -101,17 +93,17 @@ public class RobotContainer {
         // Reset the field-centric heading on left bumper press.
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        // joystick.y().whileTrue(new TurretTest(turret, 85, 2.5));
-        // joystick.b().whileTrue(new TurretTest(turret, 70, 2.5));
-        // joystick.a().whileTrue(new TurretTest(turret, 50, 2.5));
-        // joystick.x().whileTrue(new TurretTest(turret, 31, 2));
+        joystick.rightBumper().whileTrue(new IndexerCommand(indexer, () -> 1.0));
 
-        // joystick.rightBumper().whileTrue(new IndexerCommand(indexer, () -> 1.0));
+        joystick.povUp().onTrue(new InstantCommand(() -> target = 0.0));
+        joystick.povLeft().onTrue(new InstantCommand(() -> target = Math.PI/2));
+        joystick.povDown().onTrue(new InstantCommand(() -> target = Math.PI));
+        joystick.povRight().onTrue(new InstantCommand(() -> target = -Math.PI/2));
+    }
 
-        // joystick.povUp().onTrue(new InstantCommand(() -> target = 0.0));
-        // joystick.povLeft().onTrue(new InstantCommand(() -> target = Math.PI/2));
-        // joystick.povDown().onTrue(new InstantCommand(() -> target = Math.PI));
-        // joystick.povRight().onTrue(new InstantCommand(() -> target = -Math.PI/2));
+    private void configureNamedCommands() {
+        NamedCommands.registerCommand("IndexerOn", new IndexerCommand(indexer, () -> 1.0));
+        NamedCommands.registerCommand("IndexerOff", new IndexerCommand(indexer, () -> 0.0));
     }
 
     private void configureDefaultCommands() {
@@ -147,7 +139,6 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
-        // return null;
     }
 
     private double calcAutoTurn() {
