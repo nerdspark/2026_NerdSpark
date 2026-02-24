@@ -100,15 +100,114 @@ public final class Constants {
             
     }
 
+    public static final class TurretTelemetryConstants {
+        public static final String withinLimitKey = "Turret Within Limit?";
+        public static final String angleDegKey = "Turret/AngleDeg";
+        public static final String spinSetpointRotKey = "Turret/SpinSetpointRot";
+        public static final String spinClosedLoopOutputKey = "Turret/SpinClosedLoopOutput";
+        public static final String spinMotorVoltsKey = "Turret/SpinMotorVolts";
+        public static final String hoodAngleDegKey = "Hood/AngleDeg";
+        public static final String hoodSetpointRotKey = "Hood/SetpointRot";
+        public static final String hoodClosedLoopOutputKey = "Hood/ClosedLoopOutput";
+        public static final String hoodMotorVoltsKey = "Hood/MotorVolts";
+        public static final String shooterSetpointRpsKey = "Shooter/SetpointRps";
+        public static final String shooterMotorRpsKey = "Shooter/MotorRps";
+        public static final String shooterWheelRpsKey = "Shooter/WheelRps";
+        public static final String shooterMotorVoltsKey = "Shooter/MotorVolts";
+    }
+
+     public static final class turretTuningConstants {
+        public static final String enableKey = "TurretTune/Enable";
+        public static final String zeroKey = "TurretTune/Zero";
+        public static final String activeKey = "TurretTune/Active";
+        public static final String kPKey = "TurretTune/kP";
+        public static final String kIKey = "TurretTune/kI";
+        public static final String kDKey = "TurretTune/kD";
+        public static final String setpointDegKey = "TurretTune/SetpointDeg";
+        public static final boolean defaultEnable = false;
+        public static final boolean defaultZero = false;
+        public static final double defaultKP = TurretConfig.spinKp;
+        public static final double defaultKI = TurretConfig.spinKi;
+        public static final double defaultKD = TurretConfig.spinKd;
+        public static final double defaultSetpointDeg = 0.0;
+    }
+    public static final class turretTargetConstants {
+        public static final String enableKey = "TurretTarget/Enable";
+        public static final String targetXKey = "TurretTarget/X";
+        public static final String targetYKey = "TurretTarget/Y";
+        public static final boolean defaultEnable = false;
+        public static final double defaultTargetX = Field.blueHub.getX();
+        public static final double defaultTargetY = Field.blueHub.getY();
+    }
+    public static final class PassTargetConstants {
+        public static final String enableKey = "PassTarget/Enable";
+        public static final String targetXKey = "PassTarget/X";
+        public static final String targetYKey = "PassTarget/Y";
+        public static final String fieldClickKey = "Field/PassTargetClick";
+        public static final boolean defaultEnable = false;
+        public static final double defaultTargetX = Field.blueHub.getX();
+        public static final double defaultTargetY = Field.blueHub.getY();
+    }
+
+    public static final class ShooterOffsetConstants {
+        public static final String enableKey = "ShooterOffset/Enable";
+        public static final String distancesKey = "ShooterOffset/Distances";
+        public static final String hoodOffsetDegKey = "ShooterOffset/HoodOffsetDeg";
+        public static final String motorRpsOffsetKey = "ShooterOffset/MotorRpsOffset";
+        public static final boolean defaultEnable = false;
+    }
+
+    public static final class hoodTuningConstants {
+        public static final String enableKey = "HoodTune/Enable";
+        public static final String zeroKey = "HoodTune/Zero";
+        public static final String activeKey = "HoodTune/Active";
+        public static final String kPKey = "HoodTune/kP";
+        public static final String kIKey = "HoodTune/kI";
+        public static final String kDKey = "HoodTune/kD";
+        public static final String setpointDegKey = "HoodTune/SetpointDeg";
+        public static final boolean defaultEnable = false;
+        public static final boolean defaultZero = false;
+        public static final double defaultKP = TurretConfig.hoodKp1;
+        public static final double defaultKI = TurretConfig.hoodKi1;
+        public static final double defaultKD = TurretConfig.hoodKd1;
+        public static final double defaultSetpointDeg = 0.0;
+    }
+    public static final class Field {
+        public static final Translation2d blueHub = new Translation2d(4.615, 4.040); // May need to redo
+        public static final Translation2d redHub = new Translation2d(11.915, 4.040); // May need to redo
+
+        public static final double blueShootThreshold = 3.8; // Double check
+        public static final double bluePassThreshold = 5.5; // Double check
+        public static final double redShootThreshold = 12.8; // Double check
+        public static final double redPassThreshold = 11; // Double check
+
+        public static final Translation2d blueLeftPass = new Translation2d(); // May need to redo
+        public static final Translation2d blueRightPass = new Translation2d(); // May need to redo
+        public static final Translation2d redLeftPass = new Translation2d(); // May need to redo
+        public static final Translation2d redRightPass = new Translation2d(); // May need to redo
+    }
+
     public static final class TurretConstants {
         public static final double spinRatio = 210/21.0;
         public static final double spinTeeth = 210;
         public static final double spinCancoder1Teeth = 15;
         public static final double spinCancoder2Teeth = 14;
+        public static final double spinCancoder1Ratio = spinTeeth / spinCancoder1Teeth;
+        public static final double spinCancoder2Ratio = spinTeeth / spinCancoder2Teeth;
         
         public static final double hoodRatio = 50;
 
         public static final double shooterWheelRadius = Units.inchesToMeters(4);
+        public static final double shooterRatio = 2.0;
+        public static final double shooterMaxMotorRps = 4000.0 / 60.0;
+        public static final double shotAngleStepDeg = 0.5;
+        public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(30);
+        public static final double targetHeightMeters = Units.inchesToMeters(72);
+        public static final double hoodMinDegrees = 17.0;
+        public static final double hoodMaxDegrees = 65.0;
+        public static final double passTargetRadiusMeters = Units.inchesToMeters(5.91) / 2.0;
+        public static final int passTargetCirclePoints = 24;
+        public static final double turretOffset = 0.0;
 
         public static final Translation2d robotToTurret = new Translation2d(0,0); // TODO
         

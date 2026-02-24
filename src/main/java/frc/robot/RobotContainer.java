@@ -30,8 +30,6 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Turret;
-import frc.robot.subsystems.Northstar.NorthstarIO;
-import frc.robot.subsystems.Northstar.VisionNorthstar;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
 
 public class RobotContainer {
@@ -49,7 +47,6 @@ public class RobotContainer {
     private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     // public final PoseEstimatorSubsystem poseEstimatorSubsystem;
-    public final VisionNorthstar northstar;
 
     private final SendableChooser<Command> autoChooser;
 
@@ -63,11 +60,6 @@ public class RobotContainer {
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
         gyroController.setIntegratorRange(-2.0, 2.0);
 
-        // poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
-        northstar = new VisionNorthstar(this::getSelectedAprilTagLayout, () -> drivetrain, 
-            new NorthstarIO(this::getSelectedAprilTagLayout, "cam_name")
-        );
-      
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
 
