@@ -1,6 +1,7 @@
 package frc.robot.commandSequences;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -8,12 +9,25 @@ import frc.robot.Constants.ClimbConstants;
 import frc.robot.subsystems.Climb.ShortClimb;
 import frc.robot.subsystems.Climb.TallClimb;
 
+// TODO: Add LED state variable
+
 public class ClimbSequences {
-        // idk if this is useful
+
         public static Command climbMasterReset(TallClimb tallClimb, ShortClimb shortClimb) {
-                return new ParallelCommandGroup(
-                                tallClimb.tallGoToPosition(() -> 0.0),
-                                shortClimb.shortGoToPosition(() -> 0.0));
+                return new SequentialCommandGroup(
+                                new InstantCommand(() -> {
+                                        tallClimb.configMotionMagic(
+                                                        ClimbConstants.motionMagicCruiseVelocity,
+                                                        ClimbConstants.motionMagicAcceleration,
+                                                        ClimbConstants.motionMagicJerk);
+                                        shortClimb.configMotionMagic(
+                                                        ClimbConstants.motionMagicCruiseVelocity,
+                                                        ClimbConstants.motionMagicAcceleration,
+                                                        ClimbConstants.motionMagicJerk);
+                                }),
+                                new ParallelCommandGroup(
+                                                tallClimb.tallGoToPosition(() -> 0.0),
+                                                shortClimb.shortGoToPosition(() -> 0.0)));
         }
 
         // public static Command tallArmUp(TallClimb tallClimb, ShortClimb shortClimb) {
@@ -24,15 +38,40 @@ public class ClimbSequences {
 
         public static Command climbToL1(TallClimb tallClimb, ShortClimb shortClimb) {
                 return new SequentialCommandGroup(
+                                new InstantCommand(() -> {
+                                        tallClimb.configMotionMagic(ClimbConstants.motionMagicCruiseVelocity,
+                                                        ClimbConstants.motionMagicAcceleration,
+                                                        ClimbConstants.motionMagicJerk);
+                                        shortClimb.configMotionMagic(
+                                                        ClimbConstants.motionMagicCruiseVelocity,
+                                                        ClimbConstants.motionMagicAcceleration,
+                                                        ClimbConstants.motionMagicJerk);
+                                }),
                                 new ParallelCommandGroup(
                                                 tallClimb.tallGoToPosition(() -> ClimbConstants.l1Position),
                                                 shortClimb.shortGoToPosition(() -> ClimbConstants.l1Position)),
                                 new WaitCommand(0.3),
                                 new ParallelCommandGroup(
-                                        tallClimb.tallGoToPosition(() -> 0.0),
-                                        shortClimb.shortGoToPosition(() -> 0.0)
-                                )
-                );
+                                                tallClimb.tallGoToPosition(() -> ClimbConstants.l1PositionWhenClimbed),
+                                                shortClimb.shortGoToPosition(
+                                                                () -> ClimbConstants.l1PositionWhenClimbed)));
+        }
+
+        public static Command controlledDescent(TallClimb tallClimb, ShortClimb shortClimb) {
+                return new SequentialCommandGroup(
+                                new InstantCommand(() -> {
+                                        tallClimb.configMotionMagic(ClimbConstants.motionMagicDescendCruiseVelocity,
+                                                        ClimbConstants.motionMagicDescendAcceleration,
+                                                        ClimbConstants.motionMagicDescendJerk);
+                                        shortClimb.configMotionMagic(
+                                                        ClimbConstants.motionMagicDescendCruiseVelocity,
+                                                        ClimbConstants.motionMagicDescendAcceleration,
+                                                        ClimbConstants.motionMagicDescendJerk);
+                                }),
+                                new WaitCommand(0.3),
+                                new ParallelCommandGroup(
+                                                tallClimb.tallGoToPosition(() -> ClimbConstants.l1Position),
+                                                shortClimb.shortGoToPosition(() -> ClimbConstants.l1Position)));
         }
 
         // public static Command climbToL2(TallClimb tallClimb, ShortClimb shortClimb) {

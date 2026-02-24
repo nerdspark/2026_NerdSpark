@@ -164,10 +164,14 @@ public static class Vision {
 //     public static final double pitchDiameterMeters = Units.inchesToMeters(pitchDiameterInches);
 
     public static final double l1HeightInches = 12.5;
+    public static final double l1HeightInchesWhenClimbed = 7.5;
 //     public static final double l2HeightInches = 72;
 //     public static final double l3HeightInches = 80;
 
+    public static final double releaseHeightInches = 6.0;
+
     public static final double l1Position = inchesToRotations(l1HeightInches, pitchDiameterInches);
+    public static final double l1PositionWhenClimbed = inchesToRotations(l1HeightInchesWhenClimbed, pitchDiameterInches);
 //     public static final double l2Position = inchesToRotations(l2HeightInches, pitchDiameterMeters);
 //     public static final double l3Position = inchesToRotations(l3HeightInches, pitchDiameterMeters);
 
@@ -176,6 +180,10 @@ public static class Vision {
     public static final double motionMagicCruiseVelocity = 20;
     public static final double motionMagicAcceleration = 80;
     public static final double motionMagicJerk = 0.0;
+
+    public static final double motionMagicDescendCruiseVelocity = 10;
+    public static final double motionMagicDescendAcceleration = 0;
+    public static final double motionMagicDescendJerk = 0.0;
 
     public static final double sensorToMechanismRatio = 15.0;
 

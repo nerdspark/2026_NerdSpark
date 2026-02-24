@@ -69,9 +69,7 @@ public class ShortClimb extends SubsystemBase {
         .withKV(ClimbConstants.kV)
         .withGravityType(GravityTypeValue.Elevator_Static);
 
-    motionMagicConfigs.MotionMagicCruiseVelocity = ClimbConstants.motionMagicCruiseVelocity;
-    motionMagicConfigs.MotionMagicAcceleration = ClimbConstants.motionMagicAcceleration;
-    motionMagicConfigs.MotionMagicJerk = ClimbConstants.motionMagicJerk;
+    configMotionMagic(ClimbConstants.motionMagicCruiseVelocity, ClimbConstants.motionMagicAcceleration, ClimbConstants.motionMagicJerk);
 
     climbShort
         .getConfigurator()
@@ -86,6 +84,12 @@ public class ShortClimb extends SubsystemBase {
     // .withNeutralMode(NeutralModeValue.Brake)));
 
     resetShortPosition();
+  }
+
+   public void configMotionMagic(double cruiseVelocity, double acceleration, double jerk) {
+    motionMagicConfigs.MotionMagicCruiseVelocity = cruiseVelocity;
+    motionMagicConfigs.MotionMagicAcceleration = acceleration;
+    motionMagicConfigs.MotionMagicJerk = jerk;
   }
 
   public void setClimbShort(Supplier<Double> position) {

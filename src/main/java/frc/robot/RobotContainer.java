@@ -99,6 +99,7 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
         joystick.a().onTrue(ClimbSequences.climbToL1(tallClimb, shortClimb));
+        joystick.x().onTrue(ClimbSequences.controlledDescent(tallClimb, shortClimb));
         joystick.b().onTrue(ClimbSequences.climbMasterReset(tallClimb, shortClimb));
 
         // climb.setDefaultCommand();

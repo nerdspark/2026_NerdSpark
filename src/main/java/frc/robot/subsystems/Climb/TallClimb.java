@@ -66,9 +66,11 @@ public class TallClimb extends SubsystemBase {
         .withKV(ClimbConstants.kV)
         .withGravityType(GravityTypeValue.Elevator_Static);
 
-    motionMagicConfigs.MotionMagicCruiseVelocity = ClimbConstants.motionMagicCruiseVelocity;
-    motionMagicConfigs.MotionMagicAcceleration = ClimbConstants.motionMagicAcceleration;
-    motionMagicConfigs.MotionMagicJerk = ClimbConstants.motionMagicJerk;
+    // motionMagicConfigs.MotionMagicCruiseVelocity = ClimbConstants.motionMagicCruiseVelocity;
+    // motionMagicConfigs.MotionMagicAcceleration = ClimbConstants.motionMagicAcceleration;
+    // motionMagicConfigs.MotionMagicJerk = ClimbConstants.motionMagicJerk;
+
+    configMotionMagic(ClimbConstants.motionMagicCruiseVelocity, ClimbConstants.motionMagicAcceleration, ClimbConstants.motionMagicJerk);
 
     climbTall
         .getConfigurator()
@@ -82,6 +84,12 @@ public class TallClimb extends SubsystemBase {
     // .withNeutralMode(NeutralModeValue.Brake)));
 
     resetTallPosition();
+  }
+
+  public void configMotionMagic(double cruiseVelocity, double acceleration, double jerk) {
+    motionMagicConfigs.MotionMagicCruiseVelocity = cruiseVelocity;
+    motionMagicConfigs.MotionMagicAcceleration = acceleration;
+    motionMagicConfigs.MotionMagicJerk = jerk;
   }
 
   public void setClimbTall(Supplier<Double> position) {
