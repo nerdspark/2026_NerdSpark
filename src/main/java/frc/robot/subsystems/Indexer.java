@@ -25,17 +25,17 @@ import frc.robot.commands.IndexerCommand;
 
 public class Indexer implements Subsystem {
 
-    private TalonFX conveyorMotor, DrumMotor;
+    private TalonFX spinDexerMotor;
     private Supplier<Double> rollerSpeed = () -> 0.0;
     
 
     public Indexer() {
 
-        conveyorMotor = new TalonFX(0); //TODO add these in Later
-        DrumMotor = new TalonFX(1); // TODO add these later
+        spinDexerMotor = new TalonFX(0); //TODO add these in Later
+        // DrumMotor = new TalonFX(1); // TODO add these later
         
         // indexer configs
-        TalonFXConfiguration conveyorConfig = new TalonFXConfiguration()
+        TalonFXConfiguration spindexerConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(Amps.of(40))
                 .withStatorCurrentLimitEnable(true)
@@ -43,44 +43,44 @@ public class Indexer implements Subsystem {
         ;
 
         // drum motor configs: 
-        TalonFXConfiguration DrumMotorConfig = new TalonFXConfiguration()
-            .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(Amps.of(40))
-                .withStatorCurrentLimitEnable(true)
-            )
-        ;
+        // TalonFXConfiguration DrumMotorConfig = new TalonFXConfiguration()
+        //     .withCurrentLimits(new CurrentLimitsConfigs()
+        //         .withStatorCurrentLimit(Amps.of(40))
+        //         .withStatorCurrentLimitEnable(true)
+        //     )
+        // ;
 
         
 
-        conveyorMotor.getConfigurator().apply(conveyorConfig);
+        spinDexerMotor.getConfigurator().apply(spindexerConfig);
 
         //set drum motor configs
-        DrumMotor.getConfigurator().apply(DrumMotorConfig);
+        // DrumMotor.getConfigurator().apply(DrumMotorConfig);
         
         
     }
     
     // Moves the the pass through motors and spins the conveyer belt.
-    public void passThrough(Supplier<Boolean> isActive, Supplier<Double> rollerSpeed) {
+    public void spinDex(Supplier<Boolean> isActive, Supplier<Double> rollerSpeed) {
         
         this.rollerSpeed = rollerSpeed;
 
         if(isActive.get()){
-            conveyorMotor.set(rollerSpeed.get());
+            spinDexerMotor.set(rollerSpeed.get());
         } else {
-            conveyorMotor.set(0.0);
+            spinDexerMotor.set(0.0);
         }
         
     }
 
     // control the drum motors
-    public void moveDrumMotors(Supplier<Boolean> isActive) {
-        if(isActive.get()){
-            DrumMotor.set(indexerConstants.DRUM_MOTOR_SPEED);
-        } else {
-            DrumMotor.set(0.0);
-        }
-    }
+    // public void moveDrumMotors(Supplier<Boolean> isActive) {
+    //     if(isActive.get()){
+    //         DrumMotor.set(indexerConstants.DRUM_MOTOR_SPEED);
+    //     } else {
+    //         DrumMotor.set(0.0);
+    //     }
+    // }
 
     public Command incrementSpeed(Supplier<Boolean> isActive, Supplier<Double> increment) {
         

@@ -43,8 +43,8 @@ public class IndexerCommand extends InstantCommand {
 
     @Override
     public void execute() {
-        indexer.passThrough(isActive, rollerSpeed);
-        indexer.moveDrumMotors(isActive);
+        indexer.spinDex(isActive, rollerSpeed);
+        // indexer.moveDrumMotors(isActive);
     }
 
     @Override
