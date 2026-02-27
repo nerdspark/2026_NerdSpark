@@ -32,8 +32,10 @@ import frc.robot.subsystems.PassTargetSelectorSubsystem;
 import frc.robot.subsystems.RealFuelSubsystem;
 import frc.robot.subsystems.SimPoseSubsystem;
 import frc.robot.subsystems.SimFuelSubsystem;
+import frc.robot.subsystems.SimFuelIKSubsystem;
 import frc.robot.subsystems.Turret;
 import frc.robot.util.FuelSim;
+import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.turretTargetConstants;
 import frc.robot.Constants.PassTargetConstants;
@@ -60,6 +62,7 @@ public class RobotContainer {
 
     private final Turret turret;
     private final SimFuelSubsystem fuelSim;
+    private final SimFuelIKSubsystem fuelSimIK;
     private final SimPoseSubsystem simPose;
     private final RealFuelSubsystem fuelReal;
     private final PassTargetSelectorSubsystem passTargetSelector;
@@ -83,6 +86,12 @@ public class RobotContainer {
                 () -> drivetrain.getState().Speeds
             )
             : null;
+        fuelSimIK = RobotBase.isSimulation()
+            ? new SimFuelIKSubsystem(
+                () -> drivetrain.getState().Pose,
+                () -> drivetrain.getState().Speeds
+            )
+            : null;
         simPose = RobotBase.isSimulation()
             ? new SimPoseSubsystem(drivetrain)
             : null;
@@ -96,6 +105,7 @@ public class RobotContainer {
         configureDefaultCommands();
         // configureSysid();
 
+        SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, AutoAimConstants.defaultUseIKSolver);
         configureBindings();
     }
 
@@ -111,6 +121,13 @@ public class RobotContainer {
                 SmartDashboard.putBoolean(PassTargetConstants.enableKey, !enabled);
             }));
         }
+        joystick.b().onTrue(Commands.runOnce(() -> {
+            boolean useIK = SmartDashboard.getBoolean(
+                AutoAimConstants.useIKSolverKey,
+                AutoAimConstants.defaultUseIKSolver
+            );
+            SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
+        }));
         if (fuelSim != null) {
             Command shootFuelCommand = new InstantCommand(this::spawnFuelToHubTarget)
                 .andThen(Commands.waitSeconds(0.25))
@@ -179,9 +196,22 @@ public class RobotContainer {
                 ? Field.redHub
                 : Field.blueHub;
         }
-        Translation3d launchPosition = fuelSim.getRobotLaunchPosition();
-        Translation3d baseVelocity = fuelSim.computeLaunchVelocityToTarget(target);
-        Translation3d launchVelocity = fuelSim.launchVel(baseVelocity);
+        boolean useIK = SmartDashboard.getBoolean(
+            AutoAimConstants.useIKSolverKey,
+            AutoAimConstants.defaultUseIKSolver
+        );
+        Translation3d launchPosition;
+        Translation3d baseVelocity;
+        Translation3d launchVelocity;
+        if (useIK && fuelSimIK != null) {
+            launchPosition = fuelSimIK.getRobotLaunchPosition();
+            baseVelocity = fuelSimIK.computeLaunchVelocityToTarget(target);
+            launchVelocity = fuelSimIK.launchVel(baseVelocity);
+        } else {
+            launchPosition = fuelSim.getRobotLaunchPosition();
+            baseVelocity = fuelSim.computeLaunchVelocityToTarget(target);
+            launchVelocity = fuelSim.launchVel(baseVelocity);
+        }
         FuelSim.getInstance().spawnFuel(launchPosition, launchVelocity);
     }
 

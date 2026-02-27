@@ -258,6 +258,11 @@ public final class Constants {
         public static final boolean defaultEnable = false;
     }
 
+    public static final class AutoAimConstants {
+        public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
+        public static final boolean defaultUseIKSolver = true;
+    }
+
     public static final class hoodTuningConstants {
         public static final String enableKey = "HoodTune/Enable";
         public static final String zeroKey = "HoodTune/Zero";
