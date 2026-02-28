@@ -153,10 +153,10 @@ public final class Constants {
 
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
-        public static final double hoodKp1 = 0.0; // 5
-        public static final double hoodKp2 = 0.0; // 5
-        public static final double hoodKi1 = 0.0;
-        public static final double hoodKi2 = 0.0;
+        public static final double hoodKp1 = 8.6;
+        public static final double hoodKp2 = 8.6;
+        public static final double hoodKi1 = 0.2;
+        public static final double hoodKi2 = 0.2;
         public static final double hoodKd1 = 0.0;
         public static final double hoodKd2 = 0.0;
         public static final double hoodKs1 = 0;
@@ -166,8 +166,8 @@ public final class Constants {
         public static final double hoodKa1 = 0;
         public static final double hoodKa2 = 0;
         public static final double hoodStatorCurrentLimit = 40.0;
-        public static final double hoodVelocity = 50;
-        public static final double hoodAccel = 150;
+        public static final double hoodVelocity = 75;
+        public static final double hoodAccel = 200;
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;

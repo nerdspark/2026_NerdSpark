@@ -1,10 +1,12 @@
 package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Constants.IntakeConstants;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -18,23 +20,23 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 
 public class Intake extends SubsystemBase {
-    private TalonFX roller1;
-    private TalonFX roller2;
-    private TalonFX intakeMotorDeploy;
+    private CANBus canivore;
+    private TalonFX roller1, roller2, intakeMotorDeploy;
 
-     private final TalonFXSimState intakeSim;
+    private final TalonFXSimState intakeSim;
 
     private final MotionMagicVoltage m_mmRequest = new MotionMagicVoltage(0);
-        TalonFXConfiguration intakeDeployMotorConfig = new TalonFXConfiguration();
+    TalonFXConfiguration intakeDeployMotorConfig = new TalonFXConfiguration();
 
-      private MotionMagicConfigs motionMagicConfigs = intakeDeployMotorConfig.MotionMagic;
+    private MotionMagicConfigs motionMagicConfigs = intakeDeployMotorConfig.MotionMagic;
 
     
     public Intake() {
-        intakeMotorDeploy = new TalonFX(IntakeConstants.deployIntakeMotorId,  IntakeConstants.CANBus);
+        canivore = new CANBus(Constants.CANbus);
+        intakeMotorDeploy = new TalonFX(IntakeConstants.deployIntakeMotorId,  canivore);
         intakeSim = intakeMotorDeploy.getSimState();
-        roller1 = new TalonFX(IntakeConstants.roller1id, IntakeConstants.CANBus);
-        roller2 = new TalonFX(IntakeConstants.roller2id,  IntakeConstants.CANBus);
+        roller1 = new TalonFX(IntakeConstants.roller1id, canivore);
+        roller2 = new TalonFX(IntakeConstants.roller2id,  canivore);
 
         intakeDeployMotorConfig.CurrentLimits = new CurrentLimitsConfigs()
         .withStatorCurrentLimit(IntakeConstants.intakeCurrentLimit)

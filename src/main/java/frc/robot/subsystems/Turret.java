@@ -5,6 +5,8 @@ import static frc.robot.util.TurretUtil.*;
 
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
@@ -62,6 +64,8 @@ public class Turret extends SubsystemBase {
     private VelocityTorqueCurrentFOC shootTorqueBang = new VelocityTorqueCurrentFOC(0);
     private MotionMagicVoltage hoodPose = new MotionMagicVoltage(0);
     private MotionMagicVoltage spinPose = new MotionMagicVoltage(0);
+
+    private LoggedNetworkNumber hoodTestPose = new LoggedNetworkNumber("/Tuning/HoodPose", 0);
 
     // private VoltageOut sysId = new VoltageOut(0);
 
@@ -638,7 +642,7 @@ public class Turret extends SubsystemBase {
 
         spinMotor.setControl(spinPose);
         SmartDashboard.putNumber("Spin Motor Voltage", spinMotor.getMotorVoltage().getValueAsDouble());
-        hoodMotor1.setControl(hoodPose);
+        hoodMotor1.setControl(new MotionMagicVoltage(hoodTestPose.get())); // hoodPose
         SmartDashboard.putNumber("Hood Motor 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Hood Motor 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
         
