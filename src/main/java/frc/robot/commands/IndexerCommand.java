@@ -21,6 +21,17 @@ public class IndexerCommand extends InstantCommand {
     public IndexerCommand(Indexer indexer, Supplier<Boolean> isActive, Supplier<Double> rollerSpeed) {
         this.indexer = indexer;
         this.isActive = isActive;
+import edu.wpi.first.wpilibj2.command.Command;
+
+import frc.robot.subsystems.Indexer;
+
+public class IndexerCommand extends Command {
+
+    Indexer indexer;
+    Supplier<Double> rollerSpeed;
+
+    public IndexerCommand(Indexer indexer, Supplier<Double> rollerSpeed) {
+        this.indexer = indexer;
         this.rollerSpeed = rollerSpeed;
 
         addRequirements(indexer);
@@ -45,6 +56,12 @@ public class IndexerCommand extends InstantCommand {
     public void execute() {
         indexer.spinDex(isActive, rollerSpeed);
         // indexer.moveDrumMotors(isActive);
+     @Override
+    public void initialize() {}
+
+    @Override
+    public void execute() {
+        indexer.passThrough(rollerSpeed);
     }
 
     @Override
@@ -53,6 +70,9 @@ public class IndexerCommand extends InstantCommand {
     }
 
     // Returns true when the command should end.
+        indexer.stopPassThrough();
+    }
+
     @Override
     public boolean isFinished() {
         return false;
