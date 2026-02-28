@@ -143,8 +143,8 @@ public final class Constants {
         public static final double spinKv = 0.12958;
         public static final double spinKa = 0.044218;
         public static final double spinStatorCurrentLimit = 50.0;
-        public static final double spinVelocity = 50; //150
-        public static final double spinAccel = 150; // 400
+        public static final double spinVelocity = 25; //150
+        public static final double spinAccel = 75; // 400
 
         public static final int spinCancoder1Id = 26;
         public static final double spinCancoder1Offset = -0.297607421875;

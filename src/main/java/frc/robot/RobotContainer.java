@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.turretTargetConstants;
@@ -99,7 +100,8 @@ public class RobotContainer {
         SmartDashboard.putData("Auto Mode", autoChooser);
 
         configureDefaultCommands();
-        configureBindings();
+        configureSysid();
+        // configureBindings();
         configureNamedCommands();
 
         CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
@@ -116,13 +118,13 @@ public class RobotContainer {
             SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
         }));
 
-        joystick.rightTrigger()
+        joystick.leftBumper()
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> Constants.indexerConstants.PASSTHROUGH_SPEED))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
 
-        joystick.start().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
+        joystick.rightBumper().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(1.0), intake)));
-        joystick.a().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
+        joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
         joystick.x()
             .onTrue(new InstantCommand(() -> startTargeting(true)))
@@ -132,6 +134,13 @@ public class RobotContainer {
         joystick.povLeft().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
         joystick.povDown().onTrue(new InstantCommand(() -> target = Math.PI));
         joystick.povRight().onTrue(new InstantCommand(() -> target = -Math.PI / 2.0));
+    }
+
+    private void configureSysid() {
+        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        joystick.start().and(joystick.a()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        joystick.start().and(joystick.b()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     }
 
     private void configureNamedCommands() {
