@@ -319,46 +319,4 @@ public class Constants {
         public final static double PASSTHROUGH_SPEED = 0.7; //TODO tune this
         public final static double DRUM_MOTOR_SPEED = 1.0;
     }
-    public static final double gyroP = 2;
-    public static final double gyroI = 0.0;
-    public static final double gyroD = 0.00;
-
-    public static final String pigeonCanBus = "canivore1";
-
-    public static class IntakeConstants { 
-        public static final CANBus CANBus = new CANBus("canivore1");
-
-        public static final int roller1id = 34;
-        public static final int roller2id = 35;
-        public static final int deployIntakeMotorId = 33;
-
-        public static final int intakeCurrentLimit = 40;
-
-
-        public static final int motionMagicAcceleration =150;
-        public static final int motionMagicCruiseVelocity=50;
-        public static final int motionMagicJerk=0;
-        //Constants after tuning in TunerX, works great
-        public static final double kP = 1.5;
-        public static final int kI = 0;
-        public static final double kD = 0.0010000000474974513;
-        public static final int kG = 0;
-        public static final int kS = 0;
-        public static final int kA = 0;
-        public static final int kV = 0;
-
-        public static final double deployPos = -10.5;
-        public static final double homePos = 0;
-
-
-    }
-
-//         for (int i = 0; i < FieldConstants.Reef.branchPositions.size(); i++) {
-//           for (FieldConstants.ReefHeight height : FieldConstants.ReefHeight.values()) {
-//             DogLog.log("Target Pose "+ i + " " + height.toString(), FieldConstants.Reef.branchPositions.get(i).get(height).toPose2d());
-          
-//         }
-//       }
-//     }
-  
 }
