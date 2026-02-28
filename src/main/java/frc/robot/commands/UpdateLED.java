@@ -32,6 +32,9 @@ public class UpdateLED extends Command {
   private boolean turretLocked;
   private double distance;
 
+  private String pastStatus;
+  private String status;
+
   private static final RGBWColor kGreen = new RGBWColor(0, 255, 0, 0);
   private static final RGBWColor kYellow = new RGBWColor(255, 255, 0, 0);
   private static final RGBWColor kRed = new RGBWColor(255, 0, 0, 0);
@@ -54,22 +57,26 @@ public class UpdateLED extends Command {
   Supplier<Boolean> rightSupplier;
   Supplier<Boolean> leftBSupplier;
   Supplier<Double> leftStickSupplier;
+  Supplier<String> statusSupplier;
 
   public UpdateLED(LEDSubsystem ledSubsystem,
-      Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
-      Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
-      Supplier<Boolean> leftSupplier, Supplier<Boolean> rightSupplier, Supplier<Boolean> leftBSupplier, Supplier<Double> leftStickSupplier) {
+  Supplier<String> statusSupplier
+      // Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
+      // Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
+      // Supplier<Boolean> leftSupplier, Supplier<Boolean> rightSupplier, Supplier<Boolean> leftBSupplier, Supplier<Double> leftStickSupplier
+      ) {
     // Use addRequirements() here to declare subsystem dependencies.
-    this.aSupplier = aSupplier;
-    this.bSupplier = bSupplier;
-    this.xSupplier = xSupplier;
-    this.ySupplier = ySupplier;
-    this.upSupplier = upSupplier;
-    this.downSupplier = downSupplier;
-    this.leftSupplier = leftSupplier;
-    this.rightSupplier = rightSupplier;
-    this.leftBSupplier = leftBSupplier;
-    this.leftStickSupplier = leftStickSupplier;
+    // this.aSupplier = aSupplier;
+    // this.bSupplier = bSupplier;
+    // this.xSupplier = xSupplier;
+    // this.ySupplier = ySupplier;
+    // this.upSupplier = upSupplier;
+    // this.downSupplier = downSupplier;
+    // this.leftSupplier = leftSupplier;
+    // this.rightSupplier = rightSupplier;
+    // this.leftBSupplier = leftBSupplier;
+    // this.leftStickSupplier = leftStickSupplier;
+        this.statusSupplier = statusSupplier;
   }
 
   // Called when the command is initially scheduled.
@@ -87,34 +94,35 @@ public class UpdateLED extends Command {
     // visionUpdate = aSupplier.get();
     // turretLocked = leftBSupplier.get();
     // distance = leftStickSupplier.get();
+    status = statusSupplier.get();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
 
-    fuelFull = leftBSupplier.get();
-    intakeOn = bSupplier.get();
-    shooterSpinning = xSupplier.get();
-    shooterReady = ySupplier.get();
-    shooterOn = upSupplier.get();
-    // private boolean lidClosed = false;
-    climbing = downSupplier.get();
-    climbDone = rightSupplier.get();
-    visionUpdate = leftSupplier.get();
-    turretLocked = aSupplier.get();
-    distance = leftStickSupplier.get();
+    // fuelFull = leftBSupplier.get();
+    // intakeOn = bSupplier.get();
+    // shooterSpinning = xSupplier.get();
+    // shooterReady = ySupplier.get();
+    // shooterOn = upSupplier.get();
+    // // private boolean lidClosed = false;
+    // climbing = downSupplier.get();
+    // climbDone = rightSupplier.get();
+    // visionUpdate = leftSupplier.get();
+    // turretLocked = aSupplier.get();
+    // distance = leftStickSupplier.get();
 
-    led.setFuelFull(fuelFull);
-    led.setClimbDone(climbDone);
-    led.setClimbing(climbing);
-    led.setIntakeOn(intakeOn);
-    led.setShooterOn(shooterOn);
-    led.setShooterReady(shooterReady);
-    led.setShooterSpinning(shooterSpinning);
-    led.setTurretLocked(turretLocked);
-    led.setDistance(distance);
-    led.setVisionUpdate(visionUpdate);
+    // led.setFuelFull(fuelFull);
+    // led.setClimbDone(climbDone);
+    // led.setClimbing(climbing);
+    // led.setIntakeOn(intakeOn);
+    // led.setShooterOn(shooterOn);
+    // led.setShooterReady(shooterReady);
+    // led.setShooterSpinning(shooterSpinning);
+    // led.setTurretLocked(turretLocked);
+    // led.setDistance(distance);
+    // led.setVisionUpdate(visionUpdate);
     
     
     // if (climbing) { // climbing
@@ -149,18 +157,30 @@ public class UpdateLED extends Command {
     // } else { // rainbow = error
     //   led.rainbow();
     // }
+
+    pastStatus = led.getStatus();
+    if(!(pastStatus == "reset" && status == "reset")) {
+      led.setStatus(status);
+    }
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    led.solidColor(kBlack);
+    // led.setStatus("reset");
+    // led.solidColor(kBlack);
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return !aSupplier.get();
+    // if (pastStatus != "reset" && status == "reset") {
+    //   return true;//!aSupplier.get();
+    // } else {
+    //   return pastStatus == status;
+    // }
+    return true;//pastStatus == status;
+    
 
     // return false;
   }

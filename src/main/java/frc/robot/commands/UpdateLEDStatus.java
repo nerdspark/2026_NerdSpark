@@ -12,19 +12,24 @@ import frc.robot.subsystems.LEDSubsystem;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class BlinkBlue extends InstantCommand {
-  private LEDSubsystem ledSubsystem = new LEDSubsystem();
-  private Supplier<Boolean> b;
-  /** Creates a new blue. */
-  public BlinkBlue(LEDSubsystem ledSubsystem, Supplier<Boolean> b) {
+public class UpdateLEDStatus extends InstantCommand {
+  private String status;
+  private String pastStatus;
+    Supplier<String> statusSupplier;
+    LEDSubsystem led;
+
+  public UpdateLEDStatus(LEDSubsystem led, Supplier<String> statusSupplier) {
     // Use addRequirements() here to declare subsystem dependencies.
-    this.ledSubsystem = ledSubsystem;
-    this.b = b;
+    this.led = led;
+    this.statusSupplier = statusSupplier;
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    // ledSubsystem.setClimbing(b.get());
+    status = statusSupplier.get();
+    pastStatus = led.getStatus();
+    if (pastStatus != status) {
+    led.setStatus(status);}
   }
 }

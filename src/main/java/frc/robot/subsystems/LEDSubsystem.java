@@ -42,24 +42,27 @@ public class LEDSubsystem extends SubsystemBase {
   // private final AddressableLED m_led = new AddressableLED(Constants.ledID);
 
   // private int fuelAmount; // idk how were gonna do this but we can estimate
-  private boolean fuelFull = false;
-  private boolean intakeOn = false;
-  private boolean shooterSpinning = false;
-  private boolean shooterReady = false;
-  private boolean shooterOn = false;
-  // private boolean lidClosed = false;
-  private boolean climbing = false;
-  private boolean climbDone = false;
-  private boolean visionUpdate;
-  private boolean turretLocked = false;
-  private boolean startup = false;
-  private double distance;
 
-  private static final RGBWColor kGreen = new RGBWColor(0, 255, 0, 0);
-  private static final RGBWColor kYellow = new RGBWColor(255, 255, 0, 0);
+  // private boolean fuelFull = false;
+  // private boolean intakeOn = false;
+  // private boolean shooterSpinning = false;
+  // private boolean shooterReady = false;
+  // private boolean shooterOn = false;
+  // // private boolean lidClosed = false;
+  // private boolean climbing = false;
+  // private boolean climbDone = false;
+  // private boolean visionUpdate;
+  // private boolean turretLocked = false;
+  // private boolean startup = false;
+  // private double distance;
+  private static String status = "startup";
+
+  private static final RGBWColor kGreen = new RGBWColor(54, 255, 0, 0);
+  // private static final RGBWColor kYellow = new RGBWColor(255, 255, 0, 0);
+  private static final RGBWColor kYellow = new RGBWColor(255, 127, 0, 0); // looks like yellow
   private static final RGBWColor kRed = new RGBWColor(255, 0, 0, 0);
   private static final RGBWColor kBlack = new RGBWColor(0, 0, 0, 0);
-  private static final RGBWColor kCyan = new RGBWColor(0, 255, 255, 0);
+  private static final RGBWColor kCyan = new RGBWColor(0, 160, 255, 0); // made cyan more bluey
   private static final RGBWColor kMagenta = new RGBWColor(255, 0, 255, 0);
   private static final RGBWColor kBlue = new RGBWColor(0, 0, 255, 0);
   private static final RGBWColor kWhite = new RGBWColor(255, 255, 255, 255);
@@ -74,17 +77,7 @@ public class LEDSubsystem extends SubsystemBase {
   // Creates a new LEDSubsystem
   public LEDSubsystem() {
     /*
-     * Actions
-     * Empty: Red
-     * Intaking: Blinking Yellow
-     * Full: Blue
-     * Spinning up shooter/turret locking: Blinking green
-     * Ready to shoot & turret locked: Green
-     * Shooting: Blinking cyan
-     * Climbing: Blinking Magenta
-     * Climbed: Magenta
-     * Vision working (april tag detected or sum): white pulse
-     * Error: Rainbow
+     * 
      */
 
     /* Configure CANdle */
@@ -121,6 +114,10 @@ public class LEDSubsystem extends SubsystemBase {
     // .withSlot(Constants.ledBlinkID)
     // .withColor(kBlack)
     // .withFrameRate(0));
+
+    // empty(Constants.ledBlinkID);
+    // empty(Constants.ledPulseID);
+    // empty(Constants.ledRainbowID);
     empty();
     m_candle.setControl(new SolidColor(ledStartIndex, ledEndIndex).withColor(color));
   }
@@ -136,7 +133,11 @@ public class LEDSubsystem extends SubsystemBase {
     // m_candle.se
     // m_candle.setControl(new SolidColor(ledStartIndex,
     // ledEndIndex).withColor(color));
-    empty();
+
+    // empty();
+    empty(Constants.ledSolidID);
+    empty(Constants.ledPulseID);
+    empty(Constants.ledRainbowID);
     m_candle.setControl(
         new StrobeAnimation(ledStartIndex, ledEndIndex)
             .withSlot(Constants.ledBlinkID)
@@ -154,7 +155,11 @@ public class LEDSubsystem extends SubsystemBase {
     // new SolidColor(ledStartIndex, ledEndIndex)
     // .withColor(color));
     // } else
-    empty();
+
+    // empty();
+    empty(Constants.ledSolidID);
+    empty(Constants.ledBlinkID);
+    empty(Constants.ledRainbowID);
     m_candle
         .setControl(new ColorFlowAnimation(ledStartIndex, ledEndIndex)
             .withSlot(Constants.ledPulseID)
@@ -175,7 +180,10 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public void rainbow() {
-    empty();
+    // empty();
+    empty(Constants.ledSolidID);
+    empty(Constants.ledPulseID);
+    empty(Constants.ledBlinkID);
     m_candle.setControl(new RainbowAnimation(ledStartIndex, ledEndIndex)
         .withSlot(Constants.ledRainbowID)
         .withFrameRate(Constants.ledFramerate));
@@ -193,61 +201,61 @@ public class LEDSubsystem extends SubsystemBase {
     this.joystick = joystick;
   }
 
-  public boolean isFuelFull() {
-    return fuelFull;
-  }
+  // public boolean isFuelFull() {
+  //   return fuelFull;
+  // }
 
-  public void setFuelFull(boolean fuelFull) {
-    this.fuelFull = fuelFull;
-  }
+  // public void setFuelFull(boolean fuelFull) {
+  //   this.fuelFull = fuelFull;
+  // }
 
-  public boolean isIntakeOn() {
-    return intakeOn;
-  }
+  // public boolean isIntakeOn() {
+  //   return intakeOn;
+  // }
 
-  public void setIntakeOn(boolean intakeOn) {
-    this.intakeOn = intakeOn;
-  }
+  // public void setIntakeOn(boolean intakeOn) {
+  //   this.intakeOn = intakeOn;
+  // }
 
-  public boolean isShooterSpinning() {
-    return shooterSpinning;
-  }
+  // public boolean isShooterSpinning() {
+  //   return shooterSpinning;
+  // }
 
-  public void setShooterSpinning(boolean shooterSpinning) {
-    this.shooterSpinning = shooterSpinning;
-  }
+  // public void setShooterSpinning(boolean shooterSpinning) {
+  //   this.shooterSpinning = shooterSpinning;
+  // }
 
-  public boolean isShooterReady() {
-    return shooterReady;
-  }
+  // public boolean isShooterReady() {
+  //   return shooterReady;
+  // }
 
-  public void setShooterReady(boolean shooterReady) {
-    this.shooterReady = shooterReady;
-  }
+  // public void setShooterReady(boolean shooterReady) {
+  //   this.shooterReady = shooterReady;
+  // }
 
-  public boolean isShooterOn() {
-    return shooterOn;
-  }
+  // public boolean isShooterOn() {
+  //   return shooterOn;
+  // }
 
-  public void setShooterOn(boolean shooterOn) {
-    this.shooterOn = shooterOn;
-  }
+  // public void setShooterOn(boolean shooterOn) {
+  //   this.shooterOn = shooterOn;
+  // }
 
-  public boolean isClimbing() {
-    return climbing;
-  }
+  // public boolean isClimbing() {
+  //   return climbing;
+  // }
 
-  public void setClimbing(boolean climbing) {
-    this.climbing = climbing;
-  }
+  // public void setClimbing(boolean climbing) {
+  //   this.climbing = climbing;
+  // }
 
-  public boolean isClimbDone() {
-    return climbDone;
-  }
+  // public boolean isClimbDone() {
+  //   return climbDone;
+  // }
 
-  public void setClimbDone(boolean climbDone) {
-    this.climbDone = climbDone;
-  }
+  // public void setClimbDone(boolean climbDone) {
+  //   this.climbDone = climbDone;
+  // }
 
   public int getLedStartIndex() {
     return ledStartIndex;
@@ -265,61 +273,112 @@ public class LEDSubsystem extends SubsystemBase {
     this.ledEndIndex = ledEndIndex;
   }
 
-  public boolean isVisionUpdate() {
-    return visionUpdate;
-  }
+  // public boolean isVisionUpdate() {
+  //   return visionUpdate;
+  // }
 
-  public void setVisionUpdate(boolean visionUpdate) {
-    this.visionUpdate = visionUpdate;
-  }
+  // public void setVisionUpdate(boolean visionUpdate) {
+  //   this.visionUpdate = visionUpdate;
+  // }
 
-  public boolean isTurretLocked() {
-    return turretLocked;
-  }
+  // public boolean isTurretLocked() {
+  //   return turretLocked;
+  // }
 
-  public void setTurretLocked(boolean turretLocked) {
-    this.turretLocked = turretLocked;
-  }
+  // public void setTurretLocked(boolean turretLocked) {
+  //   this.turretLocked = turretLocked;
+  // }
 
-  public double getDistance() {
-    return distance;
-  }
+  // public double getDistance() {
+  //   return distance;
+  // }
 
-  public void setDistance(double distance) {
-    this.distance = distance;
-  }
+  // public void setDistance(double distance) {
+  //   this.distance = distance;
+  // }
 
+
+  
   private double distanceCurve(double distance) { 
     return Math.pow(Math.abs(distance), 2);
   }
 
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
   public void updateLED() {   
-    if (climbing) { // climbing
-      blinkColor(kMagenta);
-    } else if (climbDone) {
-      rainbow();
-    } else if (intakeOn) { // intaking
+    // TODO flash red for no apriltags detected
+    // TODO lined up for climb. maye change magenta to that
+    // red error state
+    // if (climbing) { // climbing
+    //   blinkColor(kMagenta);
+    // } else if (climbDone) {
+    //   rainbow();
+    // } else if (intakeOn) { // intaking
 
-      if (fuelFull) {
+    //   if (fuelFull) {
+    //     solidColor(kBlue);
+    //   } else {
+    //     blinkColor(kYellow);
+    //   }
+
+    // } else if (shooterOn) { // shooting
+    //   blinkColor(kCyan);
+
+    // } else if (shooterReady && turretLocked) { // shooter ready
+    //   solidColor(kGreen, distanceCurve(distance));
+
+    // } else if (shooterReady || shooterSpinning) { // shooter spinning
+    //   blinkColor(kGreen);
+
+    // } else if (startup) {
+    //   rainbow();
+    // }    if (visionUpdate) { // vision updating
+    //   // System.currentTimeMillis()
+    //   flowColor(kWhite);
+    // }
+
+    switch(status) { // TODO implement override logic
+      // maybe do that with ints and status variables in Constants and comparing if they are greater
+      case "ready to shoot":
+        blinkColor(kGreen);
+        break;
+      case "shooting":
+        solidColor(kGreen);
+        break;
+      case "intaking":
         solidColor(kBlue);
-      } else {
-        blinkColor(kYellow);
-      }
-
-    } else if (shooterOn) { // shooting
-      blinkColor(kCyan);
-
-    } else if (shooterReady && turretLocked) { // shooter ready
-      solidColor(kGreen, distanceCurve(distance));
-
-    } else if (shooterReady || shooterSpinning) { // shooter spinning
-      blinkColor(kGreen);
-
-    } else if (startup) {
-      rainbow();
-    }    if (visionUpdate) { // vision updating
-      // System.currentTimeMillis()
-      flowColor(kWhite);
+        break;
+      case "aiming":
+        solidColor(kCyan);
+        break;
+      case "no april tags":
+        blinkColor(kRed);
+        break;
+      case "lined up for climb":
+        solidColor(kMagenta); 
+        break;
+      case "idle":
+        solidColor(kWhite);
+        break;
+      case "intake deployed":
+        blinkColor(kBlue);
+        break;
+      case "safe":
+        solidColor(kYellow);
+        break;
+      case "startup":
+        rainbow();
+        break;
+      case "reset":
+        // empty();
+        solidColor(kBlack);
+        break;
     }
   }
 

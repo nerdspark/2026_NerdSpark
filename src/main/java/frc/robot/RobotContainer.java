@@ -26,6 +26,7 @@ import frc.robot.commands.BlinkRed;
 import frc.robot.commands.DriveToPose;
 import frc.robot.commands.Red;
 import frc.robot.commands.UpdateLED;
+import frc.robot.commands.UpdateLEDStatus;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.LEDSubsystem;
@@ -95,21 +96,31 @@ public class RobotContainer {
         // Reset the field-centric heading on left bumper press.
         // joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
         // joystick.b().whileTrue(new BlinkRed(ledSubsystem, () -> joystick.b().getAsBoolean()));
-        joystick.a().whileTrue//(new Red(ledSubsystem, () -> joystick.a().getAsBoolean()));
-        
-        (
-            new UpdateLED(ledSubsystem,
-                () -> joystick.a().getAsBoolean(),
-                () -> joystick.b().getAsBoolean(),
-                () -> joystick.x().getAsBoolean(),
-                () -> joystick.y().getAsBoolean(),
-                () -> joystick.povUp().getAsBoolean(),
-                () -> joystick.povDown().getAsBoolean(),
-                () -> joystick.povLeft().getAsBoolean(),
-                () -> joystick.povRight().getAsBoolean(),
-                () -> joystick.leftBumper().getAsBoolean(),
-                () -> joystick.getLeftY())
-        );
+       // joystick.a().whileTrue//(new Red(ledSubsystem, () -> joystick.a().getAsBoolean()));
+        // (
+        //     new UpdateLED(ledSubsystem,
+        //         () -> joystick.a().getAsBoolean(),
+        //         () -> joystick.b().getAsBoolean(),
+        //         () -> joystick.x().getAsBoolean(),
+        //         () -> joystick.y().getAsBoolean(),
+        //         () -> joystick.povUp().getAsBoolean(),
+        //         () -> joystick.povDown().getAsBoolean(),
+        //         () -> joystick.povLeft().getAsBoolean(),
+        //         () -> joystick.povRight().getAsBoolean(),
+        //         () -> joystick.leftBumper().getAsBoolean(),
+        //         () -> joystick.getLeftY())
+        // );
+        joystick.a().onTrue(new UpdateLED(ledSubsystem, () -> "ready to shoot"));
+        joystick.b().onTrue(new UpdateLED(ledSubsystem, () -> "shooting"));
+        joystick.x().onTrue(new UpdateLED(ledSubsystem, () -> "intaking"));
+        joystick.y().onTrue(new UpdateLED(ledSubsystem, () -> "aiming"));
+        joystick.leftBumper().onTrue(new UpdateLED(ledSubsystem, () -> "no april tags"));
+        joystick.rightBumper().onTrue(new UpdateLED(ledSubsystem, () -> "lined up for climb"));
+        joystick.povUp().onTrue(new UpdateLED(ledSubsystem, () -> "idle"));
+        joystick.povDown().onTrue(new UpdateLED(ledSubsystem, () -> "intake deployed"));
+        joystick.povLeft().onTrue(new UpdateLED(ledSubsystem, () -> "safe"));
+        joystick.povRight().onTrue(new UpdateLED(ledSubsystem, () -> "startup"));
+        joystick.leftTrigger(0.2).onTrue(new UpdateLED(ledSubsystem, () -> "reset"));
 
         // drivetrain.registerTelemetry(logger::telemeterize);
     }
