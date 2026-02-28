@@ -16,9 +16,9 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.util.ShooterParams;
 
 public final class Constants {
-    public static final double gyroP = 2.0;
+    public static final double gyroP = 7.7635;
     public static final double gyroI = 0.0;
-    public static final double gyroD = 0.0;
+    public static final double gyroD = 0.75752;
 
     public static final String CANbus = "canivore1";
 
@@ -136,12 +136,12 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 32.587;
+        public static final double spinKp = 0.0; // 32.587
         public static final double spinKi = 0.0;
-        public static final double spinKd = 1.4534;
-        public static final double spinKs = 0.44674;
-        public static final double spinKv = 0.12958;
-        public static final double spinKa = 0.044218;
+        public static final double spinKd = 0.0; // 1.4534
+        public static final double spinKs = 0.0; // 0.44674
+        public static final double spinKv = 0.0; // 0.12958
+        public static final double spinKa = 0.0; // 0.044218
         public static final double spinStatorCurrentLimit = 50.0;
         public static final double spinVelocity = 25; //150
         public static final double spinAccel = 75; // 400
@@ -153,8 +153,8 @@ public final class Constants {
 
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
-        public static final double hoodKp1 = 5;
-        public static final double hoodKp2 = 5;
+        public static final double hoodKp1 = 0.0; // 5
+        public static final double hoodKp2 = 0.0; // 5
         public static final double hoodKi1 = 0.0;
         public static final double hoodKi2 = 0.0;
         public static final double hoodKd1 = 0.0;
@@ -258,18 +258,18 @@ public final class Constants {
         public static final int roller1id = 35;
         public static final int roller2id = 36;
         public static final double intakeCurrentLimit = 40.0;
-        public static final double kP = 60.0;
+        public static final double kP = 2.0;
         public static final double kI = 0.0;
         public static final double kD = 0.0;
         public static final double kG = 0.0;
         public static final double kS = 0.0;
         public static final double kA = 0.0;
         public static final double kV = 0.0;
-        public static final double motionMagicCruiseVelocity = 80.0;
-        public static final double motionMagicAcceleration = 160.0;
-        public static final double motionMagicJerk = 1600.0;
+        public static final double motionMagicCruiseVelocity = 25.0;
+        public static final double motionMagicAcceleration = 50.0;
+        public static final double motionMagicJerk = 1200.0;
         public static final double homePos = 0.0;
-        public static final double deployPos = 8.0;
+        public static final double deployPos = 13.0;
     }
 
     public static final class indexerConstants {

@@ -94,10 +94,10 @@ public class Turret extends SubsystemBase {
         canivore = new CANBus(Constants.CANbus);
         
         spinMotor = new TalonFX(TurretConfig.spinMotorId, canivore);
-        // hoodMotor1 = new TalonFX(TurretConfig.hoodMotor1Id, canivore);
-        // hoodMotor2 = new TalonFX(TurretConfig.hoodMotor2Id, canivore);
-        // shootMotor1 = new TalonFX(TurretConfig.shootMotor1Id, canivore);
-        // shootMotor2 = new TalonFX(TurretConfig.shootMotor2Id, canivore);
+        hoodMotor1 = new TalonFX(TurretConfig.hoodMotor1Id, canivore);
+        hoodMotor2 = new TalonFX(TurretConfig.hoodMotor2Id, canivore);
+        shootMotor1 = new TalonFX(TurretConfig.shootMotor1Id, canivore);
+        shootMotor2 = new TalonFX(TurretConfig.shootMotor2Id, canivore);
 
         spinCancoder1 = new CANcoder(TurretConfig.spinCancoder1Id, canivore);
         spinCancoder2 = new CANcoder(TurretConfig.spinCancoder2Id, canivore);

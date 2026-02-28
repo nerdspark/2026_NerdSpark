@@ -43,7 +43,7 @@ import frc.robot.util.FuelSim;
 
 public class RobotContainer {
     private final double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-    private final double maxAngularRate = RotationsPerSecond.of(1).in(RadiansPerSecond);
+    private final double maxAngularRate = RotationsPerSecond.of(1.5).in(RadiansPerSecond);
 
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
@@ -100,8 +100,8 @@ public class RobotContainer {
         SmartDashboard.putData("Auto Mode", autoChooser);
 
         configureDefaultCommands();
-        configureSysid();
-        // configureBindings();
+        // configureSysid();
+        configureBindings();
         configureNamedCommands();
 
         CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
@@ -123,17 +123,18 @@ public class RobotContainer {
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
 
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
-            .andThen(new InstantCommand(() -> intake.setRollerPower(1.0), intake)));
+            .andThen(new InstantCommand(() -> intake.setRollerPower(0.85), intake)));
+        joystick.y().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
         joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
-        joystick.x()
+        joystick.a()
             .onTrue(new InstantCommand(() -> startTargeting(true)))
             .onFalse(new InstantCommand(() -> stopTargeting()));
 
-        joystick.povUp().onTrue(new InstantCommand(() -> target = 0.0));
-        joystick.povLeft().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
-        joystick.povDown().onTrue(new InstantCommand(() -> target = Math.PI));
-        joystick.povRight().onTrue(new InstantCommand(() -> target = -Math.PI / 2.0));
+        joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
+        joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
+        joystick.povDown().onTrue(new InstantCommand(() -> target = 0));
+        joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
     }
 
     private void configureSysid() {

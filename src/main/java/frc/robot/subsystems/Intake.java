@@ -61,8 +61,8 @@ public class Intake extends SubsystemBase {
         intakeMotorDeploy
         .getConfigurator()
         .apply(intakeDeployMotorConfig.withMotorOutput(new MotorOutputConfigs()
-            .withInverted(InvertedValue.CounterClockwise_Positive)
-            .withNeutralMode(NeutralModeValue.Brake)));
+            .withInverted(InvertedValue.Clockwise_Positive)
+            .withNeutralMode(NeutralModeValue.Coast)));
 
         intakeMotorDeploy.getConfigurator().apply(intakeDeployMotorConfig);
 

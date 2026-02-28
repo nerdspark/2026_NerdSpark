@@ -8,6 +8,7 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Constants;
@@ -33,7 +34,8 @@ public class Indexer implements Subsystem {
                 .withStatorCurrentLimit(IndexConfig.indexCurretLimit)
                 .withStatorCurrentLimitEnable(true))
             .withMotorOutput(new MotorOutputConfigs()
-                .withInverted(InvertedValue.Clockwise_Positive));
+                .withInverted(InvertedValue.Clockwise_Positive)
+                .withNeutralMode(NeutralModeValue.Coast));
         
         passThroughMotor.getConfigurator().apply(passThroughConfig);
         spindexerMotor.getConfigurator().apply(indexConfig);
