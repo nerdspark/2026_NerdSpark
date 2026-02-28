@@ -147,9 +147,9 @@ public final class Constants {
         public static final double spinAccel = 150; // 400
 
         public static final int spinCancoder1Id = 26;
-        public static final double spinCancoder1Offset = 0; // TODO
+        public static final double spinCancoder1Offset = -0.297607421875;
         public static final int spinCancoder2Id = 27;
-        public static final double spinCancoder2Offset = 0; // TODO
+        public static final double spinCancoder2Offset = -0.9873046875;
 
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;

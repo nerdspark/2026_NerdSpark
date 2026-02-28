@@ -382,7 +382,7 @@ public class Turret extends SubsystemBase {
         turretAngle = normalizeRadians(turretAngle);
         SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
 
-        neededAngle = normalizeRadians(neededAngle - 35);
+        neededAngle = normalizeRadians(neededAngle + 180);
         SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
 
         // Update phase delay here, 20ms loop
