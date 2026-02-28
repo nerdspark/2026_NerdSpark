@@ -18,6 +18,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
@@ -30,7 +31,6 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
@@ -55,46 +55,45 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
 
-
     /* Swerve requests to apply during SysId characterization */
-    private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
-    private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
+    // private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
+    // private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
     private final Field2d m_field = new Field2d();
 
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
-    private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-            null,        // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> setControl(m_translationCharacterization.withVolts(output)),
-            null,
-            this
-        )
-    );
+    // private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
+    //     new SysIdRoutine.Config(
+    //         null,        // Use default ramp rate (1 V/s)
+    //         Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+    //         null,        // Use default timeout (10 s)
+    //         // Log state with SignalLogger class
+    //         state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())
+    //     ),
+    //     new SysIdRoutine.Mechanism(
+    //         output -> setControl(m_translationCharacterization.withVolts(output)),
+    //         null,
+    //         this
+    //     )
+    // );
 
     /* SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
-    private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(7), // Use dynamic voltage of 7 V
-            null,        // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdSteer_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            volts -> setControl(m_steerCharacterization.withVolts(volts)),
-            null,
-            this
-        )
-    );
+    // private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
+    //     new SysIdRoutine.Config(
+    //         null,        // Use default ramp rate (1 V/s)
+    //         Volts.of(7), // Use dynamic voltage of 7 V
+    //         null,        // Use default timeout (10 s)
+    //         // Log state with SignalLogger class
+    //         state -> SignalLogger.writeString("SysIdSteer_State", state.toString())
+    //     ),
+    //     new SysIdRoutine.Mechanism(
+    //         volts -> setControl(m_steerCharacterization.withVolts(volts)),
+    //         null,
+    //         this
+    //     )
+    // );
 
     /*
      * SysId routine for characterizing rotation.
@@ -116,7 +115,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 /* output is actually radians per second, but SysId only supports "volts" */
                 setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
                 /* also log the requested output for SysId */
-                SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
+                SignalLogger.writeDouble("Rotational_Volts", output.in(Volts));
+                SignalLogger.writeDouble("Rotational_Velocity", this.getState().Speeds.omegaRadiansPerSecond);
             },
             null,
             this
@@ -124,7 +124,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     );
 
     /* The SysId routine to test */
-    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
+    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineRotation;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -308,6 +308,22 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
 
+    public record VisionObservation(double timestamp, Pose3d visionPose, Matrix<N3, N1> stdDevs) {}
+
+    /**
+     * Adds a vision measurement to the Kalman Filter. This will correct the odometry pose estimate
+     * while still accounting for measurement noise.
+     * 
+     * @param observation The VisionObservation being passed through
+     */
+    public void addVisionMeasurement(VisionObservation observation) {
+        super.addVisionMeasurement(
+            observation.visionPose.toPose2d(), 
+            Utils.fpgaToCurrentTime(observation.timestamp), 
+            observation.stdDevs
+        );
+    }
+
     /**
      * Adds a vision measurement to the Kalman Filter. This will correct the odometry pose estimate
      * while still accounting for measurement noise.
@@ -365,6 +381,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return this.getState().Speeds;
         // return kinematics.toChassisSpeeds(getState().ModuleStates);
     }
+    
     private String getFomattedPose() {
         var pose = this.getState().Pose ;
         return String.format(
