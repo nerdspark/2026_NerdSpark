@@ -273,7 +273,7 @@ public final class Constants {
     }
 
     public static final class indexerConstants {
-        public static final double PASSTHROUGH_SPEED = 0.7;
+        public static final double PASSTHROUGH_SPEED = 1.0;
         public static final double DRUM_MOTOR_SPEED = 1.0;
     }
 
