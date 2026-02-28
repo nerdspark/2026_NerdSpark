@@ -66,21 +66,9 @@ public class RobotContainer {
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
 
-        NamedCommands.registerCommand(
-            "intake_deploy",
-            new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
-                .andThen(new InstantCommand(() -> intake.setRollerPower(1.0), intake))
-        );
-        NamedCommands.registerCommand(
-            "intake_home",
-            new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
-                .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake))
-        );
-        NamedCommands.registerCommand("IndexerOn", new IndexerCommand(indexer, () -> 1.0));
-        NamedCommands.registerCommand("IndexerOff", new IndexerCommand(indexer, () -> 0.0));
-
         configureDefaultCommands();
         configureBindings();
+        configureNamedCommands();
 
         CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     }
@@ -101,6 +89,21 @@ public class RobotContainer {
         joystick.povLeft().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
         joystick.povDown().onTrue(new InstantCommand(() -> target = Math.PI));
         joystick.povRight().onTrue(new InstantCommand(() -> target = -Math.PI / 2.0));
+    }
+
+    private void configureNamedCommands() {
+        NamedCommands.registerCommand(
+            "intake_deploy",
+            new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
+                .andThen(new InstantCommand(() -> intake.setRollerPower(1.0), intake))
+        );
+        NamedCommands.registerCommand(
+            "intake_home",
+            new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
+                .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake))
+        );
+        NamedCommands.registerCommand("indexer_on", new IndexerCommand(indexer, () -> 1.0));
+        NamedCommands.registerCommand("indexer_off", new IndexerCommand(indexer, () -> 0.0));
     }
 
     private void configureDefaultCommands() {
