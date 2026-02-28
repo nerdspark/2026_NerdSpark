@@ -102,8 +102,8 @@ public class RobotContainer {
             new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
                 .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake))
         );
-        NamedCommands.registerCommand("indexer_on", new IndexerCommand(indexer, () -> 1.0));
-        NamedCommands.registerCommand("indexer_off", new IndexerCommand(indexer, () -> 0.0));
+        // NamedCommands.registerCommand("indexer_on", new IndexerCommand(indexer, () -> 1.0)); TODO add these back when we figure out whats wrong
+        // NamedCommands.registerCommand("indexer_off", new IndexerCommand(indexer, () -> 0.0));
     }
 
     private void configureDefaultCommands() {
