@@ -39,12 +39,15 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.util.ShooterParams;
 import frc.robot.Constants.TurretConfig;
 import frc.robot.Constants;
+import frc.robot.Constants.turretTargetConstants;
 import frc.robot.FieldConstants;
 import frc.robot.Constants.ShootMode;
+import frc.robot.util.ShooterOffsetMap;
 
 public class Turret extends SubsystemBase {
     private static final double TWO_PI = 2.0 * Math.PI;
@@ -81,6 +84,7 @@ public class Turret extends SubsystemBase {
     private double velocity = 0;
 
     private final Field2d m_field = new Field2d();
+    private final ShooterOffsetMap offsetMap = new ShooterOffsetMap();
 
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> climbing) {
         pose = robotPose;
@@ -337,17 +341,7 @@ public class Turret extends SubsystemBase {
 
         double velo =  map.shooterSpeed - deltaMotorRPS;
 
-        if (velo < 5) {
-            mode = ShootMode.COAST;
-            return 0;
-        }
-
-        // Actual - Target
-        boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - velo) <= 3;
-        boolean torqueCurrentControl = torqueCurrentDebouncer.calculate(inTolerance);
-        mode = torqueCurrentControl ? ShootMode.TORQUE_CURRENT_BANG_BANG : ShootMode.DUTY_CYCLE_BANG_BANG;
-
-        return velo;
+        return applyShooterControl(velo);
     }
 
     /**
@@ -432,6 +426,93 @@ public class Turret extends SubsystemBase {
         spinPose.Position = motorDelta + spinMotor.getPosition().getValueAsDouble();
     }
 
+    private double applyShooterControl(double motorRps) {
+        if (motorRps < 5) {
+            mode = ShootMode.COAST;
+            return 0;
+        }
+
+        boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - motorRps) <= 3;
+        boolean torqueCurrentControl = torqueCurrentDebouncer.calculate(inTolerance);
+        mode = torqueCurrentControl ? ShootMode.TORQUE_CURRENT_BANG_BANG : ShootMode.DUTY_CYCLE_BANG_BANG;
+
+        return motorRps;
+    }
+
+    private IkSolution solveIK(double distanceMeters) {
+        if (distanceMeters <= 0.0) {
+            return null;
+        }
+        double deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
+        double alpha = Math.atan2(deltaHeight, distanceMeters);
+        double thetaOptimal = 0.5 * (alpha + (Math.PI / 2.0));
+
+        double minAngle = Math.toRadians(TurretConstants.hoodMinDegrees);
+        double maxAngle = Math.toRadians(TurretConstants.hoodMaxDegrees);
+        double thetaClamped = Math.max(minAngle, Math.min(maxAngle, thetaOptimal));
+
+        double bestTheta = Double.NaN;
+        double bestMotorRps = Double.POSITIVE_INFINITY;
+        double[] candidates = {thetaClamped, minAngle, maxAngle};
+        for (double theta : candidates) {
+            double speedMps = solveIKSpeed(distanceMeters, alpha, theta);
+            if (!Double.isFinite(speedMps) || speedMps <= 0.0) {
+                continue;
+            }
+            double wheelRps = speedMps / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
+            double motorRps = wheelRps * TurretConstants.shooterRatio;
+            if (motorRps <= TurretConstants.shooterMaxMotorRps && motorRps < bestMotorRps) {
+                bestMotorRps = motorRps;
+                bestTheta = theta;
+            }
+        }
+
+        if (!Double.isFinite(bestTheta)) {
+            return null;
+        }
+
+        ShooterOffsetMap.Offsets offsets = offsetMap.sample(distanceMeters);
+        double hoodDeg = Math.max(
+            TurretConstants.hoodMinDegrees,
+            Math.min(
+                TurretConstants.hoodMaxDegrees,
+                Math.toDegrees(bestTheta) + offsets.hoodOffsetDeg
+            )
+        );
+        double motorRps = Math.max(
+            0.0,
+            Math.min(TurretConstants.shooterMaxMotorRps, bestMotorRps + offsets.motorRpsOffset)
+        );
+        return new IkSolution(hoodDeg, motorRps);
+    }
+
+    private double solveIKSpeed(double distanceMeters, double alpha, double theta) {
+        double denominator = 2.0 * Math.cos(theta) * Math.sin(theta - alpha);
+        if (denominator <= 1e-9) {
+            return Double.NaN;
+        }
+        double vSquared = (9.80665 * distanceMeters * Math.cos(alpha)) / denominator;
+        if (vSquared <= 0.0) {
+            return Double.NaN;
+        }
+        return Math.sqrt(vSquared);
+    }
+
+    private double applyChassisVelocityComp(double motorRps) {
+        double robotHeading = pose.get().getRotation().getRadians();
+        double shooterFOA = robotHeading + turretAngle;
+        ChassisSpeeds robotFOS = speed.get();
+        double robotSpeed = Math.hypot(robotFOS.vxMetersPerSecond, robotFOS.vyMetersPerSecond);
+        double robotVelAngle = Math.atan2(robotFOS.vyMetersPerSecond, robotFOS.vxMetersPerSecond);
+        double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
+        double deltaMotorRPS = vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
+        return motorRps - deltaMotorRPS;
+    }
+
+    private double hoodDegreesToRotations(double hoodDegrees) {
+        return (hoodDegrees / 360.0) * TurretConstants.hoodRatio;
+    }
+
     @Override
     public void periodic() {
         ChassisSpeeds speeds = speed.get();
@@ -449,6 +530,45 @@ public class Turret extends SubsystemBase {
 
         boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
         SmartDashboard.putBoolean("Is Blue", isBlue);
+
+        boolean forceTarget = SmartDashboard.getBoolean(
+            turretTargetConstants.enableKey,
+            turretTargetConstants.defaultEnable
+        );
+        if (forceTarget) {
+            double targetX = SmartDashboard.getNumber(
+                turretTargetConstants.targetXKey,
+                turretTargetConstants.defaultTargetX
+            );
+            double targetY = SmartDashboard.getNumber(
+                turretTargetConstants.targetYKey,
+                turretTargetConstants.defaultTargetY
+            );
+            Translation2d targetPose = new Translation2d(targetX, targetY);
+            double distance = turretPose.getTranslation().getDistance(targetPose);
+
+            double xError = targetPose.getX() - turretPose.getX();
+            double yError = targetPose.getY() - turretPose.getY();
+            double errorDegrees = Math.atan2(yError, xError);
+            aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
+
+            boolean useIK = SmartDashboard.getBoolean(
+                AutoAimConstants.useIKSolverKey,
+                AutoAimConstants.defaultUseIKSolver
+            );
+            if (useIK) {
+                IkSolution solution = solveIK(distance);
+                if (solution != null) {
+                    hoodPose.Position = hoodDegreesToRotations(solution.hoodDegrees);
+                    double compensated = applyChassisVelocityComp(solution.motorRps);
+                    velocity = applyShooterControl(compensated);
+                } else {
+                    hoodWheelsZero();
+                }
+            } else {
+                velocity = aimOnFly(distance);
+            }
+        } else {
 
         double shootLine = calcTriggerLine(
             isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
@@ -515,6 +635,7 @@ public class Turret extends SubsystemBase {
         } else {
             hoodWheelsZero();
         }
+        }
 
         spinMotor.setControl(spinPose);
         SmartDashboard.putNumber("Spin Motor Voltage", spinMotor.getMotorVoltage().getValueAsDouble());
@@ -551,4 +672,14 @@ public class Turret extends SubsystemBase {
     // public Command sysIdDynamic(SysIdRoutine.Direction direction) {
     //     return sysIdRoutineToApply.dynamic(direction);
     // }
+
+    private static final class IkSolution {
+        private final double hoodDegrees;
+        private final double motorRps;
+
+        private IkSolution(double hoodDegrees, double motorRps) {
+            this.hoodDegrees = hoodDegrees;
+            this.motorRps = motorRps;
+        }
+    }
 }
