@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants.IntakeConstants;
+import frc.robot.Constants.AutoAimConstants;
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
 import frc.robot.generated.TunerConstants;
@@ -53,6 +54,11 @@ public class RobotContainer {
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
         gyroController.setIntegratorRange(-2.0, 2.0);
 
+        SmartDashboard.setDefaultBoolean(
+            AutoAimConstants.useIKSolverKey,
+            AutoAimConstants.defaultUseIKSolver
+        );
+
         turret = new Turret(
             () -> drivetrain.getState().Pose,
             () -> ChassisSpeeds.fromRobotRelativeSpeeds(
@@ -75,6 +81,14 @@ public class RobotContainer {
 
     private void configureBindings() {
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+
+        joystick.b().onTrue(new InstantCommand(() -> {
+            boolean useIK = SmartDashboard.getBoolean(
+                AutoAimConstants.useIKSolverKey,
+                AutoAimConstants.defaultUseIKSolver
+            );
+            SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
+        }));
 
         joystick.rightTrigger()
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> Constants.indexerConstants.PASSTHROUGH_SPEED))
