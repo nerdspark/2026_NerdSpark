@@ -28,26 +28,26 @@ public final class Constants {
 
         public static final String kCameraNameFrontRight = "FrontRightCamera";
         public static final Transform3d kRobotToCamFrontRight = new Transform3d(
-            new Translation3d(Units.inchesToMeters(11.5), -Units.inchesToMeters(9), Units.inchesToMeters(12.5)),
-            new Rotation3d(Math.toRadians(0), Math.toRadians(-10), Math.toRadians(0))
+            new Translation3d(Units.inchesToMeters(10.93), -Units.inchesToMeters(10.59), Units.inchesToMeters(7.74)),
+            new Rotation3d(Math.toRadians(0), Math.toRadians(-65), Math.toRadians(-50))
         );
 
         public static final String kCameraNameFrontLeft = "FrontLeftCamera";
         public static final Transform3d kRobotToCamFrontLeft = new Transform3d(
-            new Translation3d(Units.inchesToMeters(11.5), Units.inchesToMeters(9), Units.inchesToMeters(12.5)),
-            new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(55))
+            new Translation3d(Units.inchesToMeters(10.93), Units.inchesToMeters(10.59), Units.inchesToMeters(7.74)),
+            new Rotation3d(Math.toRadians(0), Math.toRadians(-65), Math.toRadians(50))
         );
 
         public static final String kCameraNameBackRight = "BackRightCamera";
         public static final Transform3d kRobotToCamBackRight = new Transform3d(
-            new Translation3d(-Units.inchesToMeters(11.5), -Units.inchesToMeters(9), Units.inchesToMeters(12.5)),
-            new Rotation3d(Math.toRadians(0), Math.toRadians(-10), Math.toRadians(180))
+            new Translation3d(Units.inchesToMeters(8.12), -Units.inchesToMeters(11.06), Units.inchesToMeters(7.74)),
+            new Rotation3d(Math.toRadians(0), Math.toRadians(-65), Math.toRadians(-110))
         );
 
         public static final String kCameraNameBackLeft = "BackLeftCamera";
         public static final Transform3d kRobotToCamBackLeft = new Transform3d(
-            new Translation3d(-Units.inchesToMeters(11.5), Units.inchesToMeters(9), Units.inchesToMeters(12.5)),
-            new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(125))
+            new Translation3d(Units.inchesToMeters(8.12), Units.inchesToMeters(11.06), Units.inchesToMeters(7.74)),
+            new Rotation3d(Math.toRadians(0), Math.toRadians(-65), Math.toRadians(110))
         );
 
         public static final AprilTagFieldLayout kTagLayout =
@@ -102,15 +102,14 @@ public final class Constants {
         public static final double hoodMaxDegrees = 65.0;
         public static final double passTargetRadiusMeters = Units.inchesToMeters(5.91) / 2.0;
         public static final int passTargetCirclePoints = 24;
-        public static final double turretOffset = 0.0;
 
-        public static final Translation2d robotToTurret = new Translation2d(0, 0);
+        public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(4.699), 0);
 
         public static final double delay = 0.0011;
         public static final double maxDelay = 0.25;
         public static final double riseTime = 0.04;
         public static final double fallTime = 0.18;
-        public static final double hoodRetractTime = 0.1;
+        public static final double hoodRetractTime = 0.1; // TODO
 
         public static InterpolatingTreeMap<Double, ShooterParams> climbMap = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
@@ -144,13 +143,13 @@ public final class Constants {
         public static final double spinKv = 0.12958;
         public static final double spinKa = 0.044218;
         public static final double spinStatorCurrentLimit = 50.0;
-        public static final double spinVelocity = 150;
-        public static final double spinAccel = 400;
+        public static final double spinVelocity = 50; //150
+        public static final double spinAccel = 150; // 400
 
         public static final int spinCancoder1Id = 26;
-        public static final double spinCancoder1Offset = 0;
+        public static final double spinCancoder1Offset = 0; // TODO
         public static final int spinCancoder2Id = 27;
-        public static final double spinCancoder2Offset = 0;
+        public static final double spinCancoder2Offset = 0; // TODO
 
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;

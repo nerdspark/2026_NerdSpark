@@ -382,7 +382,7 @@ public class Turret extends SubsystemBase {
         turretAngle = normalizeRadians(turretAngle);
         SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
 
-        neededAngle = normalizeRadians(neededAngle + 180); //TODO
+        neededAngle = normalizeRadians(neededAngle - 35);
         SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
 
         // Update phase delay here, 20ms loop
@@ -569,72 +569,71 @@ public class Turret extends SubsystemBase {
                 velocity = aimOnFly(distance);
             }
         } else {
+            double shootLine = calcTriggerLine(
+                isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
+                delayPose.getX(), 
+                speeds.vxMetersPerSecond, 
+                0.25, 
+                isBlue ? 1 : -1
+            );
+            double passLine = calcTriggerLine(
+                isBlue ? FieldConstants.LinesVertical.bluePassLine : FieldConstants.LinesVertical.redPassLine, 
+                delayPose.getX(), 
+                speeds.vxMetersPerSecond, 
+                0.25, 
+                isBlue ? -1 : 1
+            );
 
-        double shootLine = calcTriggerLine(
-            isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
-            delayPose.getX(), 
-            speeds.vxMetersPerSecond, 
-            0.25, 
-            isBlue ? 1 : -1
-        );
-        double passLine = calcTriggerLine(
-            isBlue ? FieldConstants.LinesVertical.bluePassLine : FieldConstants.LinesVertical.redPassLine, 
-            delayPose.getX(), 
-            speeds.vxMetersPerSecond, 
-            0.25, 
-            isBlue ? -1 : 1
-        );
+            boolean shoot = isBlue ? turretPose.getX() <= shootLine : turretPose.getX() >= passLine;
+            SmartDashboard.putBoolean("Shoot", shoot);
+            boolean pass = isBlue ? turretPose.getX() >= shootLine : turretPose.getX() <= passLine; 
+            SmartDashboard.putBoolean("Pass", pass);
 
-        boolean shoot = isBlue ? turretPose.getX() <= shootLine : turretPose.getX() >= passLine;
-        SmartDashboard.putBoolean("Shoot", shoot);
-        boolean pass = isBlue ? turretPose.getX() >= shootLine : turretPose.getX() <= passLine; 
-        SmartDashboard.putBoolean("Pass", pass);
+            if (shoot || pass) {
+                delaySum += filteredTurretDelaySec;
+                delaySamples++;
+                maxDelay = Math.max(maxDelay, filteredTurretDelaySec);
 
-        if (shoot || pass) {
-            delaySum += filteredTurretDelaySec;
-            delaySamples++;
-            maxDelay = Math.max(maxDelay, filteredTurretDelaySec);
+                Translation2d goalPose;
+                Translation2d passPose;
+                if (isBlue) {
+                    goalPose = FieldConstants.Hub.topCenterPoint.toTranslation2d();
+                    passPose = closerPoint(turretPose, FieldConstants.LeftBump.nearLeftCorner, FieldConstants.RightBump.nearLeftCorner) 
+                        ? FieldConstants.LeftBump.nearLeftCorner : FieldConstants.RightBump.nearLeftCorner;
+                } else {
+                    goalPose = FieldConstants.Hub.oppTopCenterPoint.toTranslation2d();
+                    passPose = closerPoint(turretPose, FieldConstants.LeftBump.oppNearLeftCorner, FieldConstants.RightBump.oppNearLeftCorner) 
+                        ? FieldConstants.LeftBump.oppNearLeftCorner : FieldConstants.RightBump.oppNearLeftCorner;
+                }
 
-            Translation2d goalPose;
-            Translation2d passPose;
-            if (isBlue) {
-                goalPose = FieldConstants.Hub.topCenterPoint.toTranslation2d();
-                passPose = closerPoint(turretPose, FieldConstants.LeftBump.nearLeftCorner, FieldConstants.RightBump.nearLeftCorner) 
-                    ? FieldConstants.LeftBump.nearLeftCorner : FieldConstants.RightBump.nearLeftCorner;
+                Translation2d targetPose = shoot ? goalPose : passPose;
+                m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
+                double distance = turretPose.getTranslation().getDistance(targetPose);
+
+                tof = TurretConstants.map.get(distance).tof; // Lookup TOF from table
+                Translation2d lookaheadTurretPos = turretPose.getTranslation();
+
+                for (int i = 0; i < 10; i++) {
+                    Translation2d robotFieldVelocity = new Translation2d(
+                        speeds.vxMetersPerSecond,
+                        speeds.vyMetersPerSecond
+                    );
+                    Translation2d flightOffset = robotFieldVelocity.times(tof); // How far robot moves during ball flight
+                    lookaheadTurretPos = turretPose.getTranslation().plus(flightOffset); // Effective launch point
+                    distance = lookaheadTurretPos.getDistance(targetPose); // Recompute distance
+                    tof = TurretConstants.map.get(distance).tof;       // Recompute TOF for new distance
+                }
+                // m_field.getObject("Look Ahead Pose").setPose(lookaheadTurretPos.getMeasureX(), lookaheadTurretPos.getMeasureY(), new Rotation2d());
+
+                double xError = targetPose.getX() - lookaheadTurretPos.getX();
+                double yError = targetPose.getY() - lookaheadTurretPos.getY();
+                double errorDegrees = Math.atan2(yError, xError);
+                        
+                aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
+                velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
             } else {
-                goalPose = FieldConstants.Hub.oppTopCenterPoint.toTranslation2d();
-                passPose = closerPoint(turretPose, FieldConstants.LeftBump.oppNearLeftCorner, FieldConstants.RightBump.oppNearLeftCorner) 
-                    ? FieldConstants.LeftBump.oppNearLeftCorner : FieldConstants.RightBump.oppNearLeftCorner;
+                hoodWheelsZero();
             }
-
-            Translation2d targetPose = shoot ? goalPose : passPose;
-            m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
-            double distance = turretPose.getTranslation().getDistance(targetPose);
-
-            tof = TurretConstants.map.get(distance).tof; // Lookup TOF from table
-            Translation2d lookaheadTurretPos = turretPose.getTranslation();
-
-            for (int i = 0; i < 10; i++) {
-                Translation2d robotFieldVelocity = new Translation2d(
-                    speeds.vxMetersPerSecond,
-                    speeds.vyMetersPerSecond
-                );
-                Translation2d flightOffset = robotFieldVelocity.times(tof); // How far robot moves during ball flight
-                lookaheadTurretPos = turretPose.getTranslation().plus(flightOffset); // Effective launch point
-                distance = lookaheadTurretPos.getDistance(targetPose); // Recompute distance
-                tof = TurretConstants.map.get(distance).tof;       // Recompute TOF for new distance
-            }
-            // m_field.getObject("Look Ahead Pose").setPose(lookaheadTurretPos.getMeasureX(), lookaheadTurretPos.getMeasureY(), new Rotation2d());
-
-            double xError = targetPose.getX() - lookaheadTurretPos.getX();
-            double yError = targetPose.getY() - lookaheadTurretPos.getY();
-            double errorDegrees = Math.atan2(yError, xError);
-                    
-            aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
-            velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
-        } else {
-            hoodWheelsZero();
-        }
         }
 
         spinMotor.setControl(spinPose);
