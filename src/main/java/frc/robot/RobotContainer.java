@@ -12,7 +12,12 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -28,7 +33,10 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.SimFuelIKSubsystem;
+import frc.robot.subsystems.SimFuelSubsystem;
 import frc.robot.subsystems.Turret;
+import frc.robot.util.FuelSim;
 
 public class RobotContainer {
     private final double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
@@ -45,6 +53,8 @@ public class RobotContainer {
     private final Turret turret;
     private final Indexer indexer;
     private final Intake intake = new Intake();
+    private final SimFuelSubsystem fuelSim;
+    private final SimFuelIKSubsystem fuelSimIK;
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
@@ -68,6 +78,18 @@ public class RobotContainer {
         );
 
         indexer = new Indexer();
+        fuelSim = RobotBase.isSimulation()
+            ? new SimFuelSubsystem(
+                () -> drivetrain.getState().Pose,
+                () -> drivetrain.getState().Speeds
+            )
+            : null;
+        fuelSimIK = RobotBase.isSimulation()
+            ? new SimFuelIKSubsystem(
+                () -> drivetrain.getState().Pose,
+                () -> drivetrain.getState().Speeds
+            )
+            : null;
 
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -94,10 +116,11 @@ public class RobotContainer {
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> Constants.indexerConstants.PASSTHROUGH_SPEED))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
 
-        joystick.a().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
+        joystick.start().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(1.0), intake)));
-        joystick.x().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
+        joystick.a().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
+        joystick.x().onTrue(new InstantCommand(this::shootFuelWithIK));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = 0.0));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
@@ -156,5 +179,19 @@ public class RobotContainer {
 
     public AprilTagLayoutType getSelectedAprilTagLayout() {
         return FieldConstants.defaultAprilTagType;
+    }
+
+    private void shootFuelWithIK() {
+        if (fuelSimIK == null) {
+            return;
+        }
+        Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+        Translation2d target = alliance == Alliance.Red
+            ? Constants.Field.redHub
+            : Constants.Field.blueHub;
+        Translation3d launchPosition = fuelSimIK.getRobotLaunchPosition();
+        Translation3d baseVelocity = fuelSimIK.computeLaunchVelocityToTarget(target);
+        Translation3d launchVelocity = fuelSimIK.launchVel(baseVelocity);
+        FuelSim.getInstance().spawnFuel(launchPosition, launchVelocity);
     }
 }
