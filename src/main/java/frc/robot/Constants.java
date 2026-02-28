@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
@@ -45,6 +47,13 @@ public final class Constants {
             new Transform3d(new Translation3d(Units.inchesToMeters(11.5), -Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
                 new Rotation3d(Math.toRadians(0), Math.toRadians(-10), Math.toRadians(0))); //TODO: determine XYZ
 
+public class Constants {
+
+    public final class turretConstants {
+
+        public static final double spinOverrallRatio = 20;
+        public static final double hoodStow = 0.0;
+        public static final double turretOffset = 90;
         public static final String kCameraNameFrontLeft = "FrontLeftCamera";
         public static final Transform3d kRobotToCamFrontLeft =
             new Transform3d(new Translation3d(Units.inchesToMeters(11.5), Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
@@ -298,5 +307,14 @@ public final class Constants {
 
         public static final int indexId = 33;
         public static final double indexCurretLimit = 40;
+    }
+
+    public final class indexerConstants {
+
+        
+        public static Supplier<Boolean> isActive = () -> true;
+
+        public final static double PASSTHROUGH_SPEED = 0.7; //TODO tune this
+        public final static double DRUM_MOTOR_SPEED = 1.0;
     }
 }
