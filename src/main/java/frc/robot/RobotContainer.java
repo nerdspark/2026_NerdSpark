@@ -27,12 +27,14 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.AutoAimConstants;
+import frc.robot.Constants.turretTargetConstants;
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.RealFuelSubsystem;
 import frc.robot.subsystems.SimFuelIKSubsystem;
 import frc.robot.subsystems.SimFuelSubsystem;
 import frc.robot.subsystems.Turret;
@@ -55,6 +57,7 @@ public class RobotContainer {
     private final Intake intake = new Intake();
     private final SimFuelSubsystem fuelSim;
     private final SimFuelIKSubsystem fuelSimIK;
+    private final RealFuelSubsystem fuelReal;
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
@@ -90,6 +93,7 @@ public class RobotContainer {
                 () -> drivetrain.getState().Speeds
             )
             : null;
+        fuelReal = RobotBase.isSimulation() ? null : new RealFuelSubsystem();
 
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -120,7 +124,9 @@ public class RobotContainer {
             .andThen(new InstantCommand(() -> intake.setRollerPower(1.0), intake)));
         joystick.a().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
-        joystick.x().onTrue(new InstantCommand(this::shootFuelWithIK));
+        joystick.x()
+            .onTrue(new InstantCommand(() -> startTargeting(true)))
+            .onFalse(new InstantCommand(() -> stopTargeting()));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = 0.0));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
@@ -141,6 +147,9 @@ public class RobotContainer {
         );
         NamedCommands.registerCommand("indexer_on", new IndexerCommand(indexer, () -> 1.0));
         NamedCommands.registerCommand("indexer_off", new IndexerCommand(indexer, () -> 0.0));
+        NamedCommands.registerCommand("shoot_map", new InstantCommand(() -> startTargeting(false)));
+        NamedCommands.registerCommand("shoot_ik", new InstantCommand(() -> startTargeting(true)));
+        NamedCommands.registerCommand("shoot_stop", new InstantCommand(this::stopTargeting));
     }
 
     private void configureDefaultCommands() {
@@ -181,17 +190,36 @@ public class RobotContainer {
         return FieldConstants.defaultAprilTagType;
     }
 
-    private void shootFuelWithIK() {
-        if (fuelSimIK == null) {
-            return;
-        }
+    private void startTargeting(boolean useIK) {
+        SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, useIK);
         Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
         Translation2d target = alliance == Alliance.Red
             ? Constants.Field.redHub
             : Constants.Field.blueHub;
-        Translation3d launchPosition = fuelSimIK.getRobotLaunchPosition();
-        Translation3d baseVelocity = fuelSimIK.computeLaunchVelocityToTarget(target);
-        Translation3d launchVelocity = fuelSimIK.launchVel(baseVelocity);
-        FuelSim.getInstance().spawnFuel(launchPosition, launchVelocity);
+        SmartDashboard.putBoolean(turretTargetConstants.enableKey, true);
+        SmartDashboard.putNumber(turretTargetConstants.targetXKey, target.getX());
+        SmartDashboard.putNumber(turretTargetConstants.targetYKey, target.getY());
+        if (fuelReal != null) {
+            fuelReal.enableTargeting(true);
+            fuelReal.setTarget(target);
+        }
+        if (fuelSimIK != null && useIK) {
+            Translation3d launchPosition = fuelSimIK.getRobotLaunchPosition();
+            Translation3d baseVelocity = fuelSimIK.computeLaunchVelocityToTarget(target);
+            Translation3d launchVelocity = fuelSimIK.launchVel(baseVelocity);
+            FuelSim.getInstance().spawnFuel(launchPosition, launchVelocity);
+        } else if (fuelSim != null && !useIK) {
+            Translation3d launchPosition = fuelSim.getRobotLaunchPosition();
+            Translation3d baseVelocity = fuelSim.computeLaunchVelocityToTarget(target);
+            Translation3d launchVelocity = fuelSim.launchVel(baseVelocity);
+            FuelSim.getInstance().spawnFuel(launchPosition, launchVelocity);
+        }
+    }
+
+    private void stopTargeting() {
+        SmartDashboard.putBoolean(turretTargetConstants.enableKey, false);
+        if (fuelReal != null) {
+            fuelReal.enableTargeting(false);
+        }
     }
 }
