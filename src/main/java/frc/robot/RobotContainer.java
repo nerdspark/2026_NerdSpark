@@ -4,6 +4,8 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import java.util.Optional;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -17,14 +19,17 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.AutoAimConstants;
@@ -40,6 +45,7 @@ import frc.robot.subsystems.SimFuelIKSubsystem;
 import frc.robot.subsystems.SimFuelSubsystem;
 import frc.robot.subsystems.Turret;
 import frc.robot.util.FuelSim;
+import frc.robot.util.HubShiftUtil;
 
 public class RobotContainer {
     private final double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
@@ -80,6 +86,7 @@ public class RobotContainer {
                 drivetrain.getState().Pose.getRotation()),
             () -> true
         );
+        HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
         indexer = new Indexer();
         fuelSim = RobotBase.isSimulation()
@@ -119,9 +126,8 @@ public class RobotContainer {
         }));
 
         joystick.leftBumper()
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> Constants.indexerConstants.PASSTHROUGH_SPEED))
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
-
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.85), intake)));
         joystick.y().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
@@ -135,6 +141,59 @@ public class RobotContainer {
         joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
         joystick.povDown().onTrue(new InstantCommand(() -> target = 0));
         joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
+
+        // Start-of-shift warning
+        for (int i = 0; i < 5; i++) {
+            double start = i * 0.75; // 0.25 on + 0.5 break
+            double end = start + 0.25; // rumble duration
+
+            Trigger shiftJustStarted = new Trigger(() ->
+                HubShiftUtil.getShiftedShiftInfo().active()
+                && HubShiftUtil.getShiftedShiftInfo().elapsedTime() > start
+                && HubShiftUtil.getShiftedShiftInfo().elapsedTime() < end
+            );
+
+            shiftJustStarted.and(RobotModeTriggers.teleop())
+                .onTrue(
+                    Commands.runEnd(
+                        () -> joystick.setRumble(RumbleType.kRightRumble, 1.0),
+                        () -> joystick.setRumble(RumbleType.kBothRumble, 0.0)
+                    ).withTimeout(0.25)
+                );
+        }
+
+        // End-of-shift warning
+        for (int i = 1; i <= 5; i++) {
+            double time = i;
+            Trigger shiftAboutToEnd = new Trigger(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time));
+            shiftAboutToEnd.and(RobotModeTriggers.teleop())
+                .onTrue(
+                    Commands.runEnd(
+                        () -> joystick.setRumble(RumbleType.kRightRumble, 1.0),
+                        () -> joystick.setRumble(RumbleType.kBothRumble, 0.0)
+                    ).withTimeout(0.25)
+                );
+        }
+
+        // Reset hub shift timer when enabling
+        RobotModeTriggers.teleop().onTrue(Commands.runOnce(HubShiftUtil::initialize));
+        RobotModeTriggers.autonomous().onTrue(Commands.runOnce(HubShiftUtil::initialize));
+        RobotModeTriggers.disabled().onTrue(Commands.runOnce(HubShiftUtil::initialize).ignoringDisable(true));
+    }
+
+    public void updateDashboard() {
+        // Publish match time
+        SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
+
+        // Update from HubShiftUtil
+        SmartDashboard.putString("Shifts/Remaining Shift Time", 
+            String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))
+        );
+        SmartDashboard.putBoolean("Shifts/Shift Active", HubShiftUtil.getShiftedShiftInfo().active());
+        SmartDashboard.putString("Shifts/Game State", HubShiftUtil.getShiftedShiftInfo().currentShift().toString());
+        SmartDashboard.putBoolean("Shifts/Active First?",
+            DriverStation.getAlliance().orElse(Alliance.Red) == HubShiftUtil.getFirstActiveAlliance()
+        );
     }
 
     private void configureSysid() {
@@ -204,8 +263,8 @@ public class RobotContainer {
         SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, useIK);
         Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
         Translation2d target = alliance == Alliance.Red
-            ? Constants.Field.redHub
-            : Constants.Field.blueHub;
+            ? FieldConstants.Hub.oppTopCenterPoint.toTranslation2d()
+            : FieldConstants.Hub.topCenterPoint.toTranslation2d();
         SmartDashboard.putBoolean(turretTargetConstants.enableKey, true);
         SmartDashboard.putNumber(turretTargetConstants.targetXKey, target.getX());
         SmartDashboard.putNumber(turretTargetConstants.targetYKey, target.getY());

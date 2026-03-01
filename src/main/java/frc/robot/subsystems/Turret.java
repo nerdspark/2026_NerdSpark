@@ -47,6 +47,7 @@ import frc.robot.Constants;
 import frc.robot.Constants.turretTargetConstants;
 import frc.robot.FieldConstants;
 import frc.robot.Constants.ShootMode;
+import frc.robot.Constants.IkSolution;
 import frc.robot.util.ShooterOffsetMap;
 
 public class Turret extends SubsystemBase {
@@ -80,7 +81,7 @@ public class Turret extends SubsystemBase {
     private Debouncer torqueCurrentDebouncer = new Debouncer(0.02, DebounceType.kFalling);
     private ShootMode mode = ShootMode.COAST;
     private double velocity = 0;
-    private double tof = 0;
+    public double tof = 0;
 
     private final Field2d m_field = new Field2d();
     private final ShooterOffsetMap offsetMap = new ShooterOffsetMap();
@@ -459,9 +460,8 @@ public class Turret extends SubsystemBase {
                 continue;
             }
             double wheelRps = speedMps / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
-            double motorRps = wheelRps * TurretConstants.shooterRatio;
-            if (motorRps <= TurretConstants.shooterMaxMotorRps && motorRps < bestMotorRps) {
-                bestMotorRps = motorRps;
+            if (wheelRps <= TurretConstants.shooterMaxMotorRps && wheelRps < bestMotorRps) {
+                bestMotorRps = wheelRps;
                 bestTheta = theta;
             }
         }
@@ -673,14 +673,4 @@ public class Turret extends SubsystemBase {
     // public Command sysIdDynamic(SysIdRoutine.Direction direction) {
     //     return sysIdRoutineToApply.dynamic(direction);
     // }
-
-    private static final class IkSolution {
-        private final double hoodDegrees;
-        private final double motorRps;
-
-        private IkSolution(double hoodDegrees, double motorRps) {
-            this.hoodDegrees = hoodDegrees;
-            this.motorRps = motorRps;
-        }
-    }
 }

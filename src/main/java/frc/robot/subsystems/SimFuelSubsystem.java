@@ -95,8 +95,7 @@ public class SimFuelSubsystem extends SubsystemBase {
         }
 
         double hoodRad = Math.toRadians(solution.hoodDegrees);
-        double wheelRps = solution.motorRps / TurretConstants.shooterRatio;
-        double muzzleSpeed = wheelRps * 2.0 * Math.PI * TurretConstants.shooterWheelRadius;
+        double muzzleSpeed = solution.motorRps * 2.0 * Math.PI * TurretConstants.shooterWheelRadius;
         double horizontalSpeed = muzzleSpeed * Math.cos(hoodRad);
         double verticalSpeed = muzzleSpeed * Math.sin(hoodRad);
 
@@ -133,9 +132,8 @@ public class SimFuelSubsystem extends SubsystemBase {
                 continue;
             }
             double wheelRps = speedMps / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
-            double motorRps = wheelRps * TurretConstants.shooterRatio;
-            if (motorRps <= TurretConstants.shooterMaxMotorRps && motorRps < bestMotorRps) {
-                bestMotorRps = motorRps;
+            if (wheelRps <= TurretConstants.shooterMaxMotorRps && wheelRps < bestMotorRps) {
+                bestMotorRps = wheelRps;
                 bestAngleDeg = angleDeg;
             }
         }
