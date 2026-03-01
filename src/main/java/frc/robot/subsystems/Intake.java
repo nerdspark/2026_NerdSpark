@@ -27,7 +27,9 @@ public class Intake extends SubsystemBase {
     private final MotionMagicVoltage m_mmRequest = new MotionMagicVoltage(0);
         TalonFXConfiguration intakeDeployMotorConfig = new TalonFXConfiguration();
 
-      private MotionMagicConfigs motionMagicConfigs = intakeDeployMotorConfig.MotionMagic;
+      private MotionMagicConfigs motionMagicfastConfigs = intakeDeployMotorConfig.MotionMagic;
+      private MotionMagicConfigs motionMagicSlowConfigs = intakeDeployMotorConfig.MotionMagic;
+
 
     
     public Intake() {
@@ -54,9 +56,11 @@ public class Intake extends SubsystemBase {
 
         
 
-        motionMagicConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocity;
-        motionMagicConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
-        motionMagicConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
+        motionMagicfastConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocityFast;
+        motionMagicfastConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
+        motionMagicfastConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
+
+        motionMagicSlowConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocitySlow;
 
         intakeMotorDeploy
         .getConfigurator()
@@ -72,10 +76,18 @@ public class Intake extends SubsystemBase {
     public void setDeployPosition(Supplier<Double> rotations) {
         intakeMotorDeploy.setControl(m_mmRequest.withPosition(rotations.get().doubleValue()));
     }
-    
-    public void setRollerPower(double power) {
-        leftIntakeRollerMotor.set(-power);
-        rightIntakeRollerMotor.set(power);
+    public void setDeployPower(Supplier<Double> deployPower) {
+        intakeMotorDeploy.set(deployPower.get().doubleValue());
+    }
+    public void setRollerPower(Supplier<Double> rollerPower) {
+        leftIntakeRollerMotor.set(-rollerPower.get().doubleValue());
+        rightIntakeRollerMotor.set(rollerPower.get().doubleValue());
+    }
+    public void useFastConfig() {
+        intakeMotorDeploy.getConfigurator().apply(motionMagicfastConfigs);
+    }
+    public void useSlowConfig() {
+        intakeMotorDeploy.getConfigurator().apply(motionMagicSlowConfigs);
     }
     public void simulationPeriodic() {
     // double dt = 0.02;

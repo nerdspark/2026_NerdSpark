@@ -41,7 +41,8 @@ public class RobotContainer {
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandXboxController joystick1 = new CommandXboxController(0);
+    private final CommandXboxController joystick2 = new CommandXboxController(1);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -52,8 +53,8 @@ public class RobotContainer {
     private final Intake intake = new Intake();
       
     public RobotContainer() {
-        NamedCommands.registerCommand("intake_deploy", new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos),intake).andThen(new InstantCommand(() -> intake.setRollerPower(1.0),intake)));
-        NamedCommands.registerCommand("intake_home", new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos),intake).andThen(new InstantCommand(() -> intake.setRollerPower(0.0),intake)));
+        NamedCommands.registerCommand("intake_deploy", new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos),intake).andThen(new InstantCommand(() -> intake.setRollerPower(() -> IntakeConstants.rollerPower),intake)));
+        NamedCommands.registerCommand("intake_home", new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos),intake).andThen(new InstantCommand(() -> intake.setRollerPower(() -> 0.0),intake)));
         poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
       
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
@@ -70,9 +71,9 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getRightY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getRightX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(joystick.getLeftX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-joystick1.getRightY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-joystick1.getRightX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(joystick1.getLeftX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -93,34 +94,51 @@ public class RobotContainer {
         // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // Reset the field-centric heading on left bumper press.
-        joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        joystick1.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
         
-        // Intake bindings
-        joystick.a().onTrue(
+        // Intake binding
+
+        //Deploy Intake
+        joystick1.a().onTrue(
             new InstantCommand(
                 () -> intake.setDeployPosition(() -> IntakeConstants.deployPos),    
                 intake
             ).andThen(
                 new InstantCommand(
-                    () -> intake.setRollerPower(0.0),
+                    () -> intake.setRollerPower(() -> IntakeConstants.rollerPower),
                     intake
                 )
             )
         );
-
-        joystick.x().onTrue(
+        //Bring Intake back to home pos
+        joystick1.x().onTrue(
             new InstantCommand(
                 () -> intake.setDeployPosition(() ->IntakeConstants.homePos), 
                 intake
                 ).andThen(
                     new InstantCommand(
-                        () -> intake.setRollerPower(0.0),
+                        () -> intake.setRollerPower(() -> 0.0),
                         intake
                     )
                 )
         );
+        //Copilot Intake Shake
+        joystick2.x().whileTrue(
+        new InstantCommand(
+            () -> intake.useSlowConfig(),
+            intake
+        ).andThen(
+           new InstantCommand(
+             () -> intake.setDeployPosition(() -> IntakeConstants.shakePos),
+             intake
+           )
+        )
+       );
         drivetrain.registerTelemetry(logger::telemeterize);
+
     }
+
+    
 
     public Command getAutonomousCommand() {
         // Simple drive forward auton

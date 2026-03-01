@@ -138,7 +138,8 @@ public static class Vision {
 
 
         public static final int motionMagicAcceleration =150;
-        public static final int motionMagicCruiseVelocity=50;
+        public static final int motionMagicCruiseVelocityFast=50;
+        public static final int motionMagicCruiseVelocitySlow=15;
         public static final int motionMagicJerk=0;
         //Constants after tuning in TunerX, works great
         public static final double kP = 1.5;
@@ -151,7 +152,8 @@ public static class Vision {
 
         public static final double deployPos = 2;
         public static final double homePos = 14;
-
+        public static final double shakePos = 8;
+        public static final double rollerPower = 1.0;
 
     }
 
