@@ -532,14 +532,14 @@ public class Turret extends SubsystemBase {
             isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
             turretPose.getX(), 
             speeds.vxMetersPerSecond, 
-            Units.inchesToMeters(0.25), 
+            Units.inchesToMeters(0.5), 
             isBlue ? 1 : -1
         );
         double passLine = calcTriggerLine(
             isBlue ? FieldConstants.LinesVertical.bluePassLine : FieldConstants.LinesVertical.redPassLine, 
             turretPose.getX(), 
             speeds.vxMetersPerSecond, 
-            Units.inchesToMeters(0.25), 
+            Units.inchesToMeters(0.5), 
             isBlue ? -1 : 1
         );
 
@@ -558,7 +558,6 @@ public class Turret extends SubsystemBase {
                 turretTargetConstants.defaultEnable
             );
             forceTarget = false;
-            SmartDashboard.putBoolean("Force Target", forceTarget);
 
             Translation2d goalPose;
             Translation2d passPose;
@@ -623,8 +622,6 @@ public class Turret extends SubsystemBase {
                         
             aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
             if (forceTarget) {
-                SmartDashboard.putBoolean("Forcing Target", true);
-                SmartDashboard.putBoolean("Map", false);
                 boolean useIK = SmartDashboard.getBoolean(
                     AutoAimConstants.useIKSolverKey,
                     AutoAimConstants.defaultUseIKSolver
@@ -642,8 +639,6 @@ public class Turret extends SubsystemBase {
                     velocity = aimOnFly(distance);
                 }
             } else {
-                SmartDashboard.putBoolean("Forcing Target", false);
-                SmartDashboard.putBoolean("Map", true);
                 velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
             }
         } else {

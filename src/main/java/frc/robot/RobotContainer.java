@@ -88,7 +88,7 @@ public class RobotContainer {
             () -> ChassisSpeeds.fromRobotRelativeSpeeds(
                 drivetrain.getState().Speeds,
                 drivetrain.getState().Pose.getRotation()),
-            () -> true
+            () -> false
         );
         HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
