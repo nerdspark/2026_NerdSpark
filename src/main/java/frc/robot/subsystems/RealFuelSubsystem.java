@@ -5,11 +5,10 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.Field;
+import frc.robot.FieldConstants;
 import frc.robot.Constants.turretTargetConstants;
 
 public class RealFuelSubsystem extends SubsystemBase {
-    private Translation2d target = Field.blueHub;
     private boolean enabled = false;
 
     public void enableTargeting(boolean enable) {
@@ -18,16 +17,15 @@ public class RealFuelSubsystem extends SubsystemBase {
     }
 
     public void setTarget(Translation2d target) {
-        if (target == null) {
-            return;
-        }
-        this.target = target;
         SmartDashboard.putNumber(turretTargetConstants.targetXKey, target.getX());
         SmartDashboard.putNumber(turretTargetConstants.targetYKey, target.getY());
     }
 
     public void setHubTarget(Alliance alliance) {
-        setTarget(alliance == Alliance.Red ? Field.redHub : Field.blueHub);
+        setTarget(alliance == Alliance.Red 
+            ? FieldConstants.Hub.oppTopCenterPoint.toTranslation2d() 
+            : FieldConstants.Hub.topCenterPoint.toTranslation2d()
+        );
     }
 
     @Override

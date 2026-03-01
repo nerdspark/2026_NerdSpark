@@ -93,7 +93,6 @@ public final class Constants {
 
         public static final double hoodRatio = 50;
         public static final double shooterWheelRadius = Units.inchesToMeters(4);
-        public static final double shooterRatio = 2.0;
         public static final double shooterMaxMotorRps = 4000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(30);
@@ -109,7 +108,7 @@ public final class Constants {
         public static final double maxDelay = 0.25;
         public static final double riseTime = 0.04;
         public static final double fallTime = 0.18;
-        public static final double hoodRetractTime = 0.1; // TODO
+        public static final double hoodRetractTime = 0.1; // TODO Seconds
 
         public static InterpolatingTreeMap<Double, ShooterParams> climbMap = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
@@ -122,8 +121,11 @@ public final class Constants {
         );
 
         static {
+            // Passing
             map.put(Double.MAX_VALUE, new ShooterParams(0, 0, 0));
+
             map.put(0.0, new ShooterParams(0, 0, 0));
+
             climbMap.put(0.0, new ShooterParams(0, 0, 0));
         }
     }
@@ -134,17 +136,27 @@ public final class Constants {
         TORQUE_CURRENT_BANG_BANG
     }
 
+    public static final class IkSolution {
+        public final double hoodDegrees;
+        public final double motorRps;
+
+        public IkSolution(double hoodDegrees, double motorRps) {
+            this.hoodDegrees = hoodDegrees;
+            this.motorRps = motorRps;
+        }
+    }
+
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 0.0; // 32.587
+        public static final double spinKp = 32.587;
         public static final double spinKi = 0.0;
-        public static final double spinKd = 0.0; // 1.4534
-        public static final double spinKs = 0.0; // 0.44674
-        public static final double spinKv = 0.0; // 0.12958
-        public static final double spinKa = 0.0; // 0.044218
+        public static final double spinKd = 1.4534; 
+        public static final double spinKs = 0.44674;
+        public static final double spinKv = 0.12958;
+        public static final double spinKa = 0.044218;
         public static final double spinStatorCurrentLimit = 50.0;
-        public static final double spinVelocity = 25; //150
-        public static final double spinAccel = 75; // 400
+        public static final double spinVelocity = 150;
+        public static final double spinAccel = 400;
 
         public static final int spinCancoder1Id = 26;
         public static final double spinCancoder1Offset = -0.297607421875;
@@ -153,10 +165,10 @@ public final class Constants {
 
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
-        public static final double hoodKp1 = 0.0; // 8.6
-        public static final double hoodKp2 = 0.0; // 8.6
-        public static final double hoodKi1 = 0.0; // 0.2
-        public static final double hoodKi2 = 0.0; // 0.2
+        public static final double hoodKp1 = 8.6;
+        public static final double hoodKp2 = 8.6;
+        public static final double hoodKi1 = 0.2;
+        public static final double hoodKi2 = 0.2;
         public static final double hoodKd1 = 0.0;
         public static final double hoodKd2 = 0.0;
         public static final double hoodKs1 = 0;
@@ -166,8 +178,8 @@ public final class Constants {
         public static final double hoodKa1 = 0;
         public static final double hoodKa2 = 0;
         public static final double hoodStatorCurrentLimit = 40.0;
-        public static final double hoodVelocity = 75;
-        public static final double hoodAccel = 200;
+        public static final double hoodVelocity = 125;
+        public static final double hoodAccel = 300;
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;
@@ -184,49 +196,13 @@ public final class Constants {
         public static final double indexCurretLimit = 40;
     }
 
-    public static final class TurretTelemetryConstants {
-        public static final String withinLimitKey = "Turret Within Limit?";
-    }
-
-    public static final class turretTuningConstants {
-        public static final String enableKey = "TurretTune/Enable";
-        public static final String zeroKey = "TurretTune/Zero";
-        public static final String activeKey = "TurretTune/Active";
-        public static final String kPKey = "TurretTune/kP";
-        public static final String kIKey = "TurretTune/kI";
-        public static final String kDKey = "TurretTune/kD";
-        public static final String setpointDegKey = "TurretTune/SetpointDeg";
-        public static final boolean defaultEnable = false;
-        public static final boolean defaultZero = false;
-        public static final double defaultKP = TurretConfig.spinKp;
-        public static final double defaultKI = TurretConfig.spinKi;
-        public static final double defaultKD = TurretConfig.spinKd;
-        public static final double defaultSetpointDeg = 0.0;
-    }
-
-    public static final class hoodTuningConstants {
-        public static final String enableKey = "HoodTune/Enable";
-        public static final String zeroKey = "HoodTune/Zero";
-        public static final String activeKey = "HoodTune/Active";
-        public static final String kPKey = "HoodTune/kP";
-        public static final String kIKey = "HoodTune/kI";
-        public static final String kDKey = "HoodTune/kD";
-        public static final String setpointDegKey = "HoodTune/SetpointDeg";
-        public static final boolean defaultEnable = false;
-        public static final boolean defaultZero = false;
-        public static final double defaultKP = TurretConfig.hoodKp1;
-        public static final double defaultKI = TurretConfig.hoodKi1;
-        public static final double defaultKD = TurretConfig.hoodKd1;
-        public static final double defaultSetpointDeg = 0.0;
-    }
-
     public static final class turretTargetConstants {
         public static final String enableKey = "TurretTarget/Enable";
         public static final String targetXKey = "TurretTarget/X";
         public static final String targetYKey = "TurretTarget/Y";
         public static final boolean defaultEnable = false;
-        public static final double defaultTargetX = Field.blueHub.getX();
-        public static final double defaultTargetY = Field.blueHub.getY();
+        public static final double defaultTargetX = FieldConstants.Hub.topCenterPoint.getX();
+        public static final double defaultTargetY = FieldConstants.Hub.topCenterPoint.getY();
     }
 
     public static final class PassTargetConstants {
@@ -235,8 +211,8 @@ public final class Constants {
         public static final String targetYKey = "PassTarget/Y";
         public static final String fieldClickKey = "Field/PassTargetClick";
         public static final boolean defaultEnable = false;
-        public static final double defaultTargetX = Field.blueHub.getX();
-        public static final double defaultTargetY = Field.blueHub.getY();
+        public static final double defaultTargetX = FieldConstants.Hub.topCenterPoint.getX();
+        public static final double defaultTargetY = FieldConstants.Hub.topCenterPoint.getY();
     }
 
     public static final class ShooterOffsetConstants {
@@ -253,7 +229,6 @@ public final class Constants {
     }
 
     public static final class IntakeConstants {
-        public static final String CANBus = CANbus;
         public static final int deployIntakeMotorId = 34;
         public static final int roller1id = 35;
         public static final int roller2id = 36;
@@ -270,23 +245,5 @@ public final class Constants {
         public static final double motionMagicJerk = 1200.0;
         public static final double homePos = 0.0;
         public static final double deployPos = 13.0;
-    }
-
-    public static final class indexerConstants {
-        public static final double PASSTHROUGH_SPEED = 1.0;
-        public static final double DRUM_MOTOR_SPEED = 1.0;
-    }
-
-    public static final class Field {
-        public static final Translation2d blueHub = new Translation2d(4.615, 4.040);
-        public static final Translation2d redHub = new Translation2d(11.915, 4.040);
-        public static final double blueShootThreshold = 3.8;
-        public static final double bluePassThreshold = 5.5;
-        public static final double redShootThreshold = 12.8;
-        public static final double redPassThreshold = 11.0;
-        public static final Translation2d blueLeftPass = new Translation2d();
-        public static final Translation2d blueRightPass = new Translation2d();
-        public static final Translation2d redLeftPass = new Translation2d();
-        public static final Translation2d redRightPass = new Translation2d();
     }
 }
