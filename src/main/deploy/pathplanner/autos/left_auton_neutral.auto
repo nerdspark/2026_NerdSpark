@@ -17,6 +17,31 @@
           }
         },
         {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "indexer_on"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 6.5
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "indexer_off"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "left_auton_neutral3"

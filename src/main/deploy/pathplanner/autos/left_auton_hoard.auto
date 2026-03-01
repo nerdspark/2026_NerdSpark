@@ -11,21 +11,41 @@
           }
         },
         {
-          "type": "named",
+          "type": "deadline",
           "data": {
-            "name": "shooter_shoot"
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 6.5
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "indexer_on"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "indexer_off"
+                }
+              }
+            ]
           }
         },
         {
           "type": "path",
           "data": {
             "pathName": "left_auton_hoard2"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "climb_auton"
           }
         }
       ]
