@@ -36,16 +36,9 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "indexer_off"
-                }
-              }
-            ]
+            "name": "indexer_off"
           }
         },
         {
