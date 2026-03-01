@@ -17,9 +17,47 @@
           }
         },
         {
-          "type": "named",
+          "type": "deadline",
           "data": {
-            "name": "shooter_shoot"
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.0
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "shoot_ik"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "indexer_on"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "shoot_stop"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "indexer_off"
+                }
+              }
+            ]
           }
         },
         {
@@ -29,9 +67,28 @@
           }
         },
         {
-          "type": "named",
+          "type": "deadline",
           "data": {
-            "name": "shooter_shoot"
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.0
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "shoot_ik"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "indexer_on"
+                }
+              }
+            ]
           }
         }
       ]

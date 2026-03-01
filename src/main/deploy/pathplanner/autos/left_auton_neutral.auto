@@ -17,6 +17,50 @@
           }
         },
         {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "shoot_ik"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "indexer_on"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 6.5
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "shoot_stop"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "indexer_off"
+                }
+              }
+            ]
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "left_auton_neutral3"
