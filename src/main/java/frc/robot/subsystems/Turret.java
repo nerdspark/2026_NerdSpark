@@ -5,8 +5,6 @@ import static frc.robot.util.TurretUtil.*;
 
 import java.util.function.Supplier;
 
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
@@ -53,8 +51,6 @@ import frc.robot.util.ShooterOffsetMap;
 
 public class Turret extends SubsystemBase {
     private static final double TWO_PI = 2.0 * Math.PI;
-
-    public double tof = 0;
     
     private CANBus canivore;
     private TalonFX spinMotor, hoodMotor1, hoodMotor2, shootMotor1, shootMotor2;
@@ -84,6 +80,7 @@ public class Turret extends SubsystemBase {
     private Debouncer torqueCurrentDebouncer = new Debouncer(0.02, DebounceType.kFalling);
     private ShootMode mode = ShootMode.COAST;
     private double velocity = 0;
+    private double tof = 0;
 
     private final Field2d m_field = new Field2d();
     private final ShooterOffsetMap offsetMap = new ShooterOffsetMap();
@@ -509,10 +506,6 @@ public class Turret extends SubsystemBase {
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
         double deltaMotorRPS = vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
         return motorRps - deltaMotorRPS;
-    }
-
-    private double hoodDegreesToRotations(double hoodDegrees) {
-        return (hoodDegrees / 360.0) * TurretConstants.hoodRatio;
     }
 
     @Override

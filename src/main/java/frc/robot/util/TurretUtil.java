@@ -35,22 +35,12 @@ public final class TurretUtil {
         return angle;
     }
 
-    public static double degreesToMotorRotations(double turretDegrees) {
-        return (turretDegrees / 360.0) * TurretConstants.spinRatio;
-    }
-
-    public static double normalize180(double degrees) {
-        degrees %= 360.0;        // wrap within -360..360
-        if (degrees > 180.0) {
-            degrees -= 360.0;    // move into -180..180
-        } else if (degrees < -180.0) {
-            degrees += 360.0;    // move into -180..180
-        }
-        return degrees;
-    }
-
     public static boolean closerPoint(Pose2d pose, Translation2d poseLeft, Translation2d poseRight) {
         return Math.hypot(pose.getX() - poseLeft.getX(), pose.getY() - poseLeft.getY()) < 
             Math.hypot(pose.getX() - poseRight.getX(), pose.getY() - poseRight.getY());
+    }
+
+    public static double hoodDegreesToRotations(double hoodDegrees) {
+        return (hoodDegrees / 360.0) * TurretConstants.hoodRatio;
     }
 }
