@@ -558,6 +558,7 @@ public class Turret extends SubsystemBase {
                 turretTargetConstants.defaultEnable
             );
             forceTarget = false;
+            SmartDashboard.putBoolean("Force Target", forceTarget);
 
             Translation2d goalPose;
             Translation2d passPose;
@@ -622,6 +623,8 @@ public class Turret extends SubsystemBase {
                         
             aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
             if (forceTarget) {
+                SmartDashboard.putBoolean("Forcing Target", true);
+                SmartDashboard.putBoolean("Map", false);
                 boolean useIK = SmartDashboard.getBoolean(
                     AutoAimConstants.useIKSolverKey,
                     AutoAimConstants.defaultUseIKSolver
@@ -639,9 +642,10 @@ public class Turret extends SubsystemBase {
                     velocity = aimOnFly(distance);
                 }
             } else {
+                SmartDashboard.putBoolean("Forcing Target", false);
+                SmartDashboard.putBoolean("Map", true);
                 velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
             }
-            velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
         } else {
             hoodWheelsZero();
         }
