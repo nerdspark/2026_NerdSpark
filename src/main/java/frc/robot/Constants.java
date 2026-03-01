@@ -108,7 +108,7 @@ public final class Constants {
         public static final double maxDelay = 0.25;
         public static final double riseTime = 0.04;
         public static final double fallTime = 0.18;
-        public static final double hoodRetractTime = 0.1; // TODO Seconds
+        public static final double hoodRetractTime = 0.1; // TODO In Seconds
 
         public static InterpolatingTreeMap<Double, ShooterParams> climbMap = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
@@ -124,7 +124,7 @@ public final class Constants {
             // Passing
             map.put(Double.MAX_VALUE, new ShooterParams(0, 0, 0));
 
-            map.put(0.0, new ShooterParams(0, 0, 0));
+            map.put(0.0, new ShooterParams(0, 15, 0));
 
             climbMap.put(0.0, new ShooterParams(0, 0, 0));
         }
@@ -148,12 +148,12 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 32.587;
+        public static final double spinKp = 0.0; // 32.587
         public static final double spinKi = 0.0;
-        public static final double spinKd = 1.4534; 
-        public static final double spinKs = 0.44674;
-        public static final double spinKv = 0.12958;
-        public static final double spinKa = 0.044218;
+        public static final double spinKd = 0.0; // 1.4534
+        public static final double spinKs = 0.0; // 0.44674
+        public static final double spinKv = 0.0; // 0.12958
+        public static final double spinKa = 0.0; // 0.044218 
         public static final double spinStatorCurrentLimit = 50.0;
         public static final double spinVelocity = 150;
         public static final double spinAccel = 400;

@@ -34,6 +34,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -382,7 +383,7 @@ public class Turret extends SubsystemBase {
         turretAngle = normalizeRadians(turretAngle);
         SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
 
-        neededAngle = normalizeRadians(neededAngle + 180);
+        neededAngle = normalizeRadians(neededAngle + 180); // TODO
         SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
 
         // Update phase delay here, 20ms loop
@@ -527,16 +528,16 @@ public class Turret extends SubsystemBase {
         SmartDashboard.putBoolean("Is Blue", isBlue);
         double shootLine = calcTriggerLine(
             isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
-            delayPose.getX(), 
+            turretPose.getX(), 
             speeds.vxMetersPerSecond, 
-            0.25, 
+            Units.inchesToMeters(0.25), 
             isBlue ? 1 : -1
         );
         double passLine = calcTriggerLine(
             isBlue ? FieldConstants.LinesVertical.bluePassLine : FieldConstants.LinesVertical.redPassLine, 
-            delayPose.getX(), 
+            turretPose.getX(), 
             speeds.vxMetersPerSecond, 
-            0.25, 
+            Units.inchesToMeters(0.25), 
             isBlue ? -1 : 1
         );
 
@@ -641,7 +642,7 @@ public class Turret extends SubsystemBase {
             hoodWheelsZero();
         }
 
-        spinMotor.setControl(spinPose);
+        // spinMotor.setControl(spinPose);
         hoodMotor1.setControl(hoodPose);
         
         switch (mode) {
