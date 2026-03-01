@@ -65,8 +65,6 @@ public class Turret extends SubsystemBase {
     private MotionMagicVoltage hoodPose = new MotionMagicVoltage(0);
     private MotionMagicVoltage spinPose = new MotionMagicVoltage(0);
 
-    private LoggedNetworkNumber hoodTestPose = new LoggedNetworkNumber("/Tuning/HoodPose", 0);
-
     // private VoltageOut sysId = new VoltageOut(0);
 
     private Supplier<Pose2d> pose;
@@ -534,117 +532,124 @@ public class Turret extends SubsystemBase {
 
         boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
         SmartDashboard.putBoolean("Is Blue", isBlue);
-
-        boolean forceTarget = SmartDashboard.getBoolean(
-            turretTargetConstants.enableKey,
-            turretTargetConstants.defaultEnable
+        double shootLine = calcTriggerLine(
+            isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
+            delayPose.getX(), 
+            speeds.vxMetersPerSecond, 
+            0.25, 
+            isBlue ? 1 : -1
         );
-        if (forceTarget) {
-            double targetX = SmartDashboard.getNumber(
-                turretTargetConstants.targetXKey,
-                turretTargetConstants.defaultTargetX
-            );
-            double targetY = SmartDashboard.getNumber(
-                turretTargetConstants.targetYKey,
-                turretTargetConstants.defaultTargetY
-            );
-            Translation2d targetPose = new Translation2d(targetX, targetY);
-            double distance = turretPose.getTranslation().getDistance(targetPose);
+        double passLine = calcTriggerLine(
+            isBlue ? FieldConstants.LinesVertical.bluePassLine : FieldConstants.LinesVertical.redPassLine, 
+            delayPose.getX(), 
+            speeds.vxMetersPerSecond, 
+            0.25, 
+            isBlue ? -1 : 1
+        );
 
-            double xError = targetPose.getX() - turretPose.getX();
-            double yError = targetPose.getY() - turretPose.getY();
-            double errorDegrees = Math.atan2(yError, xError);
-            aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
+        boolean shoot = isBlue ? turretPose.getX() <= shootLine : turretPose.getX() >= passLine;
+        SmartDashboard.putBoolean("Shoot", shoot);
+        boolean pass = isBlue ? turretPose.getX() >= shootLine : turretPose.getX() <= passLine; 
+        SmartDashboard.putBoolean("Pass", pass);
 
-            boolean useIK = SmartDashboard.getBoolean(
-                AutoAimConstants.useIKSolverKey,
-                AutoAimConstants.defaultUseIKSolver
+        if (shoot || pass) {
+            delaySum += filteredTurretDelaySec;
+            delaySamples++;
+            maxDelay = Math.max(maxDelay, filteredTurretDelaySec);
+
+            boolean forceTarget = SmartDashboard.getBoolean(
+                turretTargetConstants.enableKey,
+                turretTargetConstants.defaultEnable
             );
-            if (useIK) {
-                IkSolution solution = solveIK(distance);
-                if (solution != null) {
-                    hoodPose.Position = hoodDegreesToRotations(solution.hoodDegrees);
-                    double compensated = applyChassisVelocityComp(solution.motorRps);
-                    velocity = applyShooterControl(compensated);
+
+            Translation2d goalPose;
+            Translation2d passPose;
+            if (isBlue) {
+                goalPose = FieldConstants.Hub.topCenterPoint.toTranslation2d();
+                if (forceTarget) {
+                    double targetX = SmartDashboard.getNumber(
+                        turretTargetConstants.targetXKey,
+                        turretTargetConstants.defaultTargetX
+                    );
+                    double targetY = SmartDashboard.getNumber(
+                        turretTargetConstants.targetYKey,
+                        turretTargetConstants.defaultTargetY
+                    );
+
+                    passPose = new Translation2d(targetX, targetY);
                 } else {
-                    hoodWheelsZero();
-                }
-            } else {
-                velocity = aimOnFly(distance);
-            }
-        } else {
-            double shootLine = calcTriggerLine(
-                isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
-                delayPose.getX(), 
-                speeds.vxMetersPerSecond, 
-                0.25, 
-                isBlue ? 1 : -1
-            );
-            double passLine = calcTriggerLine(
-                isBlue ? FieldConstants.LinesVertical.bluePassLine : FieldConstants.LinesVertical.redPassLine, 
-                delayPose.getX(), 
-                speeds.vxMetersPerSecond, 
-                0.25, 
-                isBlue ? -1 : 1
-            );
-
-            boolean shoot = isBlue ? turretPose.getX() <= shootLine : turretPose.getX() >= passLine;
-            SmartDashboard.putBoolean("Shoot", shoot);
-            boolean pass = isBlue ? turretPose.getX() >= shootLine : turretPose.getX() <= passLine; 
-            SmartDashboard.putBoolean("Pass", pass);
-
-            if (shoot || pass) {
-                delaySum += filteredTurretDelaySec;
-                delaySamples++;
-                maxDelay = Math.max(maxDelay, filteredTurretDelaySec);
-
-                Translation2d goalPose;
-                Translation2d passPose;
-                if (isBlue) {
-                    goalPose = FieldConstants.Hub.topCenterPoint.toTranslation2d();
                     passPose = closerPoint(turretPose, FieldConstants.LeftBump.nearLeftCorner, FieldConstants.RightBump.nearLeftCorner) 
                         ? FieldConstants.LeftBump.nearLeftCorner : FieldConstants.RightBump.nearLeftCorner;
+                }
+            } else {
+                goalPose = FieldConstants.Hub.oppTopCenterPoint.toTranslation2d();
+                if (forceTarget) {
+                    double targetX = SmartDashboard.getNumber(
+                        turretTargetConstants.targetXKey,
+                        turretTargetConstants.defaultTargetX
+                    );
+                    double targetY = SmartDashboard.getNumber(
+                        turretTargetConstants.targetYKey,
+                        turretTargetConstants.defaultTargetY
+                    );
+
+                    passPose = new Translation2d(targetX, targetY);
                 } else {
-                    goalPose = FieldConstants.Hub.oppTopCenterPoint.toTranslation2d();
                     passPose = closerPoint(turretPose, FieldConstants.LeftBump.oppNearLeftCorner, FieldConstants.RightBump.oppNearLeftCorner) 
                         ? FieldConstants.LeftBump.oppNearLeftCorner : FieldConstants.RightBump.oppNearLeftCorner;
                 }
-
-                Translation2d targetPose = shoot ? goalPose : passPose;
-                m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
-                double distance = turretPose.getTranslation().getDistance(targetPose);
-
-                tof = TurretConstants.map.get(distance).tof; // Lookup TOF from table
-                Translation2d lookaheadTurretPos = turretPose.getTranslation();
-
-                for (int i = 0; i < 10; i++) {
-                    Translation2d robotFieldVelocity = new Translation2d(
-                        speeds.vxMetersPerSecond,
-                        speeds.vyMetersPerSecond
-                    );
-                    Translation2d flightOffset = robotFieldVelocity.times(tof); // How far robot moves during ball flight
-                    lookaheadTurretPos = turretPose.getTranslation().plus(flightOffset); // Effective launch point
-                    distance = lookaheadTurretPos.getDistance(targetPose); // Recompute distance
-                    tof = TurretConstants.map.get(distance).tof;       // Recompute TOF for new distance
-                }
-                // m_field.getObject("Look Ahead Pose").setPose(lookaheadTurretPos.getMeasureX(), lookaheadTurretPos.getMeasureY(), new Rotation2d());
-
-                double xError = targetPose.getX() - lookaheadTurretPos.getX();
-                double yError = targetPose.getY() - lookaheadTurretPos.getY();
-                double errorDegrees = Math.atan2(yError, xError);
-                        
-                aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
-                velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
-            } else {
-                hoodWheelsZero();
             }
+
+            Translation2d targetPose = shoot ? goalPose : passPose;
+            m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
+            double distance = turretPose.getTranslation().getDistance(targetPose);
+
+            tof = TurretConstants.map.get(distance).tof; // Lookup TOF from table
+            Translation2d lookaheadTurretPos = turretPose.getTranslation();
+
+            for (int i = 0; i < 10; i++) {
+                Translation2d robotFieldVelocity = new Translation2d(
+                    speeds.vxMetersPerSecond,
+                    speeds.vyMetersPerSecond
+                );
+                Translation2d flightOffset = robotFieldVelocity.times(tof); // How far robot moves during ball flight
+                lookaheadTurretPos = turretPose.getTranslation().plus(flightOffset); // Effective launch point
+                distance = lookaheadTurretPos.getDistance(targetPose); // Recompute distance
+                tof = TurretConstants.map.get(distance).tof;       // Recompute TOF for new distance
+            }
+            m_field.getObject("Look Ahead Pose").setPose(lookaheadTurretPos.getMeasureX(), lookaheadTurretPos.getMeasureY(), new Rotation2d());
+
+            double xError = targetPose.getX() - lookaheadTurretPos.getX();
+            double yError = targetPose.getY() - lookaheadTurretPos.getY();
+            double errorDegrees = Math.atan2(yError, xError);
+                        
+            aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
+            if (forceTarget) {
+                boolean useIK = SmartDashboard.getBoolean(
+                    AutoAimConstants.useIKSolverKey,
+                    AutoAimConstants.defaultUseIKSolver
+                );
+                if (useIK) {
+                    IkSolution solution = solveIK(distance);
+                    if (solution != null) {
+                        hoodPose.Position = hoodDegreesToRotations(solution.hoodDegrees);
+                        double compensated = applyChassisVelocityComp(solution.motorRps);
+                        velocity = applyShooterControl(compensated);
+                    } else {
+                        hoodWheelsZero();
+                    }
+                } else {
+                    velocity = aimOnFly(distance);
+                }
+            } else {
+                velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
+            }
+        } else {
+            hoodWheelsZero();
         }
 
         spinMotor.setControl(spinPose);
-        SmartDashboard.putNumber("Spin Motor Voltage", spinMotor.getMotorVoltage().getValueAsDouble());
-        hoodMotor1.setControl(new MotionMagicVoltage(hoodTestPose.get())); // hoodPose
-        SmartDashboard.putNumber("Hood Motor 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Hood Motor 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
+        hoodMotor1.setControl(hoodPose);
         
         switch (mode) {
             case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity));

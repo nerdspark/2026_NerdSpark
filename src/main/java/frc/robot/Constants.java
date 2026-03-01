@@ -153,10 +153,10 @@ public final class Constants {
 
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
-        public static final double hoodKp1 = 8.6;
-        public static final double hoodKp2 = 8.6;
-        public static final double hoodKi1 = 0.2;
-        public static final double hoodKi2 = 0.2;
+        public static final double hoodKp1 = 0.0; // 8.6
+        public static final double hoodKp2 = 0.0; // 8.6
+        public static final double hoodKi1 = 0.0; // 0.2
+        public static final double hoodKi2 = 0.0; // 0.2
         public static final double hoodKd1 = 0.0;
         public static final double hoodKd2 = 0.0;
         public static final double hoodKs1 = 0;
