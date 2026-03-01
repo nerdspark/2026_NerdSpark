@@ -29,12 +29,6 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "shoot_ik"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
                   "name": "indexer_on"
                 }
               }
@@ -45,12 +39,6 @@
           "type": "parallel",
           "data": {
             "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "shoot_stop"
-                }
-              },
               {
                 "type": "named",
                 "data": {
@@ -74,12 +62,6 @@
                 "type": "wait",
                 "data": {
                   "waitTime": 2.0
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "shoot_ik"
                 }
               },
               {
