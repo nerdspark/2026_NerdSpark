@@ -207,7 +207,7 @@ public class RobotContainer {
         NamedCommands.registerCommand(
             "intake_deploy",
             new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
-                .andThen(new InstantCommand(() -> intake.setRollerPower(1.0), intake))
+                .andThen(new InstantCommand(() -> intake.setRollerPower(0.85), intake))
         );
         NamedCommands.registerCommand(
             "intake_home",
