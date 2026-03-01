@@ -40,6 +40,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.PoseEstimatorSubsystem;
 import frc.robot.subsystems.RealFuelSubsystem;
 import frc.robot.subsystems.SimFuelIKSubsystem;
 import frc.robot.subsystems.SimFuelSubsystem;
@@ -57,8 +58,9 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(maxSpeed);
     private final CommandXboxController joystick = new CommandXboxController(0);
     private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-    private final SendableChooser<Command> autoChooser;
+    private SendableChooser<Command> autoChooser;
 
+    private final PoseEstimatorSubsystem poseEstimator;
     private final Turret turret;
     private final Indexer indexer;
     private final Intake intake = new Intake();
@@ -78,6 +80,8 @@ public class RobotContainer {
             AutoAimConstants.useIKSolverKey,
             AutoAimConstants.defaultUseIKSolver
         );
+
+        poseEstimator = new PoseEstimatorSubsystem(drivetrain);
 
         turret = new Turret(
             () -> drivetrain.getState().Pose,
@@ -103,14 +107,12 @@ public class RobotContainer {
             : null;
         fuelReal = RobotBase.isSimulation() ? null : new RealFuelSubsystem();
 
-        autoChooser = AutoBuilder.buildAutoChooser("Tests");
-        SmartDashboard.putData("Auto Mode", autoChooser);
-
+        configureNamedCommands();
         configureDefaultCommands();
         // configureSysid();
         configureBindings();
-        configureNamedCommands();
-
+        configureAutoChooser();
+        
         CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     }
 
@@ -129,7 +131,7 @@ public class RobotContainer {
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
-            .andThen(new InstantCommand(() -> intake.setRollerPower(0.85), intake)));
+            .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake)));
         joystick.y().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
         joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
@@ -203,11 +205,16 @@ public class RobotContainer {
         joystick.start().and(joystick.b()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     }
 
+    private void configureAutoChooser() {
+        autoChooser = AutoBuilder.buildAutoChooser("Tests");
+        SmartDashboard.putData("Auto Mode", autoChooser);
+    }
+
     private void configureNamedCommands() {
         NamedCommands.registerCommand(
             "intake_deploy",
             new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
-                .andThen(new InstantCommand(() -> intake.setRollerPower(0.85), intake))
+                .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake))
         );
         NamedCommands.registerCommand(
             "intake_home",
@@ -244,7 +251,7 @@ public class RobotContainer {
 
     private double calcAutoTurn() {
         if (Math.abs(joystick.getLeftX()) > 0.01) {
-            target += joystick.getLeftX() * Math.toRadians(5);
+            target -= joystick.getLeftX() * Math.toRadians(5);
         }
 
         double output = gyroController.calculate(

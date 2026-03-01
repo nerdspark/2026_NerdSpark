@@ -169,6 +169,7 @@ public class Turret extends SubsystemBase {
         ;
         TalonFXConfiguration shootConfig1 = new TalonFXConfiguration()
             .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast)
+            .withInverted(InvertedValue.CounterClockwise_Positive)
                 .withPeakForwardDutyCycle(TurretConfig.peakDutyCycle)
                 .withPeakReverseDutyCycle(0)
             )
@@ -436,6 +437,7 @@ public class Turret extends SubsystemBase {
         boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - motorRps) <= 3;
         boolean torqueCurrentControl = torqueCurrentDebouncer.calculate(inTolerance);
         mode = torqueCurrentControl ? ShootMode.TORQUE_CURRENT_BANG_BANG : ShootMode.DUTY_CYCLE_BANG_BANG;
+        SmartDashboard.putString("Shoot Mode", mode.toString());
 
         return motorRps;
     }
@@ -555,6 +557,7 @@ public class Turret extends SubsystemBase {
                 turretTargetConstants.enableKey,
                 turretTargetConstants.defaultEnable
             );
+            forceTarget = false;
 
             Translation2d goalPose;
             Translation2d passPose;
@@ -638,6 +641,7 @@ public class Turret extends SubsystemBase {
             } else {
                 velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
             }
+            velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
         } else {
             hoodWheelsZero();
         }

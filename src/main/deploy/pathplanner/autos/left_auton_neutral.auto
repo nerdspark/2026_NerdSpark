@@ -17,7 +17,7 @@
           }
         },
         {
-          "type": "deadline",
+          "type": "race",
           "data": {
             "commands": [
               {
@@ -36,15 +36,22 @@
           }
         },
         {
-          "type": "named",
+          "type": "race",
           "data": {
-            "name": "indexer_off"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "left_auton_neutral3"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "indexer_off"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "left_auton_neutral3"
+                }
+              }
+            ]
           }
         }
       ]

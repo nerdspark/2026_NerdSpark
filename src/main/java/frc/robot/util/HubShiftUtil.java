@@ -42,9 +42,10 @@ public class HubShiftUtil {
   private static final double minFuelCountDelay = 1.0;
   private static final double maxFuelCountDelay = 2.0;
   private static final double shiftEndFuelCountExtension = 3.0;
-  private static final double approachingActiveFudge = -1 * (turretSupplier.get().get().tof + minFuelCountDelay);
+  private static final double tof = turretSupplier.get().isEmpty() ? 0 : turretSupplier.get().get().tof;
+  private static final double approachingActiveFudge = -1 * (tof + minFuelCountDelay);
   private static final double endingActiveFudge =
-    shiftEndFuelCountExtension + -1 * (turretSupplier.get().get().tof + maxFuelCountDelay);
+    shiftEndFuelCountExtension + -1 * (tof + maxFuelCountDelay);
 
   public static final double autoEndTime = 20.0;
   public static final double teleopDuration = 140.0;

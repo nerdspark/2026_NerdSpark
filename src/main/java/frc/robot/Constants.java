@@ -122,9 +122,9 @@ public final class Constants {
 
         static {
             // Passing
-            map.put(Double.MAX_VALUE, new ShooterParams(0, 0, 0));
+            map.put(Double.MAX_VALUE, new ShooterParams(0, 30, 0));
 
-            map.put(0.0, new ShooterParams(0, 15, 0));
+            map.put(0.0, new ShooterParams(0, 20, 0));
 
             climbMap.put(0.0, new ShooterParams(0, 0, 0));
         }
