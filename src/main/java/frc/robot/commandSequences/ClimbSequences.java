@@ -68,7 +68,6 @@ public class ClimbSequences {
                                                         ClimbConstants.motionMagicDescendAcceleration,
                                                         ClimbConstants.motionMagicDescendJerk);
                                 }),
-                                new WaitCommand(0.3),
                                 new ParallelCommandGroup(
                                                 tallClimb.tallGoToPosition(() -> ClimbConstants.l1Position),
                                                 shortClimb.shortGoToPosition(() -> ClimbConstants.l1Position)));

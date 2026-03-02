@@ -2,7 +2,6 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-
 // TODO: Change direction of motors
 
 package frc.robot.subsystems.Climb;
@@ -35,9 +34,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimbConstants;
 
 public class TallClimb extends SubsystemBase {
- private TalonFX climbTall, climbShort;
+  private TalonFX climbTall, climbShort;
   private TalonFXConfiguration climbConfig = new TalonFXConfiguration();
   private boolean ampTriggered, ampTriggerStarted = false;
+  private boolean isClimbing = false;
   // private final TalonFXSimState tallSim;
   // private final TalonFXSimState shortSim;
 
@@ -55,7 +55,8 @@ public class TallClimb extends SubsystemBase {
     climbConfig.Feedback = new FeedbackConfigs()
         .withFeedbackRotorOffset(0)
         .withSensorToMechanismRatio(ClimbConstants.sensorToMechanismRatio);
-    // climbConfig.ClosedLoopRamps = new ClosedLoopRampsConfigs().withVoltageClosedLoopRampPeriod(ClimbConstants.rampRate);
+    // climbConfig.ClosedLoopRamps = new
+    // ClosedLoopRampsConfigs().withVoltageClosedLoopRampPeriod(ClimbConstants.rampRate);
     climbConfig.Slot0 = new Slot0Configs()
         .withKP(ClimbConstants.kP)
         .withKI(ClimbConstants.kI)
@@ -66,17 +67,20 @@ public class TallClimb extends SubsystemBase {
         .withKV(ClimbConstants.kV)
         .withGravityType(GravityTypeValue.Elevator_Static);
 
-    // motionMagicConfigs.MotionMagicCruiseVelocity = ClimbConstants.motionMagicCruiseVelocity;
-    // motionMagicConfigs.MotionMagicAcceleration = ClimbConstants.motionMagicAcceleration;
+    // motionMagicConfigs.MotionMagicCruiseVelocity =
+    // ClimbConstants.motionMagicCruiseVelocity;
+    // motionMagicConfigs.MotionMagicAcceleration =
+    // ClimbConstants.motionMagicAcceleration;
     // motionMagicConfigs.MotionMagicJerk = ClimbConstants.motionMagicJerk;
 
-    configMotionMagic(ClimbConstants.motionMagicCruiseVelocity, ClimbConstants.motionMagicAcceleration, ClimbConstants.motionMagicJerk);
+    configMotionMagic(ClimbConstants.motionMagicCruiseVelocity, ClimbConstants.motionMagicAcceleration,
+        ClimbConstants.motionMagicJerk);
 
-    climbTall
-        .getConfigurator()
-        .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
-            .withInverted(InvertedValue.CounterClockwise_Positive)
-            .withNeutralMode(NeutralModeValue.Brake)));
+    // climbTall
+    // .getConfigurator()
+    // .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
+    // .withInverted(InvertedValue.CounterClockwise_Positive)
+    // .withNeutralMode(NeutralModeValue.Brake)));
     // climbHook
     // .getConfigurator()
     // .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
@@ -90,13 +94,25 @@ public class TallClimb extends SubsystemBase {
     motionMagicConfigs.MotionMagicCruiseVelocity = cruiseVelocity;
     motionMagicConfigs.MotionMagicAcceleration = acceleration;
     motionMagicConfigs.MotionMagicJerk = jerk;
+
+    climbTall
+        .getConfigurator()
+        .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
+            .withInverted(InvertedValue.CounterClockwise_Positive)
+            .withNeutralMode(NeutralModeValue.Brake)));
   }
 
   public void setClimbTall(Supplier<Double> position) {
     climbTall.setControl(m_request.withPosition(position.get().doubleValue()));
   }
 
+  public void setIsClimbing(boolean newIsClimbing) {
+    isClimbing = newIsClimbing;
+  }
 
+  public boolean getIsClimbing() {
+    return isClimbing;
+  }
 
   public void resetTallPosition() {
     // climbTall.setControl(m_request.withPosition(0));
@@ -111,7 +127,6 @@ public class TallClimb extends SubsystemBase {
     return Math.abs(climbTall.getStatorCurrent().getValueAsDouble()) > ClimbConstants.climbCurrentLimit;
   }
 
-
   public double getLeftPosition() {
     return climbTall.getPosition().getValueAsDouble();
   }
@@ -125,9 +140,9 @@ public class TallClimb extends SubsystemBase {
     return new InstantCommand(() -> resetTallPosition(), this);
   }
 
-
   public double getClimbTallHeightInches() {
-    return climbTall.getPosition().getValueAsDouble() * ClimbConstants.inchesPerRotation(ClimbConstants.pitchDiameterInches);
+    return climbTall.getPosition().getValueAsDouble()
+        * ClimbConstants.inchesPerRotation(ClimbConstants.pitchDiameterInches);
   }
 
   @Override

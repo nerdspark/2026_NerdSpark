@@ -71,11 +71,11 @@ public class ShortClimb extends SubsystemBase {
 
     configMotionMagic(ClimbConstants.motionMagicCruiseVelocity, ClimbConstants.motionMagicAcceleration, ClimbConstants.motionMagicJerk);
 
-    climbShort
-        .getConfigurator()
-        .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
-            .withInverted(InvertedValue.Clockwise_Positive)
-            .withNeutralMode(NeutralModeValue.Brake)));
+    // climbShort
+    //     .getConfigurator()
+    //     .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
+    //         .withInverted(InvertedValue.Clockwise_Positive)
+    //         .withNeutralMode(NeutralModeValue.Brake)));
 
     // climbHook
     // .getConfigurator()
@@ -90,6 +90,12 @@ public class ShortClimb extends SubsystemBase {
     motionMagicConfigs.MotionMagicCruiseVelocity = cruiseVelocity;
     motionMagicConfigs.MotionMagicAcceleration = acceleration;
     motionMagicConfigs.MotionMagicJerk = jerk;
+
+    climbShort
+        .getConfigurator()
+        .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
+            .withInverted(InvertedValue.Clockwise_Positive)
+            .withNeutralMode(NeutralModeValue.Brake)));
   }
 
   public void setClimbShort(Supplier<Double> position) {
