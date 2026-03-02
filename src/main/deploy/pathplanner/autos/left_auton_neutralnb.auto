@@ -1,0 +1,25 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "left_auton_neutralnb1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "left_auton_neutralnb2"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "left_autos",
+  "choreoAuto": false
+}
