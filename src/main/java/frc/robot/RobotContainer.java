@@ -55,6 +55,7 @@ public class RobotContainer {
     public RobotContainer() {
         NamedCommands.registerCommand("intake_deploy", new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos),intake).andThen(new InstantCommand(() -> intake.setRollerPower(() -> IntakeConstants.rollerPower),intake)));
         NamedCommands.registerCommand("intake_home", new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos),intake).andThen(new InstantCommand(() -> intake.setRollerPower(() -> 0.0),intake)));
+        NamedCommands.registerCommand("intake_shake",  new InstantCommand( () -> intake.useSlowConfig(), intake).andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos),intake)));
         poseEstimatorSubsystem = new PoseEstimatorSubsystem(drivetrain);
       
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
