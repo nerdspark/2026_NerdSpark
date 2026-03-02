@@ -60,7 +60,11 @@ public class Intake extends SubsystemBase {
         motionMagicfastConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
         motionMagicfastConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
 
+
+
         motionMagicSlowConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocitySlow;
+        motionMagicSlowConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
+        motionMagicSlowConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
 
         intakeMotorDeploy
         .getConfigurator()
