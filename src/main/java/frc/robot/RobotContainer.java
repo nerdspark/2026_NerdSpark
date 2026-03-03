@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -50,7 +51,7 @@ import frc.robot.util.HubShiftUtil;
 
 public class RobotContainer {
     private final double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-    private final double maxAngularRate = RotationsPerSecond.of(1.5).in(RadiansPerSecond);
+    private final double maxAngularRate = RotationsPerSecond.of(1.25).in(RadiansPerSecond);
 
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
@@ -62,6 +63,7 @@ public class RobotContainer {
 
     private final PoseEstimatorSubsystem poseEstimator;
     private final Turret turret;
+    private Supplier<Boolean> turretOff = () -> true;
     private final Indexer indexer;
     private final Intake intake = new Intake();
     private final SimFuelSubsystem fuelSim;
@@ -88,7 +90,7 @@ public class RobotContainer {
             () -> ChassisSpeeds.fromRobotRelativeSpeeds(
                 drivetrain.getState().Speeds,
                 drivetrain.getState().Pose.getRotation()),
-            () -> false
+            turretOff
         );
         HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
@@ -132,7 +134,7 @@ public class RobotContainer {
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake)));
-        joystick.y().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
+        joystick.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
         joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
         joystick.a()
@@ -145,37 +147,37 @@ public class RobotContainer {
         joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
 
         // Start-of-shift warning
-        for (int i = 0; i < 5; i++) {
-            double start = i * 0.75; // 0.25 on + 0.5 break
-            double end = start + 0.25; // rumble duration
+        // for (int i = 0; i < 5; i++) {
+        //     double start = i * 0.75; // 0.25 on + 0.5 break
+        //     double end = start + 0.25; // rumble duration
 
-            Trigger shiftJustStarted = new Trigger(() ->
-                HubShiftUtil.getShiftedShiftInfo().active()
-                && HubShiftUtil.getShiftedShiftInfo().elapsedTime() > start
-                && HubShiftUtil.getShiftedShiftInfo().elapsedTime() < end
-            );
+        //     Trigger shiftJustStarted = new Trigger(() ->
+        //         HubShiftUtil.getShiftedShiftInfo().active()
+        //         && HubShiftUtil.getShiftedShiftInfo().elapsedTime() > start
+        //         && HubShiftUtil.getShiftedShiftInfo().elapsedTime() < end
+        //     );
 
-            shiftJustStarted.and(RobotModeTriggers.teleop())
-                .onTrue(
-                    Commands.runEnd(
-                        () -> joystick.setRumble(RumbleType.kRightRumble, 1.0),
-                        () -> joystick.setRumble(RumbleType.kBothRumble, 0.0)
-                    ).withTimeout(0.25)
-                );
-        }
+        //     shiftJustStarted.and(RobotModeTriggers.teleop())
+        //         .onTrue(
+        //             Commands.runEnd(
+        //                 () -> joystick.setRumble(RumbleType.kRightRumble, 1.0),
+        //                 () -> joystick.setRumble(RumbleType.kBothRumble, 0.0)
+        //             ).withTimeout(0.25)
+        //         );
+        // }
 
         // End-of-shift warning
-        for (int i = 1; i <= 5; i++) {
-            double time = i;
-            Trigger shiftAboutToEnd = new Trigger(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time));
-            shiftAboutToEnd.and(RobotModeTriggers.teleop())
-                .onTrue(
-                    Commands.runEnd(
-                        () -> joystick.setRumble(RumbleType.kRightRumble, 1.0),
-                        () -> joystick.setRumble(RumbleType.kBothRumble, 0.0)
-                    ).withTimeout(0.25)
-                );
-        }
+        // for (int i = 1; i <= 5; i++) {
+        //     double time = i;
+        //     Trigger shiftAboutToEnd = new Trigger(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time));
+        //     shiftAboutToEnd.and(RobotModeTriggers.teleop())
+        //         .onTrue(
+        //             Commands.runEnd(
+        //                 () -> joystick.setRumble(RumbleType.kRightRumble, 1.0),
+        //                 () -> joystick.setRumble(RumbleType.kBothRumble, 0.0)
+        //             ).withTimeout(0.25)
+        //         );
+        // }
 
         // Reset hub shift timer when enabling
         RobotModeTriggers.teleop().onTrue(Commands.runOnce(HubShiftUtil::initialize));
