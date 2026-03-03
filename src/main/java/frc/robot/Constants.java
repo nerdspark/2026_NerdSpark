@@ -122,9 +122,9 @@ public final class Constants {
 
         static {
             // Passing
-            map.put(Double.MAX_VALUE, new ShooterParams(0, 30, 0));
+            map.put(Double.MAX_VALUE, new ShooterParams(4, 0, 0));
 
-            map.put(0.0, new ShooterParams(0, 20, 0));
+            map.put(0.0, new ShooterParams(2, 0, 0));
 
             climbMap.put(0.0, new ShooterParams(0, 0, 0));
         }
@@ -178,8 +178,8 @@ public final class Constants {
         public static final double hoodKa1 = 0;
         public static final double hoodKa2 = 0;
         public static final double hoodStatorCurrentLimit = 40.0;
-        public static final double hoodVelocity = 125;
-        public static final double hoodAccel = 300;
+        public static final double hoodVelocity = 75;
+        public static final double hoodAccel = 150;
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;

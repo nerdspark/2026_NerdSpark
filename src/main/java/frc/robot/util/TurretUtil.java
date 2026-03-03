@@ -36,8 +36,8 @@ public final class TurretUtil {
     }
 
     public static boolean closerPoint(Pose2d pose, Translation2d poseLeft, Translation2d poseRight) {
-        return Math.hypot(pose.getX() - poseLeft.getX(), pose.getY() - poseLeft.getY()) < 
-            Math.hypot(pose.getX() - poseRight.getX(), pose.getY() - poseRight.getY());
+        return Math.hypot(poseLeft.getX() - pose.getX(), poseLeft.getY() - pose.getY()) < 
+            Math.hypot(poseRight.getX() - pose.getX(), poseRight.getY() - pose.getY());
     }
 
     public static double hoodDegreesToRotations(double hoodDegrees) {

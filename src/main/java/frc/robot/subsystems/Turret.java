@@ -299,7 +299,8 @@ public class Turret extends SubsystemBase {
      * @param approachDirection The sign of the robot velo going toward the line
      * @return X value of dynamic trigger line
      */
-    private double calcTriggerLine(double startingLine, double robotX, double robotVeloX, double safetyMargin, int approachDirection) {
+    private double calcTriggerLine(double startingLine, double robotX, double robotVeloX, double safetyMargin, 
+        int approachDirection) {
         // Closing velocity toward line
         double closingVelocity = robotVeloX * approachDirection;
 
@@ -543,9 +544,9 @@ public class Turret extends SubsystemBase {
             isBlue ? -1 : 1
         );
 
-        boolean shoot = isBlue ? turretPose.getX() <= shootLine : turretPose.getX() >= passLine;
+        boolean shoot = isBlue ? turretPose.getX() <= shootLine : turretPose.getX() >= shootLine;
         SmartDashboard.putBoolean("Shoot", shoot);
-        boolean pass = isBlue ? turretPose.getX() >= shootLine : turretPose.getX() <= passLine; 
+        boolean pass = isBlue ? turretPose.getX() >= passLine : turretPose.getX() <= passLine; 
         SmartDashboard.putBoolean("Pass", pass);
 
         if (shoot || pass) {
@@ -592,11 +593,11 @@ public class Turret extends SubsystemBase {
 
                     passPose = new Translation2d(targetX, targetY);
                 } else {
-                    passPose = closerPoint(turretPose, FieldConstants.LeftBump.oppNearLeftCorner, FieldConstants.RightBump.oppNearLeftCorner) 
-                        ? FieldConstants.LeftBump.oppNearLeftCorner : FieldConstants.RightBump.oppNearLeftCorner;
+                    passPose = closerPoint(turretPose, FieldConstants.LeftBump.oppFarLeftCorner, FieldConstants.RightBump.oppFarLeftCorner) 
+                        ? FieldConstants.LeftBump.oppFarLeftCorner : FieldConstants.RightBump.oppFarLeftCorner;
                 }
             }
-
+            
             Translation2d targetPose = shoot ? goalPose : passPose;
             m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
             double distance = turretPose.getTranslation().getDistance(targetPose);
