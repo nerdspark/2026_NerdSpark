@@ -1,65 +1,104 @@
 package frc.robot.subsystems;
-
-import com.revrobotics.spark.SparkMax;
-
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
+import frc.robot.Constants.IntakeConstants;
 
+import java.util.function.Supplier;
+
+import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 
 public class Intake extends SubsystemBase {
-    private TalonFX intakeMotorRoller1;
-    private TalonFX intakeMotorRoller2;
-    private TalonFX intakeMotorDeploy;
+    private CANBus canivore;
+    private TalonFX roller1, roller2, intakeMotorDeploy;
 
-    private int intakeMotorRoller1ID = 1;
-    private int intakeMotorRoller2ID = 2;
-    private int intakeMotorDeployID = 3;
-    
+    private final TalonFXSimState intakeSim;
+
     private final MotionMagicVoltage m_mmRequest = new MotionMagicVoltage(0);
+    TalonFXConfiguration intakeDeployMotorConfig = new TalonFXConfiguration();
+
+    private MotionMagicConfigs motionMagicConfigs = intakeDeployMotorConfig.MotionMagic;
+
     
     public Intake() {
-        intakeMotorRoller1 = new TalonFX(intakeMotorRoller1ID, "intakeMotorRoller1");
-        intakeMotorRoller2 = new TalonFX(intakeMotorRoller2ID, "intakeMotorRoller2");
-        intakeMotorDeploy = new TalonFX(intakeMotorDeployID, "intakeMotorDeploy");
+        canivore = new CANBus(Constants.CANbus);
+        intakeMotorDeploy = new TalonFX(IntakeConstants.deployIntakeMotorId,  canivore);
+        intakeSim = intakeMotorDeploy.getSimState();
+        roller1 = new TalonFX(IntakeConstants.roller1id, canivore);
+        roller2 = new TalonFX(IntakeConstants.roller2id,  canivore);
 
-        TalonFXConfiguration intakeDeployMotorConfig = new TalonFXConfiguration();
+        intakeDeployMotorConfig.CurrentLimits = new CurrentLimitsConfigs()
+        .withStatorCurrentLimit(IntakeConstants.intakeCurrentLimit)
+        .withStatorCurrentLimitEnable(true);
+        intakeDeployMotorConfig.Feedback = new FeedbackConfigs()
+        .withFeedbackRotorOffset(0)
+        .withSensorToMechanismRatio(1);
         // set slot 0 gains
-        var slot0Configs = intakeDeployMotorConfig.Slot0;
-        slot0Configs.kS = 0.25; // Add 0.25 V output to overcome static friction
-        slot0Configs.kV = 0.12; // A velocity target of 1 rps results in 0.12 V output
-        slot0Configs.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
-        slot0Configs.kP = 4.8; // A position error of 2.5 rotations results in 12 V output
-        slot0Configs.kI = 0; // no output for integrated error
-        slot0Configs.kD = 0.1; // A velocity error of 1 rps results in 0.1 V output
+        intakeDeployMotorConfig.Slot0 = new Slot0Configs()
+            .withKP(IntakeConstants.kP)
+            .withKI(IntakeConstants.kI)
+            .withKD(IntakeConstants.kD)
+            .withKG(IntakeConstants.kG)
+            .withKS(IntakeConstants.kS)
+            .withKA(IntakeConstants.kA)
+            .withKV(IntakeConstants.kV);
 
-        // set Motion Magic settings
-        var motionMagicConfigs = intakeDeployMotorConfig.MotionMagic;
-        motionMagicConfigs.MotionMagicCruiseVelocity = 80; // Target cruise velocity of 80 rps
-        motionMagicConfigs.MotionMagicAcceleration = 160; // Target acceleration of 160 rps/s (0.5 seconds)
-        motionMagicConfigs.MotionMagicJerk = 1600; // Target jerk of 1600 rps/s/s (0.1 seconds)
+        
+
+        motionMagicConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocity;
+        motionMagicConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
+        motionMagicConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
+
+        intakeMotorDeploy
+        .getConfigurator()
+        .apply(intakeDeployMotorConfig.withMotorOutput(new MotorOutputConfigs()
+            .withInverted(InvertedValue.Clockwise_Positive)
+            .withNeutralMode(NeutralModeValue.Brake)));
 
         intakeMotorDeploy.getConfigurator().apply(intakeDeployMotorConfig);
 
 
     }
     
-    public void setDeployPosition(double rotations) {
-        intakeMotorDeploy.setControl(intakeMotorDeploy);
+    public void setDeployPosition(Supplier<Double> rotations) {
+        intakeMotorDeploy.setControl(m_mmRequest.withPosition(rotations.get().doubleValue()));
     }
-    public void setDeployPower(double target){
-    intakeMotorDeploy.set(target);
-    }
+    
     public void setRollerPower(double power) {
-        intakeMotorRoller1.set(power);
-        intakeMotorRoller2.set(power);
+        roller1.set(-power);
+        roller2.set(power);
     }
+    public void simulationPeriodic() {
+    // double dt = 0.02;
+
+    // Read the applied motor voltage
+    double intakeVoltage = intakeSim.getMotorVoltage();
+
+    intakeSim.addRotorPosition(intakeVoltage);
+  }
     public void stopIntake() {
             intakeMotorDeploy.stopMotor();
-            intakeMotorRoller1.stopMotor();
-            intakeMotorRoller2.stopMotor();
+            roller1.stopMotor();
+            roller2.stopMotor();
 
+
+    }
+
+    public void periodic() {
+        SmartDashboard.putNumber("Intake Position", intakeMotorDeploy.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Intake Current",intakeMotorDeploy.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Intake Roller Current", roller1.getStatorCurrent().getValueAsDouble());
     }
 
 }

@@ -52,11 +52,9 @@ import dev.doglog.DogLog;
 
 public class Vision {
     private final PhotonCamera camera;
-    private final String cameraName;
     private final PhotonPoseEstimator photonEstimator;
     private Matrix<N3, N1> curStdDevs;
     private final EstimateConsumer estConsumer;
-    private Transform3d robotToCam;
 
     // Simulation
     private PhotonCameraSim cameraSim;
@@ -68,9 +66,7 @@ public class Vision {
      */
     public Vision(EstimateConsumer estConsumer, String cameraName, Transform3d robotToCam) {
         this.estConsumer = estConsumer;
-        this.cameraName = cameraName;
         camera = new PhotonCamera(cameraName);
-        this.robotToCam = robotToCam;
         photonEstimator = new PhotonPoseEstimator(kTagLayout, robotToCam);
 
         // ----- Simulation

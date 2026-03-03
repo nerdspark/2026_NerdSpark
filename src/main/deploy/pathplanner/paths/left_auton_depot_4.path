@@ -8,7 +8,7 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.6599999999999997,
+        "x": 1.8842453126007004,
         "y": 5.909
       },
       "isLocked": false,
@@ -20,8 +20,8 @@
         "y": 4.676
       },
       "prevControl": {
-        "x": 1.8670000000000004,
-        "y": 4.676
+        "x": 3.0606640963420415,
+        "y": 4.503851349204046
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,20 +31,7 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "shooter_spin",
-      "waypointRelativePos": 0.4305084745762712,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
-      "name": "shooter_run",
-      "waypointRelativePos": 1.0,
-      "endWaypointRelativePos": null,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
@@ -55,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -32.733
+    "rotation": 0.0
   },
   "reversed": false,
-  "folder": "left_auton",
+  "folder": "left_auton_depot",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

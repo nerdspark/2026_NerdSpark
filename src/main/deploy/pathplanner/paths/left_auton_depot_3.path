@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.867,
-        "y": 4.676
+        "x": 2.7008429458740015,
+        "y": 5.29449866903283
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.6602862254025041,
-        "y": 5.909033989266548
+        "x": 0.66,
+        "y": 5.909
       },
       "prevControl": {
-        "x": 1.4087728085867615,
-        "y": 6.378055456171735
+        "x": 1.5416569866649312,
+        "y": 6.1233999060307
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,7 +31,14 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "intake_deploy",
+      "waypointRelativePos": 0.29769736842105204,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
@@ -42,13 +49,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "reversed": false,
-  "folder": "left_auton",
+  "folder": "left_auton_depot",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": -32.733
+    "velocity": 0.0,
+    "rotation": 45.0
   },
   "useDefaultConstraints": true
 }
