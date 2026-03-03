@@ -20,47 +20,47 @@ import frc.robot.subsystems.LEDSubsystem;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class UpdateLED extends Command {
   /** Creates a new UpdateLED. */
-  private boolean fuelFull  ;
-  private boolean intakeOn  ;
-  private boolean shooterSpinning  ;
-  private boolean shooterReady  ;
-  private boolean shooterOn ;
-  // private boolean lidClosed = false;
-  private boolean climbing ;
-  private boolean climbDone;
-  private boolean visionUpdate;
-  private boolean turretLocked;
-  private double distance;
+  // private boolean fuelFull  ;
+  // private boolean intakeOn  ;
+  // private boolean shooterSpinning  ;
+  // private boolean shooterReady  ;
+  // private boolean shooterOn ;
+  // // private boolean lidClosed = false;
+  // private boolean climbing ;
+  // private boolean climbDone;
+  // private boolean visionUpdate;
+  // private boolean turretLocked;
+  // private double distance;
 
-  private String pastStatus;
-  private String status;
+  private int pastStatus;
+  private int status;
 
-  private static final RGBWColor kGreen = new RGBWColor(0, 255, 0, 0);
-  private static final RGBWColor kYellow = new RGBWColor(255, 255, 0, 0);
-  private static final RGBWColor kRed = new RGBWColor(255, 0, 0, 0);
-  private static final RGBWColor kBlack = new RGBWColor(0, 0, 0, 0);
-  private static final RGBWColor kCyan = new RGBWColor(0, 255, 255, 0);
-  private static final RGBWColor kMagenta = new RGBWColor(255, 0, 255, 0);
-  private static final RGBWColor kBlue = new RGBWColor(0, 0, 255, 0);
-  private static final RGBWColor kWhite = new RGBWColor(0, 0, 0, 255);
+  // private static final RGBWColor kGreen = new RGBWColor(0, 255, 0, 0);
+  // private static final RGBWColor kYellow = new RGBWColor(255, 255, 0, 0);
+  // private static final RGBWColor kRed = new RGBWColor(255, 0, 0, 0);
+  // private static final RGBWColor kBlack = new RGBWColor(0, 0, 0, 0);
+  // private static final RGBWColor kCyan = new RGBWColor(0, 255, 255, 0);
+  // private static final RGBWColor kMagenta = new RGBWColor(255, 0, 255, 0);
+  // private static final RGBWColor kBlue = new RGBWColor(0, 0, 255, 0);
+  // private static final RGBWColor kWhite = new RGBWColor(0, 0, 0, 255);
 
   LEDSubsystem led = new LEDSubsystem();
   // CommandXboxController joystick = RobotContainer.joystick;
 
-  Supplier<Boolean> aSupplier;
-  Supplier<Boolean> bSupplier;
-  Supplier<Boolean> xSupplier;
-  Supplier<Boolean> ySupplier;
-  Supplier<Boolean> upSupplier;
-  Supplier<Boolean> downSupplier;
-  Supplier<Boolean> leftSupplier;
-  Supplier<Boolean> rightSupplier;
-  Supplier<Boolean> leftBSupplier;
-  Supplier<Double> leftStickSupplier;
-  Supplier<String> statusSupplier;
+  // Supplier<Boolean> aSupplier;
+  // Supplier<Boolean> bSupplier;
+  // Supplier<Boolean> xSupplier;
+  // Supplier<Boolean> ySupplier;
+  // Supplier<Boolean> upSupplier;
+  // Supplier<Boolean> downSupplier;
+  // Supplier<Boolean> leftSupplier;
+  // Supplier<Boolean> rightSupplier;
+  // Supplier<Boolean> leftBSupplier;
+  // Supplier<Double> leftStickSupplier;
+  Supplier<Integer> statusSupplier;
 
   public UpdateLED(LEDSubsystem ledSubsystem,
-  Supplier<String> statusSupplier
+  Supplier<Integer> statusSupplier
       // Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
       // Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
       // Supplier<Boolean> leftSupplier, Supplier<Boolean> rightSupplier, Supplier<Boolean> leftBSupplier, Supplier<Double> leftStickSupplier
@@ -159,7 +159,8 @@ public class UpdateLED extends Command {
     // }
 
     pastStatus = led.getStatus();
-    if(!(pastStatus == "reset" && status == "reset")) {
+    if(!(pastStatus == Constants.LED.reset && status == Constants.LED.reset)
+    && status < pastStatus) {
       led.setStatus(status);
     }
   }
@@ -167,7 +168,7 @@ public class UpdateLED extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    // led.setStatus("reset");
+    led.setStatus(99);
     // led.solidColor(kBlack);
   }
 
@@ -179,7 +180,7 @@ public class UpdateLED extends Command {
     // } else {
     //   return pastStatus == status;
     // }
-    return true;//pastStatus == status;
+    return false;//pastStatus == status;
     
 
     // return false;

@@ -20,13 +20,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import frc.robot.commands.BlinkBlue;
-import frc.robot.commands.BlinkRed;
 // import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveToPose;
-import frc.robot.commands.Red;
 import frc.robot.commands.UpdateLED;
-import frc.robot.commands.UpdateLEDStatus;
+// import frc.robot.commands.UpdateLEDStatus;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.LEDSubsystem;
@@ -110,17 +107,18 @@ public class RobotContainer {
         //         () -> joystick.leftBumper().getAsBoolean(),
         //         () -> joystick.getLeftY())
         // );
-        joystick.a().onTrue(new UpdateLED(ledSubsystem, () -> "ready to shoot"));
-        joystick.b().onTrue(new UpdateLED(ledSubsystem, () -> "shooting"));
-        joystick.x().onTrue(new UpdateLED(ledSubsystem, () -> "intaking"));
-        joystick.y().onTrue(new UpdateLED(ledSubsystem, () -> "aiming"));
-        joystick.leftBumper().onTrue(new UpdateLED(ledSubsystem, () -> "no april tags"));
-        joystick.rightBumper().onTrue(new UpdateLED(ledSubsystem, () -> "lined up for climb"));
-        joystick.povUp().onTrue(new UpdateLED(ledSubsystem, () -> "idle"));
-        joystick.povDown().onTrue(new UpdateLED(ledSubsystem, () -> "intake deployed"));
-        joystick.povLeft().onTrue(new UpdateLED(ledSubsystem, () -> "safe"));
-        joystick.povRight().onTrue(new UpdateLED(ledSubsystem, () -> "startup"));
-        joystick.leftTrigger(0.2).onTrue(new UpdateLED(ledSubsystem, () -> "reset"));
+        joystick.a().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.readyToShoot)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.b().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.shooting)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.x().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.intaking)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.y().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.aiming)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.leftBumper().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.noAprilTags)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.rightBumper().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.climbReady)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.povUp().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.idle)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.povDown().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.intakeDeployed)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.povLeft().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.safe)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.povRight().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.startup)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        
+        // joystick.leftTrigger(0.2).onTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.reset));
 
         // drivetrain.registerTelemetry(logger::telemeterize);
     }

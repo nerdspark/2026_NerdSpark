@@ -134,14 +134,28 @@ public static class Vision {
 //       }
 //     }
 
-public static final int testJoystickID = 0;
-public static final int ledID = 0;
-public static final int ledSolidID = 0;
-public static final int ledBlinkID = 1;
-public static final int ledPulseID = 2;
-public static final int ledRainbowID = 3;
-public static final int ledFramerate = 16; //fps
-public static final int totalLEDs = 100;
+public static class LED {
+        public static final int id = 0;
+        public static final int solidID = 0;
+        public static final int blinkID = 1;
+        public static final int pulseID = 2;
+        public static final int rainbowID = 3;
+        public static final int framerate = 16; //fps
+        public static final int totalLEDs = 100;
+        public static final int testJoystickID = 0;
+
+        public static final int readyToShoot = 1;
+        public static final int shooting = 2;
+        public static final int intaking = 3;
+        public static final int aiming = 4;
+        public static final int noAprilTags = 5;
+        public static final int climbReady = 6;
+        public static final int idle = 7;
+        public static final int intakeDeployed = 8;
+        public static final int safe = 9;
+        public static final int startup = 10;
+        public static final int reset = 11;
+}
 
 public static final double optimalShootingDistance = 2; //meters from hub
 

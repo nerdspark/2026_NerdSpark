@@ -35,7 +35,7 @@ import frc.robot.RobotContainer;
 import java.lang.Math;
 
 public class LEDSubsystem extends SubsystemBase {
-  private final CANdle m_candle = new CANdle(Constants.ledID, "rio");
+  private final CANdle m_candle = new CANdle(Constants.LED.id, "rio");
   private XboxController joystick;
 
   // addressable LED
@@ -55,7 +55,7 @@ public class LEDSubsystem extends SubsystemBase {
   // private boolean turretLocked = false;
   // private boolean startup = false;
   // private double distance;
-  private static String status = "startup";
+  private static int status = 10; // startup
 
   private static final RGBWColor kGreen = new RGBWColor(54, 255, 0, 0);
   // private static final RGBWColor kYellow = new RGBWColor(255, 255, 0, 0);
@@ -101,7 +101,7 @@ public class LEDSubsystem extends SubsystemBase {
 
     // SmartDashboard.putData("LED state", (Sendable) m_candle.getAppliedControl());
 
-    CommandXboxController joystick = new CommandXboxController(Constants.testJoystickID);
+    CommandXboxController joystick = new CommandXboxController(Constants.LED.testJoystickID);
 
   }
 
@@ -135,14 +135,14 @@ public class LEDSubsystem extends SubsystemBase {
     // ledEndIndex).withColor(color));
 
     // empty();
-    empty(Constants.ledSolidID);
-    empty(Constants.ledPulseID);
-    empty(Constants.ledRainbowID);
+    empty(Constants.LED.solidID);
+    empty(Constants.LED.pulseID);
+    empty(Constants.LED.rainbowID);
     m_candle.setControl(
         new StrobeAnimation(ledStartIndex, ledEndIndex)
-            .withSlot(Constants.ledBlinkID)
+            .withSlot(Constants.LED.blinkID)
             .withColor(color)
-            .withFrameRate(Constants.ledFramerate));
+            .withFrameRate(Constants.LED.framerate));
     // .withUpdateFreqHz(60));
   }
 
@@ -157,12 +157,12 @@ public class LEDSubsystem extends SubsystemBase {
     // } else
 
     // empty();
-    empty(Constants.ledSolidID);
-    empty(Constants.ledBlinkID);
-    empty(Constants.ledRainbowID);
+    empty(Constants.LED.solidID);
+    empty(Constants.LED.blinkID);
+    empty(Constants.LED.rainbowID);
     m_candle
         .setControl(new ColorFlowAnimation(ledStartIndex, ledEndIndex)
-            .withSlot(Constants.ledPulseID)
+            .withSlot(Constants.LED.pulseID)
             .withColor(color));
 
     m_candle.setControl(previousControl);
@@ -173,20 +173,20 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public void empty() {
-    m_candle.setControl(new EmptyAnimation(Constants.ledSolidID));
-    m_candle.setControl(new EmptyAnimation(Constants.ledBlinkID));
-    m_candle.setControl(new EmptyAnimation(Constants.ledPulseID));
-    m_candle.setControl(new EmptyAnimation(Constants.ledRainbowID));
+    m_candle.setControl(new EmptyAnimation(Constants.LED.solidID));
+    m_candle.setControl(new EmptyAnimation(Constants.LED.blinkID));
+    m_candle.setControl(new EmptyAnimation(Constants.LED.rainbowID));
+    m_candle.setControl(new EmptyAnimation(Constants.LED.pulseID));
   }
 
   public void rainbow() {
     // empty();
-    empty(Constants.ledSolidID);
-    empty(Constants.ledPulseID);
-    empty(Constants.ledBlinkID);
+    empty(Constants.LED.solidID);
+    empty(Constants.LED.pulseID);
+    empty(Constants.LED.blinkID);
     m_candle.setControl(new RainbowAnimation(ledStartIndex, ledEndIndex)
-        .withSlot(Constants.ledRainbowID)
-        .withFrameRate(Constants.ledFramerate));
+        .withSlot(Constants.LED.rainbowID)
+        .withFrameRate(Constants.LED.framerate));
   }
 
   public CANdle getM_candle() {
@@ -303,11 +303,11 @@ public class LEDSubsystem extends SubsystemBase {
     return Math.pow(Math.abs(distance), 2);
   }
 
-  public String getStatus() {
+  public int getStatus() {
     return status;
   }
 
-  public void setStatus(String status) {
+  public void setStatus(int status) {
     this.status = status;
   }
 
@@ -345,38 +345,41 @@ public class LEDSubsystem extends SubsystemBase {
 
     switch(status) { // TODO implement override logic
       // maybe do that with ints and status variables in Constants and comparing if they are greater
-      case "ready to shoot":
+      case Constants.LED.readyToShoot:
         blinkColor(kGreen);
         break;
-      case "shooting":
+      case Constants.LED.shooting:
         solidColor(kGreen);
         break;
-      case "intaking":
+      case Constants.LED.intaking:
         solidColor(kBlue);
         break;
-      case "aiming":
+      case Constants.LED.aiming:
         solidColor(kCyan);
         break;
-      case "no april tags":
+      case Constants.LED.noAprilTags:
         blinkColor(kRed);
         break;
-      case "lined up for climb":
+      case Constants.LED.climbReady: //lined up for climb
         solidColor(kMagenta); 
         break;
-      case "idle":
+      case Constants.LED.idle:
         solidColor(kWhite);
         break;
-      case "intake deployed":
+      case Constants.LED.intakeDeployed:
         blinkColor(kBlue);
         break;
-      case "safe":
+      case Constants.LED.safe:
         solidColor(kYellow);
         break;
-      case "startup":
+      case Constants.LED.startup:
         rainbow();
         break;
-      case "reset":
+      case Constants.LED.reset:
         // empty();
+        solidColor(kBlack);
+        break;
+      default:
         solidColor(kBlack);
         break;
     }
