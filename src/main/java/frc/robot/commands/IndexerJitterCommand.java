@@ -19,26 +19,30 @@ public class IndexerJitterCommand extends InstantCommand {
         this.isActive = isActive;
         this.rollerSpeed = rollerSpeed;
 
+        this.timer = new Timer(); // redundant? idk the this keyword is for better readability
+
         addRequirements(indexer);
     }
 
-    public void changeRollerSpeed(double value){
+    public void changeRollerSpeed(double value) {
         rollerSpeed = () -> value;
     }
 
     public void jitter() {
-        if (Timer.getFPGATimestamp() % 1 == 0) { // activate if the timer is a whole number
+        if (timer.get() > 1) { // activate if the timer is a whole number
             changeRollerSpeed(-rollerSpeed.get()); // set roller speed to negative itself
+            timer.reset();
         }
     }
 
-    public Supplier<Double> getRollerSpeed(){
+    public Supplier<Double> getRollerSpeed() {
         return rollerSpeed;
     }
 
      @Override
     public void initialize() {
-       timer.start(); // TODO not sure if this should go here or in robot container or in the constructor
+        timer.reset();
+        timer.start(); 
     }
 
     @Override
