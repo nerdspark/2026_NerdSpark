@@ -29,7 +29,7 @@ public class IndexerJitterCommand extends InstantCommand {
     }
 
     public void jitter() {
-        if (timer.get() > 1) { // activate if the timer is a whole number
+        if (timer.get() > 0.15) { // activate if the timer is a whole number
             changeRollerSpeed(-rollerSpeed.get()); // set roller speed to negative itself
             timer.reset();
         }

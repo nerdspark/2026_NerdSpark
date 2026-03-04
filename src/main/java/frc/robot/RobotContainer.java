@@ -76,7 +76,7 @@ public class RobotContainer {
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
-    private double target = 0.0;
+    private double target = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue ? 0 : Math.PI;
 
     public RobotContainer() {
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
@@ -135,14 +135,14 @@ public class RobotContainer {
 
         joystick.leftBumper()
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
-            .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+            .onFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
         
         joystick2.leftBumper()
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> -0.25))
-            .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+            .onFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
         joystick2.rightBumper()
-            .whileTrue(new IndexerJitterCommand(indexer, () -> true, () -> 0.5))
-            .whileFalse(new IndexerJitterCommand(indexer, () -> false, () -> 0.0));
+            .whileTrue(new IndexerJitterCommand(indexer, () -> true, () -> 0.3))
+            .onFalse(new IndexerJitterCommand(indexer, () -> false, () -> 0.0));
         
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake)));
