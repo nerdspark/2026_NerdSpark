@@ -38,6 +38,7 @@ import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.turretTargetConstants;
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
+import frc.robot.commands.IndexerJitterCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
@@ -58,7 +59,10 @@ public class RobotContainer {
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     private final Telemetry logger = new Telemetry(maxSpeed);
+
     private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandXboxController joystick2 = new CommandXboxController(1);
+
     private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     private SendableChooser<Command> autoChooser;
 
@@ -132,6 +136,14 @@ public class RobotContainer {
         joystick.leftBumper()
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+        
+        joystick2.leftBumper()
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> -0.25))
+            .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+        joystick2.rightBumper()
+            .whileTrue(new IndexerJitterCommand(indexer, () -> true, () -> 0.5))
+            .whileFalse(new IndexerJitterCommand(indexer, () -> false, () -> 0.0));
+        
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake)));
         joystick.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
