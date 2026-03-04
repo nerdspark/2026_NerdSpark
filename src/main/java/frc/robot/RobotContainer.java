@@ -71,7 +71,7 @@ public class RobotContainer {
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
-    private double target = 0.0;
+    private double target = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue ? 0 : Math.PI;
 
     public RobotContainer() {
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
