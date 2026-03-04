@@ -141,7 +141,7 @@ public class RobotContainer {
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> -0.25))
             .onFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
         joystick2.rightBumper()
-            .whileTrue(new IndexerJitterCommand(indexer, () -> true, () -> 0.3))
+            .whileTrue(new IndexerJitterCommand(indexer, () -> true, () -> 0.4))
             .onFalse(new IndexerJitterCommand(indexer, () -> false, () -> 0.0));
         
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
