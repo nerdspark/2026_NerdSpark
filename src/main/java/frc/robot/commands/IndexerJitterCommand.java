@@ -11,6 +11,7 @@ public class IndexerJitterCommand extends InstantCommand {
     Indexer indexer;
     Supplier<Boolean> isActive;
     Supplier<Double> rollerSpeed;
+    Timer timer;
 
 
     public IndexerJitterCommand(Indexer indexer, Supplier<Boolean> isActive, Supplier<Double> rollerSpeed) {
@@ -26,8 +27,8 @@ public class IndexerJitterCommand extends InstantCommand {
     }
 
     public void jitter() {
-        if (Timer.getFPGATimestamp() % 1 == 0) {
-            changeRollerSpeed(-rollerSpeed.get());
+        if (Timer.getFPGATimestamp() % 1 == 0) { // activate if the timer is a whole number
+            changeRollerSpeed(-rollerSpeed.get()); // set roller speed to negative itself
         }
     }
 
@@ -37,7 +38,7 @@ public class IndexerJitterCommand extends InstantCommand {
 
      @Override
     public void initialize() {
-       
+       timer.start(); // TODO not sure if this should go here or in robot container or in the constructor
     }
 
     @Override
