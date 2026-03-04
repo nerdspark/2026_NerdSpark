@@ -41,97 +41,174 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 
-
 /**
- * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
- * constants. This class should not be used for any other purpose. All constants should be declared
+ * The Constants class provides a convenient place for teams to hold robot-wide
+ * numerical or boolean
+ * constants. This class should not be used for any other purpose. All constants
+ * should be declared
  * globally (i.e. public static). Do not put anything functional in this class.
  *
- * <p>It is advised to statically import this class (or one of its inner classes) wherever the
+ * <p>
+ * It is advised to statically import this class (or one of its inner classes)
+ * wherever the
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-  // public static double shootAlgaeDistance = 2; // m from center of field
-  
-public static class Vision {
+        // public static double shootAlgaeDistance = 2; // m from center of field
 
-        public static boolean DOGLOG_ENABLED = false;
+        public static class Vision {
 
-        public static final boolean USE_VISION = true;
+                public static boolean DOGLOG_ENABLED = false;
 
-        public static final String kCameraNameFrontRight = "FrontRightCamera";
-        public static final Transform3d kRobotToCamFrontRight =
-                new Transform3d(new Translation3d(Units.inchesToMeters(11.5), -Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
-                new Rotation3d(Math.toRadians(0), Math.toRadians(-10), Math.toRadians(0))); //TODO: determine XYZ
+                public static final boolean USE_VISION = true;
 
-        public static final String kCameraNameFrontLeft = "FrontLeftCamera";
-        public static final Transform3d kRobotToCamFrontLeft =
-                new Transform3d(new Translation3d(Units.inchesToMeters(11.5), Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
-                new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(55))); //TODO: determine XYZ
+                public static final String kCameraNameFrontRight = "FrontRightCamera";
+                public static final Transform3d kRobotToCamFrontRight = new Transform3d(
+                                new Translation3d(Units.inchesToMeters(11.5), -Units.inchesToMeters((9)),
+                                                Units.inchesToMeters(12.5)),
+                                new Rotation3d(Math.toRadians(0), Math.toRadians(-10), Math.toRadians(0))); // TODO:
+                                                                                                            // determine
+                                                                                                            // XYZ
 
-        public static final String kCameraNameBackRight = "BackRightCamera";
-        public static final Transform3d kRobotToCamBackRight =
-                new Transform3d(new Translation3d(-Units.inchesToMeters(11.5), -Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
-                new Rotation3d(Math.toRadians(0), Math.toRadians(-10), Math.toRadians(180))); //TODO: determine XYZ
+                public static final String kCameraNameFrontLeft = "FrontLeftCamera";
+                public static final Transform3d kRobotToCamFrontLeft = new Transform3d(
+                                new Translation3d(Units.inchesToMeters(11.5), Units.inchesToMeters((9)),
+                                                Units.inchesToMeters(12.5)),
+                                new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(55))); // TODO:
+                                                                                                             // determine
+                                                                                                             // XYZ
 
-        public static final String kCameraNameBackLeft = "BackLeftCamera";
-        public static final Transform3d kRobotToCamBackLeft =
-                new Transform3d(new Translation3d(-Units.inchesToMeters(11.5), Units.inchesToMeters((9)), Units.inchesToMeters(12.5)), 
-                new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(125))); //TODO: determine XYZ
-        // The layout of the AprilTags on the field
-        public static final AprilTagFieldLayout kTagLayout =
-                AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+                public static final String kCameraNameBackRight = "BackRightCamera";
+                public static final Transform3d kRobotToCamBackRight = new Transform3d(
+                                new Translation3d(-Units.inchesToMeters(11.5), -Units.inchesToMeters((9)),
+                                                Units.inchesToMeters(12.5)),
+                                new Rotation3d(Math.toRadians(0), Math.toRadians(-10), Math.toRadians(180))); // TODO:
+                                                                                                              // determine
+                                                                                                              // XYZ
 
-        //Do not change these. Actual values will be calculated by the vision system.
-        public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
+                public static final String kCameraNameBackLeft = "BackLeftCamera";
+                public static final Transform3d kRobotToCamBackLeft = new Transform3d(
+                                new Translation3d(-Units.inchesToMeters(11.5), Units.inchesToMeters((9)),
+                                                Units.inchesToMeters(12.5)),
+                                new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(125))); // TODO:
+                                                                                                              // determine
+                                                                                                              // XYZ
+                // The layout of the AprilTags on the field
+                public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout
+                                .loadField(AprilTagFields.k2026RebuiltWelded);
 
-        public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
-        
-        //Change these for fine tune vision system calculations of standard deviations.
-        public static final double kXYStdDev = 0.4; 
-        public static final double kThetaStdDev = 1; 
+                // Do not change these. Actual values will be calculated by the vision system.
+                public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
 
-        public static final double TRANSLATION_TOLERANCE_X = 0.013; // Changed from 0.05 3/8/25
-        public static final double TRANSLATION_TOLERANCE_Y = 0.013; // Changed from 0.05 3/8/25
-        public static final double ROTATION_TOLERANCE = Math.toRadians(1.3); // /deg
+                public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
 
-        //Below same as pathplanner constants
-        public static final double MAX_VELOCITY = 3; 
-        public static final double MAX_ACCELERATION = 5; 
-        public static final double MAX_VELOCITY_ROTATION = 540; 
-        public static final double MAX_ACCELARATION_ROTATION = 720;
-        
-        public static final double VELOCITY_TOLERANCE_X = 4;
-        public static final double VELOCITY_TOLERANCE_Y = 4;
-        public static final double VELOCITY_TOLERANCE_OMEGA = 5;
+                // Change these for fine tune vision system calculations of standard deviations.
+                public static final double kXYStdDev = 0.4;
+                public static final double kThetaStdDev = 1;
 
-        public static final double kPXController = 15; //2.5
-        public static final double kIXController = 0.0 ; //0.01d
-        public static final double kDXController = 0.1d;
-    
-        public static final double kPThetaController = 7; //2
-        public static final double kIThetaController = 0.0;
-        public static final double kDThetaController = 0.0; //0.0041
+                public static final double TRANSLATION_TOLERANCE_X = 0.013; // Changed from 0.05 3/8/25
+                public static final double TRANSLATION_TOLERANCE_Y = 0.013; // Changed from 0.05 3/8/25
+                public static final double ROTATION_TOLERANCE = Math.toRadians(1.3); // /deg
 
-        public static final double kPoseAmbiguityThreshold = 0.2;
-        public static final double kSingleTagDistanceThreshold = 2.0;
+                // Below same as pathplanner constants
+                public static final double MAX_VELOCITY = 3;
+                public static final double MAX_ACCELERATION = 5;
+                public static final double MAX_VELOCITY_ROTATION = 540;
+                public static final double MAX_ACCELARATION_ROTATION = 720;
 
-        
-    }
+                public static final double VELOCITY_TOLERANCE_X = 4;
+                public static final double VELOCITY_TOLERANCE_Y = 4;
+                public static final double VELOCITY_TOLERANCE_OMEGA = 5;
 
-    public static final double gyroP = 2;
-    public static final double gyroI = 0.0;
-    public static final double gyroD = 0.00;
+                public static final double kPXController = 15; // 2.5
+                public static final double kIXController = 0.0; // 0.01d
+                public static final double kDXController = 0.1d;
 
-    public static final String pigeonCanBus = "canivore1";
+                public static final double kPThetaController = 7; // 2
+                public static final double kIThetaController = 0.0;
+                public static final double kDThetaController = 0.0; // 0.0041
 
+                public static final double kPoseAmbiguityThreshold = 0.2;
+                public static final double kSingleTagDistanceThreshold = 2.0;
 
-//         for (int i = 0; i < FieldConstants.Reef.branchPositions.size(); i++) {
-//           for (FieldConstants.ReefHeight height : FieldConstants.ReefHeight.values()) {
-//             DogLog.log("Target Pose "+ i + " " + height.toString(), FieldConstants.Reef.branchPositions.get(i).get(height).toPose2d());
-          
-//         }
-//       }
-//     }
-  
+        }
+
+        public static final double gyroP = 2;
+        public static final double gyroI = 0.0;
+        public static final double gyroD = 0.00;
+
+        public static final String pigeonCanBus = "canivore1";
+
+        // for (int i = 0; i < FieldConstants.Reef.branchPositions.size(); i++) {
+        // for (FieldConstants.ReefHeight height : FieldConstants.ReefHeight.values()) {
+        // DogLog.log("Target Pose "+ i + " " + height.toString(),
+        // FieldConstants.Reef.branchPositions.get(i).get(height).toPose2d());
+
+        // }
+        // }
+        // }
+
+        public static class ClimbConstants {
+                public static final int kLeftID = 6;
+                public static final int kRightID = 7;
+                // public static final int kKickerID = 3;
+                public static final double climbCurrentLimit = 100.0;
+                public static final double holdCurrentLimit = 8;
+                public static final double hookCurrentLimit = 8;
+                // public static final double ampTriggeredCurrentLimit = 2;
+                public static final double power = 0.20;
+                // public static final double deployPosition = 0; // rot
+                // public static final double climbedPosition = 0; // rot
+                // public static final double rampRate = 15;
+                public static final double kP = 50.0;
+                public static final double kI = 0.0;
+                public static final double kD = 0.0;
+                public static final double kG = 0.0;
+                public static final double kS = 0.0;
+                public static final double kV = 0.0;
+                public static final double kA = 0.0;
+                public static final String canBus = "rio";
+                // public static final double servoOpenPosition = 1.0;
+                // public static final double servoCloseposition = 0.0;
+
+                public static final double pitchDiameterInches = 1.214;
+                // public static final double pitchDiameterMeters =
+                // Units.inchesToMeters(pitchDiameterInches);
+
+                public static final double l1HeightInches = 12.5;
+                public static final double l1HeightInchesWhenClimbedAuton = 7.5;
+                // public static final double l2HeightInches = 72;
+                // public static final double l3HeightInches = 80;
+
+                public static final double releaseHeightInches = 6.0;
+
+                public static final double l1Position = inchesToRotations(l1HeightInches, pitchDiameterInches);
+                public static final double l1PositionWhenClimbedAuton = inchesToRotations(l1HeightInchesWhenClimbedAuton,
+                                pitchDiameterInches);
+                // public static final double l2Position = inchesToRotations(l2HeightInches,
+                // pitchDiameterMeters);
+                // public static final double l3Position = inchesToRotations(l3HeightInches,
+                // pitchDiameterMeters);
+
+                public static final double positionToleranceRotations = 0.25;
+
+                public static final double motionMagicCruiseVelocity = 20;
+                public static final double motionMagicAcceleration = 80;
+                public static final double motionMagicJerk = 0.0;
+
+                public static final double motionMagicDescendCruiseVelocity = 10;
+                public static final double motionMagicDescendAcceleration = 0;
+                public static final double motionMagicDescendJerk = 0.0;
+
+                public static final double sensorToMechanismRatio = 15.0;
+
+                public static double inchesPerRotation(double pitchDiameterInches) {
+                        return Math.PI * pitchDiameterInches;
+                }
+
+                public static double inchesToRotations(double inches, double pitchDiameterInches) {
+                        return inches / inchesPerRotation(pitchDiameterInches);
+                }
+        }
+
 }
