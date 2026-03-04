@@ -28,7 +28,9 @@ public class Intake extends SubsystemBase {
     private final MotionMagicVoltage m_mmRequest = new MotionMagicVoltage(0);
     TalonFXConfiguration intakeDeployMotorConfig = new TalonFXConfiguration();
 
-    private MotionMagicConfigs motionMagicConfigs = intakeDeployMotorConfig.MotionMagic;
+      private MotionMagicConfigs motionMagicfastConfigs = intakeDeployMotorConfig.MotionMagic;
+      private MotionMagicConfigs motionMagicSlowConfigs = intakeDeployMotorConfig.MotionMagic;
+
 
     
     public Intake() {
@@ -56,9 +58,15 @@ public class Intake extends SubsystemBase {
 
         
 
-        motionMagicConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocity;
-        motionMagicConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
-        motionMagicConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
+        motionMagicfastConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocityFast;
+        motionMagicfastConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
+        motionMagicfastConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
+
+
+
+        motionMagicSlowConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocitySlow;
+        motionMagicSlowConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
+        motionMagicSlowConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
 
         intakeMotorDeploy
         .getConfigurator()
@@ -78,6 +86,13 @@ public class Intake extends SubsystemBase {
     public void setRollerPower(double power) {
         roller1.set(-power);
         roller2.set(power);
+    }
+
+    public void useFastConfig() {
+        intakeMotorDeploy.getConfigurator().apply(motionMagicfastConfigs);
+    }
+    public void useSlowConfig() {
+        intakeMotorDeploy.getConfigurator().apply(motionMagicSlowConfigs);
     }
     public void simulationPeriodic() {
     // double dt = 0.02;

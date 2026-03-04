@@ -57,10 +57,10 @@ public class RobotContainer {
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     private final Telemetry logger = new Telemetry(maxSpeed);
-    private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandXboxController joystick1 = new CommandXboxController(0);
+    private final CommandXboxController joystick2 = new CommandXboxController(1);
     private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     private SendableChooser<Command> autoChooser;
-
     private final PoseEstimatorSubsystem poseEstimator;
     private final Turret turret;
     private Supplier<Boolean> turretOff = () -> true;
@@ -119,9 +119,9 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        joystick1.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        joystick.b().onTrue(new InstantCommand(() -> {
+        joystick1.b().onTrue(new InstantCommand(() -> {
             boolean useIK = SmartDashboard.getBoolean(
                 AutoAimConstants.useIKSolverKey,
                 AutoAimConstants.defaultUseIKSolver
@@ -129,22 +129,22 @@ public class RobotContainer {
             SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
         }));
 
-        joystick.leftBumper()
+        joystick1.leftBumper()
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
-        joystick.rightBumper().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
+        joystick1.rightBumper().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake)));
-        joystick.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
-        joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
+        joystick1.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
+        joystick1.rightTrigger().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
-        joystick.a()
+        joystick1.a()
             .onTrue(new InstantCommand(() -> startTargeting(true)))
             .onFalse(new InstantCommand(() -> stopTargeting()));
 
-        joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
-        joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
-        joystick.povDown().onTrue(new InstantCommand(() -> target = 0));
-        joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
+        joystick1.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
+        joystick1.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
+        joystick1.povDown().onTrue(new InstantCommand(() -> target = 0));
+        joystick1.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
 
         // Start-of-shift warning
         // for (int i = 0; i < 5; i++) {
@@ -200,12 +200,12 @@ public class RobotContainer {
         );
     }
 
-    private void configureSysid() {
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        joystick.start().and(joystick.a()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        joystick.start().and(joystick.b()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    }
+    // private void configureSysid() {
+    //     joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    //     joystick.start().and(joystick.a()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    //     joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    //     joystick.start().and(joystick.b()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // }
 
     private void configureAutoChooser() {
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
@@ -223,6 +223,10 @@ public class RobotContainer {
             new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
                 .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake))
         );
+        NamedCommands.registerCommand(
+            "intake_shake",  
+            new InstantCommand( () -> intake.useSlowConfig(), intake)
+                .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos),intake)));
         NamedCommands.registerCommand("indexer_on", new IndexerCommand(indexer, () -> true, () -> 1.0));
         NamedCommands.registerCommand("indexer_off", new IndexerCommand(indexer, () -> false, () -> 0.0));
         NamedCommands.registerCommand("shoot_map", new InstantCommand(() -> startTargeting(false)));
@@ -233,8 +237,8 @@ public class RobotContainer {
     private void configureDefaultCommands() {
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getRightY() * maxSpeed)
-                    .withVelocityY(-joystick.getRightX() * maxSpeed)
+                drive.withVelocityX(-joystick1.getRightY() * maxSpeed)
+                    .withVelocityY(-joystick1.getRightX() * maxSpeed)
                     .withRotationalRate(calcAutoTurn())
             )
         );
@@ -244,16 +248,69 @@ public class RobotContainer {
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
 
+        // joystick.x().whileTrue(new DriveToPose(drivetrain, () -> new Pose2d(2, 2, Rotation2d.fromDegrees(90))));
+
+        // Run SysId routines when holding back/start and X/Y.
+        // Note that each routine should be run exactly once in a single log.
+        // joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        // joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        // joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+
+        // Reset the field-centric heading on left bumper press.
+        joystick1.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        
+        // Intake binding
+
+        //Deploy Intake
+        joystick1.a().onTrue(
+            new InstantCommand(
+                () -> intake.setDeployPosition(() -> IntakeConstants.deployPos),    
+                intake
+            ).andThen(
+                new InstantCommand(
+                    () -> intake.setRollerPower(IntakeConstants.rollerPower),
+                    intake
+                )
+            )
+        );
+        //Bring Intake back to home pos
+        joystick1.x().onTrue(
+            new InstantCommand(
+                () -> intake.setDeployPosition(() ->IntakeConstants.homePos), 
+                intake
+                ).andThen(
+                    new InstantCommand(
+                        () -> intake.setRollerPower(0.0),
+                        intake
+                    )
+                )
+        );
+        //Copilot Intake Shake
+        joystick2.x().whileTrue(
+        new InstantCommand(
+            () -> intake.useSlowConfig(),
+            intake
+        ).andThen(
+           new InstantCommand(
+             () -> intake.setDeployPosition(() -> IntakeConstants.shakePos),
+             intake
+           )
+        )
+       );
         drivetrain.registerTelemetry(logger::telemeterize);
+
     }
+
+    
 
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
     }
 
     private double calcAutoTurn() {
-        if (Math.abs(joystick.getLeftX()) > 0.01) {
-            target -= joystick.getLeftX() * Math.toRadians(5);
+        if (Math.abs(joystick1.getLeftX()) > 0.01) {
+            target -= joystick1.getLeftX() * Math.toRadians(5);
         }
 
         double output = gyroController.calculate(
