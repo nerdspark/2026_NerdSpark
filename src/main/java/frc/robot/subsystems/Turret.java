@@ -301,20 +301,30 @@ public class Turret extends SubsystemBase {
      */
     private double calcTriggerLine(double startingLine, double robotX, double robotVeloX, double safetyMargin, 
         int approachDirection) {
+        SmartDashboard.putNumber("Starting Line", startingLine);
+        SmartDashboard.putNumber("Direction", approachDirection);
+        m_field.getObject("Starting Line").setPose(startingLine, FieldConstants.LeftTrench.center, new Rotation2d());
+        SmartDashboard.putNumber("Robot X", robotX);
         // Closing velocity toward line
         double closingVelocity = robotVeloX * approachDirection;
+        SmartDashboard.putNumber("Closing Velo", closingVelocity);
+        SmartDashboard.putNumber("Safety Margin", safetyMargin * approachDirection);
 
         // Only extend the line if moving toward it
-        if (closingVelocity <= 0) {
+        if (closingVelocity <= 0.01) {
             // Moving away or stopped, use original line
-            return startingLine + safetyMargin;
+            SmartDashboard.putNumber("Off Line", startingLine + (safetyMargin * -approachDirection));
+            return startingLine + (safetyMargin * -approachDirection);
         }
 
         // Distance traveled while retracting
-        double preTriggerDistance = (closingVelocity * TurretConstants.hoodRetractTime) + safetyMargin;
+        double preTriggerDistance = (closingVelocity * TurretConstants.hoodRetractTime) + (safetyMargin * approachDirection);
+        SmartDashboard.putNumber("Pre Trigger Distance", preTriggerDistance);
 
         // Move the line backward along approach direction
-        return startingLine - (preTriggerDistance * approachDirection);
+        SmartDashboard.putNumber("Moved Line", startingLine + (preTriggerDistance * approachDirection));
+        m_field.getObject("Moved Line").setPose(startingLine + (preTriggerDistance * approachDirection), FieldConstants.LeftTrench.center, new Rotation2d());
+        return startingLine + (preTriggerDistance * approachDirection);
     }
 
     /** 
@@ -516,11 +526,12 @@ public class Turret extends SubsystemBase {
     public void periodic() {
         ChassisSpeeds speeds = speed.get();
         Pose2d currPose = pose.get();
+        ChassisSpeeds robotSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, currPose.getRotation());
         m_field.setRobotPose(currPose);
         Pose2d delayPose = currPose.exp(new Twist2d( // Account for phase delay
-            speeds.vxMetersPerSecond * filteredTurretDelaySec, 
-            speeds.vyMetersPerSecond * filteredTurretDelaySec,
-            speeds.omegaRadiansPerSecond * filteredTurretDelaySec
+            robotSpeeds.vxMetersPerSecond * filteredTurretDelaySec, 
+            robotSpeeds.vyMetersPerSecond * filteredTurretDelaySec,
+            robotSpeeds.omegaRadiansPerSecond * filteredTurretDelaySec
         ));
         SmartDashboard.putNumber("Phase Delay", filteredTurretDelaySec);
         m_field.getObject("Delay Pose").setPose(delayPose);
@@ -533,20 +544,20 @@ public class Turret extends SubsystemBase {
             isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
             turretPose.getX(), 
             speeds.vxMetersPerSecond, 
-            Units.inchesToMeters(0.5), 
+            Units.inchesToMeters(20), 
             isBlue ? 1 : -1
         );
         double passLine = calcTriggerLine(
             isBlue ? FieldConstants.LinesVertical.bluePassLine : FieldConstants.LinesVertical.redPassLine, 
             turretPose.getX(), 
             speeds.vxMetersPerSecond, 
-            Units.inchesToMeters(0.5), 
+            Units.inchesToMeters(20), 
             isBlue ? -1 : 1
         );
 
-        boolean shoot = isBlue ? turretPose.getX() <= shootLine : turretPose.getX() >= shootLine;
+        boolean shoot = isBlue ? turretPose.getX() < shootLine : turretPose.getX() > shootLine;
         SmartDashboard.putBoolean("Shoot", shoot);
-        boolean pass = isBlue ? turretPose.getX() >= passLine : turretPose.getX() <= passLine; 
+        boolean pass = isBlue ? turretPose.getX() > passLine : turretPose.getX() < passLine; 
         SmartDashboard.putBoolean("Pass", pass);
 
         if (shoot || pass) {
@@ -593,8 +604,8 @@ public class Turret extends SubsystemBase {
 
                     passPose = new Translation2d(targetX, targetY);
                 } else {
-                    passPose = closerPoint(turretPose, FieldConstants.LeftBump.oppFarLeftCorner, FieldConstants.RightBump.oppFarLeftCorner) 
-                        ? FieldConstants.LeftBump.oppFarLeftCorner : FieldConstants.RightBump.oppFarLeftCorner;
+                    passPose = closerPoint(turretPose, FieldConstants.LeftBump.oppFarLeftCorner, FieldConstants.RightBump.oppNearLeftCorner) 
+                        ? FieldConstants.LeftBump.oppFarLeftCorner : FieldConstants.RightBump.oppNearLeftCorner;
                 }
             }
             

@@ -63,7 +63,6 @@ public class RobotContainer {
 
     private final PoseEstimatorSubsystem poseEstimator;
     private final Turret turret;
-    private Supplier<Boolean> turretOff = () -> true;
     private final Indexer indexer;
     private final Intake intake = new Intake();
     private final SimFuelSubsystem fuelSim;
@@ -90,7 +89,7 @@ public class RobotContainer {
             () -> ChassisSpeeds.fromRobotRelativeSpeeds(
                 drivetrain.getState().Speeds,
                 drivetrain.getState().Pose.getRotation()),
-            turretOff
+            () -> false
         );
         HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 

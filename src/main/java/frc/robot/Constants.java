@@ -105,7 +105,7 @@ public final class Constants {
         public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(4.699), 0);
 
         public static final double delay = 0.0011;
-        public static final double maxDelay = 0.25;
+        public static final double maxDelay = 0.4;
         public static final double riseTime = 0.04;
         public static final double fallTime = 0.18;
         public static final double hoodRetractTime = 0.1; // TODO In Seconds
@@ -122,9 +122,9 @@ public final class Constants {
 
         static {
             // Passing
-            map.put(Double.MAX_VALUE, new ShooterParams(4, 0, 0));
+            map.put(Double.MAX_VALUE, new ShooterParams(0, 0, 0));
 
-            map.put(0.0, new ShooterParams(2, 0, 0));
+            map.put(0.0, new ShooterParams(0, 0, 0));
 
             climbMap.put(0.0, new ShooterParams(0, 0, 0));
         }
