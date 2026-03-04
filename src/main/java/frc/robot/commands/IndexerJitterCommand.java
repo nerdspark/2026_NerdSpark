@@ -4,15 +4,16 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.Indexer;
+import edu.wpi.first.wpilibj.Timer;
 
-public class IndexerCommand extends InstantCommand {
+public class IndexerJitterCommand extends InstantCommand {
 
     Indexer indexer;
     Supplier<Boolean> isActive;
     Supplier<Double> rollerSpeed;
 
 
-    public IndexerCommand(Indexer indexer, Supplier<Boolean> isActive, Supplier<Double> rollerSpeed) {
+    public IndexerJitterCommand(Indexer indexer, Supplier<Boolean> isActive, Supplier<Double> rollerSpeed) {
         this.indexer = indexer;
         this.isActive = isActive;
         this.rollerSpeed = rollerSpeed;
@@ -24,6 +25,11 @@ public class IndexerCommand extends InstantCommand {
         rollerSpeed = () -> value;
     }
 
+    public void jitter() {
+        if (Timer.getFPGATimestamp() % 1 == 0) {
+            changeRollerSpeed(-rollerSpeed.get());
+        }
+    }
 
     public Supplier<Double> getRollerSpeed(){
         return rollerSpeed;
@@ -36,6 +42,7 @@ public class IndexerCommand extends InstantCommand {
 
     @Override
     public void execute() {
+        jitter();
         indexer.spinDex(rollerSpeed);
     }
 
