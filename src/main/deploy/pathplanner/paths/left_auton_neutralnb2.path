@@ -16,32 +16,32 @@
     },
     {
       "anchor": {
-        "x": 6.87358630952381,
-        "y": 7.499933035714285
+        "x": 6.846747503566333,
+        "y": 7.3629017857142856
       },
       "prevControl": {
-        "x": 8.04297997446218,
-        "y": 7.480306941403336
+        "x": 8.016141168504703,
+        "y": 7.343275691403337
       },
       "nextControl": {
-        "x": 5.4532298136645965,
-        "y": 7.52377107364685
+        "x": 5.42639100770712,
+        "y": 7.386739823646851
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.4494345238095234,
-        "y": 7.3629017857142856
+        "x": 2.4476034236804565,
+        "y": 7.35
       },
       "prevControl": {
-        "x": 2.8215616681455185,
-        "y": 7.636441881100266
+        "x": 2.8197305680164515,
+        "y": 7.62354009538598
       },
       "nextControl": {
-        "x": 1.9465005000254174,
-        "y": 6.9932092681629605
+        "x": 1.9446693998963505,
+        "y": 6.980307482448675
       },
       "isLocked": false,
       "linkedName": null
@@ -104,17 +104,6 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "intake_home",
-      "waypointRelativePos": 0.5150501672240804,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "intake_home"
-        }
-      }
-    },
-    {
       "name": "indexer_on",
       "waypointRelativePos": 1.622615803814715,
       "endWaypointRelativePos": null,
@@ -155,7 +144,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 2.0,
+    "maxVelocity": 1.5,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

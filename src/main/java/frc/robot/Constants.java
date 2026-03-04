@@ -122,9 +122,9 @@ public final class Constants {
 
         static {
             // Passing
-            map.put(Double.MAX_VALUE, new ShooterParams(4, 0, 0));
+            map.put(Double.MAX_VALUE, new ShooterParams(0, 0, 0));
 
-            map.put(0.0, new ShooterParams(2, 0, 0));
+            map.put(0.0, new ShooterParams(0, 0, 0));
 
             climbMap.put(0.0, new ShooterParams(0, 0, 0));
         }
@@ -244,9 +244,9 @@ public final class Constants {
         public static final double motionMagicCruiseVelocityFast = 50.0;
         public static final double motionMagicCruiseVelocitySlow = 15.0;
         public static final double motionMagicJerk = 0.0;
-        public static final double deployPos = 2;
-        public static final double homePos = 14;
-        public static final double shakePos = 8;
+        public static final double deployPos = 13;
+        public static final double homePos = 0;
+        public static final double shakePos = 5;
         public static final double rollerPower = 1.0;
     }
 }
