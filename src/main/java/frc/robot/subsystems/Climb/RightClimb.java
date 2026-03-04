@@ -32,19 +32,19 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimbConstants;
 
 public class RightClimb extends SubsystemBase {
-  private TalonFX climbShort;
+  private TalonFX climbRight;
   private TalonFXConfiguration climbConfig = new TalonFXConfiguration();
   private boolean ampTriggered, ampTriggerStarted = false;
   // private final TalonFXSimState tallSim;
-  // private final TalonFXSimState shortSim;
+  // private final TalonFXSimState RightSim;
 
   private MotionMagicConfigs motionMagicConfigs = climbConfig.MotionMagic;
   final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
 
   /** Creates a new Climb. */
   public RightClimb() {
-    climbShort = new TalonFX(ClimbConstants.kRightID, ClimbConstants.canBus);
-    // shortSim = climbShort.getSimState();
+    climbRight = new TalonFX(ClimbConstants.kRightID, ClimbConstants.canBus);
+    // RightSim = climbRight.getSimState();
 
     // climbMech = new Mechanism2d(3.0, 3.0);
     // // Roots at bottom of elevators
@@ -71,7 +71,7 @@ public class RightClimb extends SubsystemBase {
 
     configMotionMagic(ClimbConstants.motionMagicCruiseVelocity, ClimbConstants.motionMagicAcceleration, ClimbConstants.motionMagicJerk);
 
-    // climbShort
+    // climbRight
     //     .getConfigurator()
     //     .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
     //         .withInverted(InvertedValue.Clockwise_Positive)
@@ -83,7 +83,7 @@ public class RightClimb extends SubsystemBase {
     // .withInverted(InvertedValue.Clockwise_Positive)
     // .withNeutralMode(NeutralModeValue.Brake)));
 
-    resetShortPosition();
+    resetRightPosition();
   }
 
    public void configMotionMagic(double cruiseVelocity, double acceleration, double jerk) {
@@ -91,51 +91,51 @@ public class RightClimb extends SubsystemBase {
     motionMagicConfigs.MotionMagicAcceleration = acceleration;
     motionMagicConfigs.MotionMagicJerk = jerk;
 
-    climbShort
+    climbRight
         .getConfigurator()
         .apply(climbConfig.withMotorOutput(new MotorOutputConfigs()
             .withInverted(InvertedValue.Clockwise_Positive)
             .withNeutralMode(NeutralModeValue.Brake)));
   }
 
-  public void setClimbShort(Supplier<Double> position) {
-    climbShort.setControl(m_request.withPosition(position.get().doubleValue()));
+  public void setClimbRight(Supplier<Double> position) {
+    climbRight.setControl(m_request.withPosition(position.get().doubleValue()));
   } 
 
-  public void resetShortPosition() {
-    climbShort.setPosition(0);
+  public void resetRightPosition() {
+    climbRight.setPosition(0);
   }
 
-  public void setClimbShortVoltage(double voltage) {
-    climbShort.setVoltage(voltage);
+  public void setClimbRightVoltage(double voltage) {
+    climbRight.setVoltage(voltage);
   }
 
   public boolean climbRightAmpTriggered() {
-    return Math.abs(climbShort.getStatorCurrent().getValueAsDouble()) > ClimbConstants.climbCurrentLimit;
+    return Math.abs(climbRight.getStatorCurrent().getValueAsDouble()) > ClimbConstants.climbCurrentLimit;
   }
 
   public double getRightPosition() {
-    return climbShort.getPosition().getValueAsDouble();
+    return climbRight.getPosition().getValueAsDouble();
   }
 
-  public Command shortGoToPosition(Supplier<Double> position) {
-    return new RunCommand(() -> setClimbShort(position), this)
+  public Command rightGoToPosition(Supplier<Double> position) {
+    return new RunCommand(() -> setClimbRight(position), this)
         .until(() -> Math.abs(getRightPosition() - position.get()) <= ClimbConstants.positionToleranceRotations);
   }
 
 
-  public Command shortResetPosition() {
-    return new InstantCommand(() -> resetShortPosition(), this);
+  public Command rightResetPosition() {
+    return new InstantCommand(() -> resetRightPosition(), this);
   }
 
-  public double getClimbShortHeightInches() {
-    return climbShort.getPosition().getValueAsDouble() * ClimbConstants.inchesPerRotation(ClimbConstants.pitchDiameterInches);
+  public double getClimbRightHeightInches() {
+    return climbRight.getPosition().getValueAsDouble() * ClimbConstants.inchesPerRotation(ClimbConstants.pitchDiameterInches);
   }
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("climb right position", climbShort.getPosition().getValueAsDouble());
-    SmartDashboard.putNumber("climb right current (amps)", climbShort.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber("climb right position", climbRight.getPosition().getValueAsDouble());
+    SmartDashboard.putNumber("climb right current (amps)", climbRight.getStatorCurrent().getValueAsDouble());
     SmartDashboard.putNumber("target position", ClimbConstants.l1Position);
   }
 }
