@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "test_bump"
+            "pathName": null
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "test_autos",
+  "folder": "tests",
   "choreoAuto": false
 }

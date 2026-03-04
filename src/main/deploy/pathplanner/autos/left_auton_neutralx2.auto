@@ -70,6 +70,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "left_autos",
+  "folder": "left_autons",
   "choreoAuto": false
 }

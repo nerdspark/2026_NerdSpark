@@ -20,12 +20,12 @@
         "y": 7.499933035714285
       },
       "prevControl": {
-        "x": 8.035089285714285,
-        "y": 7.3629017857142856
+        "x": 8.04297997446218,
+        "y": 7.480306941403336
       },
       "nextControl": {
-        "x": 5.417361815109482,
-        "y": 7.671734801909234
+        "x": 5.4532298136645965,
+        "y": 7.52377107364685
       },
       "isLocked": false,
       "linkedName": null
@@ -36,12 +36,12 @@
         "y": 7.3629017857142856
       },
       "prevControl": {
-        "x": 2.847477678571428,
-        "y": 7.715267857142856
+        "x": 2.8215616681455185,
+        "y": 7.636441881100266
       },
       "nextControl": {
-        "x": 1.9820634107588404,
-        "y": 6.94916342334155
+        "x": 1.9465005000254174,
+        "y": 6.9932092681629605
       },
       "isLocked": false,
       "linkedName": null
@@ -64,12 +64,12 @@
     },
     {
       "anchor": {
-        "x": 1.445,
-        "y": 3.8287999999999998
+        "x": 1.4184375,
+        "y": 3.865342261904762
       },
       "prevControl": {
-        "x": 2.045327380952381,
-        "y": 3.8092241071428563
+        "x": 2.0187648809523813,
+        "y": 3.8457663690476185
       },
       "nextControl": null,
       "isLocked": false,
@@ -104,6 +104,17 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
+      "name": "intake_home",
+      "waypointRelativePos": 0.5150501672240804,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_home"
+        }
+      }
+    },
+    {
       "name": "indexer_on",
       "waypointRelativePos": 1.622615803814715,
       "endWaypointRelativePos": null,
@@ -115,10 +126,32 @@
       }
     },
     {
+      "name": "intake_shake",
+      "waypointRelativePos": 1.8327759197324414,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_shake"
+        }
+      }
+    },
+    {
       "name": "indexer_off",
       "waypointRelativePos": 4.0,
       "endWaypointRelativePos": null,
       "command": null
+    },
+    {
+      "name": "intake_home",
+      "waypointRelativePos": 4.0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_home"
+        }
+      }
     }
   ],
   "globalConstraints": {
