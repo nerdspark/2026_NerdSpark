@@ -20,11 +20,14 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.commandSequences.ClimbSequences;
 // import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
+import frc.robot.subsystems.Climb.LeftClimb;
+import frc.robot.subsystems.Climb.RightClimb;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -41,6 +44,9 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     public final PoseEstimatorSubsystem poseEstimatorSubsystem;
+    
+    public final LeftClimb leftClimb = new LeftClimb();
+    public final RightClimb rightClimb = new RightClimb();
 
     private final SendableChooser<Command> autoChooser;
       
@@ -85,6 +91,13 @@ public class RobotContainer {
 
         // Reset the field-centric heading on left bumper press.
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+
+
+        joystick.a().onTrue(ClimbSequences.innerHooksUp(leftClimb, rightClimb));
+        joystick.b().onTrue(ClimbSequences.outerHooksUp(leftClimb, rightClimb));
+        joystick.x().onTrue(ClimbSequences.controlledDescent(leftClimb, rightClimb));
+        joystick.y().onTrue(ClimbSequences.climbTol1(leftClimb, rightClimb));
+
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

@@ -76,7 +76,7 @@ public class ClimbSequences {
                                                 rightClimb.rightGoToPosition(() -> ClimbConstants.l1Position)));
         }
 
-        public static Command climbTol1Auton(LeftClimb leftClimb, RightClimb rightClimb) {
+        public static Command climbTol1(LeftClimb leftClimb, RightClimb rightClimb) {
                 return new SequentialCommandGroup(
                         new InstantCommand(() -> {
                                 leftClimb.configMotionMagic(ClimbConstants.motionMagicCruiseVelocity,
@@ -91,8 +91,8 @@ public class ClimbSequences {
                                 rightClimb.rightGoToPosition(() -> ClimbConstants.l1Position)),
                         new WaitCommand(0.3),
                         new ParallelCommandGroup(
-                                leftClimb.leftGoToPosition(() -> ClimbConstants.l1PositionWhenClimbedAuton),
-                                rightClimb.rightGoToPosition(() -> ClimbConstants.l1PositionWhenClimbedAuton))
+                                leftClimb.leftGoToPosition(() -> ClimbConstants.l1PositionWhenClimbed),
+                                rightClimb.rightGoToPosition(() -> ClimbConstants.l1PositionWhenClimbed))
                 );
         }
 

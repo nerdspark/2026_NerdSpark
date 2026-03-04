@@ -176,14 +176,14 @@ public final class Constants {
                 // Units.inchesToMeters(pitchDiameterInches);
 
                 public static final double l1HeightInches = 12.5;
-                public static final double l1HeightInchesWhenClimbedAuton = 7.5;
+                public static final double l1HeightInchesWhenClimbed = 7.5;
                 // public static final double l2HeightInches = 72;
                 // public static final double l3HeightInches = 80;
 
                 public static final double releaseHeightInches = 6.0;
 
                 public static final double l1Position = inchesToRotations(l1HeightInches, pitchDiameterInches);
-                public static final double l1PositionWhenClimbedAuton = inchesToRotations(l1HeightInchesWhenClimbedAuton,
+                public static final double l1PositionWhenClimbed = inchesToRotations(l1HeightInchesWhenClimbed,
                                 pitchDiameterInches);
                 // public static final double l2Position = inchesToRotations(l2HeightInches,
                 // pitchDiameterMeters);
