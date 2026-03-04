@@ -289,7 +289,7 @@ public class Turret extends SubsystemBase {
     }
 
     /**
-     * Calculates the dynamic X threshold line for a single state (shoot or pass),
+     * Calculates the dynamic X threshold line for a signal state (shoot or pass),
      * taking into account velocity and direction.
      *
      * @param startingLine      Original X coordinate of the line
@@ -313,8 +313,8 @@ public class Turret extends SubsystemBase {
         // Only extend the line if moving toward it
         if (closingVelocity <= 0.01) {
             // Moving away or stopped, use original line
-            SmartDashboard.putNumber("Off Line", startingLine + (safetyMargin * -approachDirection));
-            return startingLine + (safetyMargin * -approachDirection);
+            SmartDashboard.putNumber("Off Line", startingLine + (safetyMargin * approachDirection));
+            return startingLine + (safetyMargin * approachDirection);
         }
 
         // Distance traveled while retracting
@@ -540,13 +540,13 @@ public class Turret extends SubsystemBase {
 
         boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
         SmartDashboard.putBoolean("Is Blue", isBlue);
-        double shootLine = calcTriggerLine(
-            isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
-            turretPose.getX(), 
-            speeds.vxMetersPerSecond, 
-            Units.inchesToMeters(20), 
-            isBlue ? 1 : -1
-        );
+        // double shootLine = calcTriggerLine(
+        //     isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
+        //     turretPose.getX(), 
+        //     speeds.vxMetersPerSecond, 
+        //     Units.inchesToMeters(20), 
+        //     isBlue ? 1 : -1
+        // );
         double passLine = calcTriggerLine(
             isBlue ? FieldConstants.LinesVertical.bluePassLine : FieldConstants.LinesVertical.redPassLine, 
             turretPose.getX(), 
@@ -555,7 +555,7 @@ public class Turret extends SubsystemBase {
             isBlue ? -1 : 1
         );
 
-        boolean shoot = isBlue ? turretPose.getX() < shootLine : turretPose.getX() > shootLine;
+        boolean shoot = false;//isBlue ? turretPose.getX() < shootLine : turretPose.getX() > shootLine;
         SmartDashboard.putBoolean("Shoot", shoot);
         boolean pass = isBlue ? turretPose.getX() > passLine : turretPose.getX() < passLine; 
         SmartDashboard.putBoolean("Pass", pass);
