@@ -5,6 +5,8 @@ import static frc.robot.util.TurretUtil.*;
 
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
@@ -84,6 +86,8 @@ public class Turret extends SubsystemBase {
     private double velocity = 0;
     public double tof = 0;
 
+    private final LoggedNetworkNumber hood = new LoggedNetworkNumber("/Tuning/Hood Pose", 0);
+    private final LoggedNetworkNumber shot = new LoggedNetworkNumber("/Tuning/Shooter Speed", 0);
     private final Field2d m_field = new Field2d();
     private final ShooterOffsetMap offsetMap = new ShooterOffsetMap();
 
@@ -299,32 +303,32 @@ public class Turret extends SubsystemBase {
      * @param approachDirection The sign of the robot velo going toward the line
      * @return X value of dynamic trigger line
      */
-    private double calcTriggerLine(double startingLine, double robotX, double robotVeloX, double safetyMargin, 
-        int approachDirection) {
-        SmartDashboard.putNumber("Starting Line", startingLine);
-        SmartDashboard.putNumber("Direction", approachDirection);
-        m_field.getObject("Starting Line").setPose(startingLine, FieldConstants.LeftTrench.center, new Rotation2d());
-        SmartDashboard.putNumber("Robot X", robotX);
-        // Closing velocity toward line
-        double closingVelocity = robotVeloX * approachDirection;
-        SmartDashboard.putNumber("Closing Velo", closingVelocity);
-        SmartDashboard.putNumber("Safety Margin", safetyMargin * approachDirection);
+    private double calcTriggerLine(double startingLine, double robotX, double robotVeloX, double safetyMargin, boolean goingLeft) {
+        if (goingLeft) {
+            // Only extend the line if moving toward it
+            if (robotVeloX <= 0.01) {
+                // Moving away or stopped, use original line
+                return startingLine - safetyMargin;
+            }
 
-        // Only extend the line if moving toward it
-        if (closingVelocity <= 0.01) {
-            // Moving away or stopped, use original line
-            SmartDashboard.putNumber("Off Line", startingLine + (safetyMargin * approachDirection));
-            return startingLine + (safetyMargin * approachDirection);
+            // Distance traveled while retracting
+            double preTriggerDistance = (-robotVeloX * TurretConstants.hoodRetractTime) - safetyMargin;
+
+            // Move the line backward along approach direction
+            return startingLine + preTriggerDistance;
+        } else {
+            // Only extend the line if moving toward it
+            if (-robotVeloX <= 0.01) {
+                // Moving away or stopped, use original line
+                return startingLine + safetyMargin;
+            }
+
+            // Distance traveled while retracting
+            double preTriggerDistance = (robotVeloX * TurretConstants.hoodRetractTime) - safetyMargin;
+
+            // Move the line backward along approach direction
+            return startingLine - preTriggerDistance;
         }
-
-        // Distance traveled while retracting
-        double preTriggerDistance = (closingVelocity * TurretConstants.hoodRetractTime) + (safetyMargin * approachDirection);
-        SmartDashboard.putNumber("Pre Trigger Distance", preTriggerDistance);
-
-        // Move the line backward along approach direction
-        SmartDashboard.putNumber("Moved Line", startingLine + (preTriggerDistance * approachDirection));
-        m_field.getObject("Moved Line").setPose(startingLine + (preTriggerDistance * approachDirection), FieldConstants.LeftTrench.center, new Rotation2d());
-        return startingLine + (preTriggerDistance * approachDirection);
     }
 
     /** 
@@ -540,22 +544,22 @@ public class Turret extends SubsystemBase {
 
         boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
         SmartDashboard.putBoolean("Is Blue", isBlue);
-        // double shootLine = calcTriggerLine(
-        //     isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
-        //     turretPose.getX(), 
-        //     speeds.vxMetersPerSecond, 
-        //     Units.inchesToMeters(20), 
-        //     isBlue ? 1 : -1
-        // );
+        double shootLine = calcTriggerLine(
+            isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
+            turretPose.getX(), 
+            speeds.vxMetersPerSecond, 
+            Units.inchesToMeters(20), 
+            isBlue ? true : false
+        );
         double passLine = calcTriggerLine(
             isBlue ? FieldConstants.LinesVertical.bluePassLine : FieldConstants.LinesVertical.redPassLine, 
             turretPose.getX(), 
             speeds.vxMetersPerSecond, 
             Units.inchesToMeters(20), 
-            isBlue ? -1 : 1
+            isBlue ? false : true
         );
 
-        boolean shoot = false;//isBlue ? turretPose.getX() < shootLine : turretPose.getX() > shootLine;
+        boolean shoot = isBlue ? turretPose.getX() < shootLine : turretPose.getX() > shootLine;
         SmartDashboard.putBoolean("Shoot", shoot);
         boolean pass = isBlue ? turretPose.getX() > passLine : turretPose.getX() < passLine; 
         SmartDashboard.putBoolean("Pass", pass);
@@ -651,6 +655,7 @@ public class Turret extends SubsystemBase {
                     velocity = aimOnFly(distance);
                 }
             } else {
+                SmartDashboard.putNumber("Distance To Goal", Math.hypot(yError, xError));
                 velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
             }
         } else {
@@ -658,8 +663,10 @@ public class Turret extends SubsystemBase {
         }
 
         // spinMotor.setControl(spinPose);
+        hoodPose.Position = hood.get();
         hoodMotor1.setControl(hoodPose);
         
+        velocity = shot.get();
         switch (mode) {
             case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
             case TORQUE_CURRENT_BANG_BANG -> shootMotor1.setControl(shootTorqueBang.withVelocity(velocity));
