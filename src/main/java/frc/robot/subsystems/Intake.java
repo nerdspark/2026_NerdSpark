@@ -28,9 +28,9 @@ public class Intake extends SubsystemBase {
     private final MotionMagicVoltage m_mmRequest = new MotionMagicVoltage(0);
     TalonFXConfiguration intakeDeployMotorConfig = new TalonFXConfiguration();
 
-    private MotionMagicConfigs motionMagicConfigs = intakeDeployMotorConfig.MotionMagic;
+    private MotionMagicConfigs motionMagicFastConfigs = intakeDeployMotorConfig.MotionMagic;
+    private MotionMagicConfigs motionMagicSlowConfigs = intakeDeployMotorConfig.MotionMagic;
 
-    
     public Intake() {
         canivore = new CANBus(Constants.CANbus);
         intakeMotorDeploy = new TalonFX(IntakeConstants.deployIntakeMotorId,  canivore);
@@ -56,9 +56,11 @@ public class Intake extends SubsystemBase {
 
         
 
-        motionMagicConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocity;
-        motionMagicConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
-        motionMagicConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
+        motionMagicFastConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocityFast;
+        motionMagicFastConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
+        motionMagicFastConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
+
+        motionMagicSlowConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocitySlow;
 
         intakeMotorDeploy
         .getConfigurator()
@@ -79,6 +81,14 @@ public class Intake extends SubsystemBase {
         roller1.set(-power);
         roller2.set(power);
     }
+
+    public void useFastConfig() {
+        intakeMotorDeploy.getConfigurator().apply(motionMagicFastConfigs);
+    }
+    public void useSlowConfig() {
+        intakeMotorDeploy.getConfigurator().apply(motionMagicSlowConfigs);
+    }
+
     public void simulationPeriodic() {
     // double dt = 0.02;
 

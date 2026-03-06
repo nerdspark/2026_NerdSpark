@@ -58,6 +58,7 @@ public class RobotContainer {
 
     private final Telemetry logger = new Telemetry(maxSpeed);
     private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandXboxController joystick2 = new CommandXboxController(1);
     private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     private SendableChooser<Command> autoChooser;
 
@@ -129,13 +130,19 @@ public class RobotContainer {
         }));
 
         joystick.leftBumper()
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 0.6))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
-        joystick.rightBumper().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
+
+        joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake)));
+
         joystick.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
-        joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
+
+        joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
+
         joystick.a()
             .onTrue(new InstantCommand(() -> startTargeting(true)))
             .onFalse(new InstantCommand(() -> stopTargeting()));
@@ -144,6 +151,10 @@ public class RobotContainer {
         joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
         joystick.povDown().onTrue(new InstantCommand(() -> target = 0));
         joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
+
+        joystick2.x().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
+            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         // Start-of-shift warning
         // for (int i = 0; i < 5; i++) {
