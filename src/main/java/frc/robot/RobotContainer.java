@@ -63,7 +63,7 @@ public class RobotContainer {
     private SendableChooser<Command> autoChooser;
 
     private final PoseEstimatorSubsystem poseEstimator;
-    private final Turret turret;
+    // private final Turret turret;
     private final Indexer indexer;
     private final Intake intake = new Intake();
     private final SimFuelSubsystem fuelSim;
@@ -85,14 +85,14 @@ public class RobotContainer {
 
         poseEstimator = new PoseEstimatorSubsystem(drivetrain);
 
-        turret = new Turret(
-            () -> drivetrain.getState().Pose,
-            () -> ChassisSpeeds.fromRobotRelativeSpeeds(
-                drivetrain.getState().Speeds,
-                drivetrain.getState().Pose.getRotation()),
-            () -> false
-        );
-        HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
+        // turret = new Turret(
+        //     () -> drivetrain.getState().Pose,
+        //     () -> ChassisSpeeds.fromRobotRelativeSpeeds(
+        //         drivetrain.getState().Speeds,
+        //         drivetrain.getState().Pose.getRotation()),
+        //     () -> false
+        // );
+        // HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
         indexer = new Indexer();
         fuelSim = RobotBase.isSimulation()
