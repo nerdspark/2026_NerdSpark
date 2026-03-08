@@ -72,7 +72,7 @@ public class RobotContainer {
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
-    private double target = 0.0;
+    private double target = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue ? 0 : Math.PI;
 
     public RobotContainer() {
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
@@ -145,6 +145,10 @@ public class RobotContainer {
         joystick1.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
         joystick1.povDown().onTrue(new InstantCommand(() -> target = 0));
         joystick1.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
+
+        joystick2.x().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
+            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         // Start-of-shift warning
         // for (int i = 0; i < 5; i++) {
@@ -226,7 +230,8 @@ public class RobotContainer {
         NamedCommands.registerCommand(
             "intake_shake",  
             new InstantCommand( () -> intake.useSlowConfig(), intake)
-                .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos),intake)));
+                .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos),intake))
+                .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
         NamedCommands.registerCommand("indexer_on", new IndexerCommand(indexer, () -> true, () -> 1.0));
         NamedCommands.registerCommand("indexer_off", new IndexerCommand(indexer, () -> false, () -> 0.0));
         NamedCommands.registerCommand("shoot_map", new InstantCommand(() -> startTargeting(false)));
@@ -249,57 +254,7 @@ public class RobotContainer {
         );
 
         // joystick.x().whileTrue(new DriveToPose(drivetrain, () -> new Pose2d(2, 2, Rotation2d.fromDegrees(90))));
-
-        // Run SysId routines when holding back/start and X/Y.
-        // Note that each routine should be run exactly once in a single log.
-        // joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        // joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        // joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
-
-        // Reset the field-centric heading on left bumper press.
-        joystick1.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-        
-        // Intake binding
-
-        //Deploy Intake
-        joystick1.a().onTrue(
-            new InstantCommand(
-                () -> intake.setDeployPosition(() -> IntakeConstants.deployPos),    
-                intake
-            ).andThen(
-                new InstantCommand(
-                    () -> intake.setRollerPower(IntakeConstants.rollerPower),
-                    intake
-                )
-            )
-        );
-        //Bring Intake back to home pos
-        joystick1.x().onTrue(
-            new InstantCommand(
-                () -> intake.setDeployPosition(() ->IntakeConstants.homePos), 
-                intake
-                ).andThen(
-                    new InstantCommand(
-                        () -> intake.setRollerPower(0.0),
-                        intake
-                    )
-                )
-        );
-        //Copilot Intake Shake
-        joystick2.x().whileTrue(
-        new InstantCommand(
-            () -> intake.useSlowConfig(),
-            intake
-        ).andThen(
-           new InstantCommand(
-             () -> intake.setDeployPosition(() -> IntakeConstants.shakePos),
-             intake
-           )
-        )
-       );
         drivetrain.registerTelemetry(logger::telemeterize);
-
     }
 
     
