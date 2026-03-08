@@ -82,6 +82,10 @@ public class RobotContainer {
             AutoAimConstants.useIKSolverKey,
             AutoAimConstants.defaultUseIKSolver
         );
+        SmartDashboard.putBoolean(
+            AutoAimConstants.useIKSolverKey,
+            AutoAimConstants.defaultUseIKSolver
+        );
 
         poseEstimator = new PoseEstimatorSubsystem(drivetrain);
 

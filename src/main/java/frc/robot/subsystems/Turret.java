@@ -635,23 +635,33 @@ public class Turret extends SubsystemBase {
             double errorDegrees = Math.atan2(yError, xError);
                         
             aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
-            if (forceTarget) {
-                boolean useIK = SmartDashboard.getBoolean(
-                    AutoAimConstants.useIKSolverKey,
-                    AutoAimConstants.defaultUseIKSolver
-                );
-                if (useIK) {
-                    IkSolution solution = solveIK(distance);
-                    if (solution != null) {
-                        hoodPose.Position = hoodDegreesToRotations(solution.hoodDegrees);
-                        double compensated = applyChassisVelocityComp(solution.motorRps);
-                        velocity = applyShooterControl(compensated);
-                    } else {
-                        hoodWheelsZero();
-                    }
+            IkSolution ikSolution = solveIK(distance);
+            double ikCompensatedMotorRps = Double.NaN;
+            if (ikSolution != null) {
+                ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps);
+                SmartDashboard.putBoolean("Turret/IK/HasSolution", true);
+                SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", ikSolution.hoodDegrees);
+                SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", ikSolution.motorRps);
+                SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", ikCompensatedMotorRps);
+            } else {
+                SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
+                SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
+                SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
+                SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
+            }
+            boolean useIK = SmartDashboard.getBoolean(
+                AutoAimConstants.useIKSolverKey,
+                AutoAimConstants.defaultUseIKSolver
+            );
+            if (shoot && useIK) {
+                if (ikSolution != null) {
+                    hoodPose.Position = hoodDegreesToRotations(ikSolution.hoodDegrees);
+                    velocity = applyShooterControl(ikCompensatedMotorRps);
                 } else {
-                    velocity = aimOnFly(distance);
+                    hoodWheelsZero();
                 }
+            } else if (forceTarget) {
+                velocity = aimOnFly(distance);
             } else {
                 SmartDashboard.putNumber("Distance To Goal", Math.hypot(yError, xError));
                 velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
@@ -659,6 +669,10 @@ public class Turret extends SubsystemBase {
         } else {
             hoodWheelsZero();
             SmartDashboard.putNumber("Turret/DistanceToTarget", 0.0);
+            SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
+            SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
+            SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
+            SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
         }
 
         // spinMotor.setControl(spinPose);
