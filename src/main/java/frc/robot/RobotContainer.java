@@ -65,7 +65,7 @@ public class RobotContainer {
     private final PoseEstimatorSubsystem poseEstimator;
     // private final Turret turret;
     private final Indexer indexer;
-    private final Intake intake = new Intake();
+    private final Intake intake;
     private final SimFuelSubsystem fuelSim;
     private final SimFuelIKSubsystem fuelSimIK;
     private final RealFuelSubsystem fuelReal;
@@ -95,6 +95,7 @@ public class RobotContainer {
         // HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
         indexer = new Indexer();
+        intake = new Intake();
         fuelSim = RobotBase.isSimulation()
             ? new SimFuelSubsystem(
                 () -> drivetrain.getState().Pose,
