@@ -57,15 +57,14 @@ public class RobotContainer {
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     private final Telemetry logger = new Telemetry(maxSpeed);
-    private final CommandXboxController joystick1 = new CommandXboxController(0);
+    private final CommandXboxController joystick = new CommandXboxController(0);
     private final CommandXboxController joystick2 = new CommandXboxController(1);
     private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     private SendableChooser<Command> autoChooser;
     private final PoseEstimatorSubsystem poseEstimator;
     private final Turret turret;
-    private Supplier<Boolean> turretOff = () -> true;
     private final Indexer indexer;
-    private final Intake intake = new Intake();
+    private final Intake intake;
     private final SimFuelSubsystem fuelSim;
     private final SimFuelIKSubsystem fuelSimIK;
     private final RealFuelSubsystem fuelReal;
@@ -82,6 +81,10 @@ public class RobotContainer {
             AutoAimConstants.useIKSolverKey,
             AutoAimConstants.defaultUseIKSolver
         );
+        SmartDashboard.putBoolean(
+            AutoAimConstants.useIKSolverKey,
+            AutoAimConstants.defaultUseIKSolver
+        );
 
         poseEstimator = new PoseEstimatorSubsystem(drivetrain);
 
@@ -89,12 +92,14 @@ public class RobotContainer {
             () -> drivetrain.getState().Pose,
             () -> ChassisSpeeds.fromRobotRelativeSpeeds(
                 drivetrain.getState().Speeds,
-                drivetrain.getState().Pose.getRotation()),
-            turretOff
+                drivetrain.getState().Pose.getRotation()
+            ),
+            () -> false
         );
         HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
         indexer = new Indexer();
+        intake = new Intake();
         fuelSim = RobotBase.isSimulation()
             ? new SimFuelSubsystem(
                 () -> drivetrain.getState().Pose,
@@ -119,9 +124,9 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        joystick1.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        joystick1.b().onTrue(new InstantCommand(() -> {
+        joystick.b().onTrue(new InstantCommand(() -> {
             boolean useIK = SmartDashboard.getBoolean(
                 AutoAimConstants.useIKSolverKey,
                 AutoAimConstants.defaultUseIKSolver
@@ -129,22 +134,32 @@ public class RobotContainer {
             SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
         }));
 
-        joystick1.leftBumper()
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
+        joystick.leftBumper()
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 0.6))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
-        joystick1.rightBumper().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
+
+        joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake)));
-        joystick1.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
-        joystick1.rightTrigger().onTrue(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
+
+        joystick.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
+
+        joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
-        joystick1.a()
+
+        joystick.a()
             .onTrue(new InstantCommand(() -> startTargeting(true)))
             .onFalse(new InstantCommand(() -> stopTargeting()));
 
-        joystick1.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
-        joystick1.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
-        joystick1.povDown().onTrue(new InstantCommand(() -> target = 0));
-        joystick1.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
+        joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
+        joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
+        joystick.povDown().onTrue(new InstantCommand(() -> target = 0));
+        joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
+
+        joystick2.x().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
+            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         joystick2.x().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
@@ -242,8 +257,8 @@ public class RobotContainer {
     private void configureDefaultCommands() {
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick1.getRightY() * maxSpeed)
-                    .withVelocityY(-joystick1.getRightX() * maxSpeed)
+                drive.withVelocityX(-joystick.getRightY() * maxSpeed)
+                    .withVelocityY(-joystick.getRightX() * maxSpeed)
                     .withRotationalRate(calcAutoTurn())
             )
         );
@@ -264,8 +279,8 @@ public class RobotContainer {
     }
 
     private double calcAutoTurn() {
-        if (Math.abs(joystick1.getLeftX()) > 0.01) {
-            target -= joystick1.getLeftX() * Math.toRadians(5);
+        if (Math.abs(joystick.getLeftX()) > 0.01) {
+            target -= joystick.getLeftX() * Math.toRadians(5);
         }
 
         double output = gyroController.calculate(

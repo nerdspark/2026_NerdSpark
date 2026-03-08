@@ -5,6 +5,7 @@ import static frc.robot.util.TurretUtil.*;
 
 import java.util.function.Supplier;
 
+
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
@@ -234,6 +235,7 @@ public class Turret extends SubsystemBase {
 
         hoodMotor1.setPosition(0);
         hoodMotor2.setPosition(0);
+
     }
 
     // private final SysIdRoutine spin = new SysIdRoutine(
@@ -289,7 +291,7 @@ public class Turret extends SubsystemBase {
     }
 
     /**
-     * Calculates the dynamic X threshold line for a single state (shoot or pass),
+     * Calculates the dynamic X threshold line for a signal state (shoot or pass),
      * taking into account velocity and direction.
      *
      * @param startingLine      Original X coordinate of the line
@@ -299,22 +301,32 @@ public class Turret extends SubsystemBase {
      * @param approachDirection The sign of the robot velo going toward the line
      * @return X value of dynamic trigger line
      */
-    private double calcTriggerLine(double startingLine, double robotX, double robotVeloX, double safetyMargin, 
-        int approachDirection) {
-        // Closing velocity toward line
-        double closingVelocity = robotVeloX * approachDirection;
+    private double calcTriggerLine(double startingLine, double robotX, double robotVeloX, double safetyMargin, boolean goingLeft) {
+        if (goingLeft) {
+            // Only extend the line if moving toward it
+            if (robotVeloX <= 0.01) {
+                // Moving away or stopped, use original line
+                return startingLine - safetyMargin;
+            }
 
-        // Only extend the line if moving toward it
-        if (closingVelocity <= 0) {
-            // Moving away or stopped, use original line
-            return startingLine + safetyMargin;
+            // Distance traveled while retracting
+            double preTriggerDistance = (-robotVeloX * TurretConstants.hoodRetractTime) - safetyMargin;
+
+            // Move the line backward along approach direction
+            return startingLine + preTriggerDistance;
+        } else {
+            // Only extend the line if moving toward it
+            if (-robotVeloX <= 0.01) {
+                // Moving away or stopped, use original line
+                return startingLine + safetyMargin;
+            }
+
+            // Distance traveled while retracting
+            double preTriggerDistance = (robotVeloX * TurretConstants.hoodRetractTime) - safetyMargin;
+
+            // Move the line backward along approach direction
+            return startingLine - preTriggerDistance;
         }
-
-        // Distance traveled while retracting
-        double preTriggerDistance = (closingVelocity * TurretConstants.hoodRetractTime) + safetyMargin;
-
-        // Move the line backward along approach direction
-        return startingLine - (preTriggerDistance * approachDirection);
     }
 
     /** 
@@ -516,11 +528,12 @@ public class Turret extends SubsystemBase {
     public void periodic() {
         ChassisSpeeds speeds = speed.get();
         Pose2d currPose = pose.get();
+        ChassisSpeeds robotSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, currPose.getRotation());
         m_field.setRobotPose(currPose);
         Pose2d delayPose = currPose.exp(new Twist2d( // Account for phase delay
-            speeds.vxMetersPerSecond * filteredTurretDelaySec, 
-            speeds.vyMetersPerSecond * filteredTurretDelaySec,
-            speeds.omegaRadiansPerSecond * filteredTurretDelaySec
+            robotSpeeds.vxMetersPerSecond * filteredTurretDelaySec, 
+            robotSpeeds.vyMetersPerSecond * filteredTurretDelaySec,
+            robotSpeeds.omegaRadiansPerSecond * filteredTurretDelaySec
         ));
         SmartDashboard.putNumber("Phase Delay", filteredTurretDelaySec);
         m_field.getObject("Delay Pose").setPose(delayPose);
@@ -533,20 +546,20 @@ public class Turret extends SubsystemBase {
             isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
             turretPose.getX(), 
             speeds.vxMetersPerSecond, 
-            Units.inchesToMeters(0.5), 
-            isBlue ? 1 : -1
+            Units.inchesToMeters(20), 
+            isBlue ? true : false
         );
         double passLine = calcTriggerLine(
             isBlue ? FieldConstants.LinesVertical.bluePassLine : FieldConstants.LinesVertical.redPassLine, 
             turretPose.getX(), 
             speeds.vxMetersPerSecond, 
-            Units.inchesToMeters(0.5), 
-            isBlue ? -1 : 1
+            Units.inchesToMeters(20), 
+            isBlue ? false : true
         );
 
-        boolean shoot = isBlue ? turretPose.getX() <= shootLine : turretPose.getX() >= shootLine;
+        boolean shoot = isBlue ? turretPose.getX() < shootLine : turretPose.getX() > shootLine;
         SmartDashboard.putBoolean("Shoot", shoot);
-        boolean pass = isBlue ? turretPose.getX() >= passLine : turretPose.getX() <= passLine; 
+        boolean pass = isBlue ? turretPose.getX() > passLine : turretPose.getX() < passLine; 
         SmartDashboard.putBoolean("Pass", pass);
 
         if (shoot || pass) {
@@ -558,7 +571,6 @@ public class Turret extends SubsystemBase {
                 turretTargetConstants.enableKey,
                 turretTargetConstants.defaultEnable
             );
-            forceTarget = false;
 
             Translation2d goalPose;
             Translation2d passPose;
@@ -593,14 +605,15 @@ public class Turret extends SubsystemBase {
 
                     passPose = new Translation2d(targetX, targetY);
                 } else {
-                    passPose = closerPoint(turretPose, FieldConstants.LeftBump.oppFarLeftCorner, FieldConstants.RightBump.oppFarLeftCorner) 
-                        ? FieldConstants.LeftBump.oppFarLeftCorner : FieldConstants.RightBump.oppFarLeftCorner;
+                    passPose = closerPoint(turretPose, FieldConstants.LeftBump.oppFarLeftCorner, FieldConstants.RightBump.oppNearLeftCorner) 
+                        ? FieldConstants.LeftBump.oppFarLeftCorner : FieldConstants.RightBump.oppNearLeftCorner;
                 }
             }
             
             Translation2d targetPose = shoot ? goalPose : passPose;
             m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
             double distance = turretPose.getTranslation().getDistance(targetPose);
+            SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
 
             tof = TurretConstants.map.get(distance).tof; // Lookup TOF from table
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
@@ -622,33 +635,55 @@ public class Turret extends SubsystemBase {
             double errorDegrees = Math.atan2(yError, xError);
                         
             aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
-            if (forceTarget) {
-                boolean useIK = SmartDashboard.getBoolean(
-                    AutoAimConstants.useIKSolverKey,
-                    AutoAimConstants.defaultUseIKSolver
-                );
-                if (useIK) {
-                    IkSolution solution = solveIK(distance);
-                    if (solution != null) {
-                        hoodPose.Position = hoodDegreesToRotations(solution.hoodDegrees);
-                        double compensated = applyChassisVelocityComp(solution.motorRps);
-                        velocity = applyShooterControl(compensated);
-                    } else {
-                        hoodWheelsZero();
-                    }
-                } else {
-                    velocity = aimOnFly(distance);
-                }
+            IkSolution ikSolution = solveIK(distance);
+            double ikCompensatedMotorRps = Double.NaN;
+            if (ikSolution != null) {
+                ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps);
+                SmartDashboard.putBoolean("Turret/IK/HasSolution", true);
+                SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", ikSolution.hoodDegrees);
+                SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", ikSolution.motorRps);
+                SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", ikCompensatedMotorRps);
             } else {
+                SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
+                SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
+                SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
+                SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
+                SmartDashboard.putNumber("Turret/IK/test", Double.NaN);
+            }
+            boolean useIK = SmartDashboard.getBoolean(
+                AutoAimConstants.useIKSolverKey,
+                AutoAimConstants.defaultUseIKSolver
+            );
+            if (shoot && useIK) {
+                if (ikSolution != null) {
+                    hoodPose.Position = hoodDegreesToRotations(ikSolution.hoodDegrees);
+                    velocity = applyShooterControl(ikCompensatedMotorRps);
+                } else {
+                    hoodWheelsZero();
+                }
+            } else if (forceTarget) {
+                velocity = aimOnFly(distance);
+            } else {
+                SmartDashboard.putNumber("Distance To Goal", Math.hypot(yError, xError));
                 velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
             }
         } else {
             hoodWheelsZero();
+            SmartDashboard.putNumber("Turret/DistanceToTarget", 0.0);
+            SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
+            SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
+            SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
+            SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
         }
 
         // spinMotor.setControl(spinPose);
+        spinMotor.set(0);
         hoodMotor1.setControl(hoodPose);
-        
+        SmartDashboard.putNumber("Hood 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Hood 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Turret/HoodCurrentDeg", (hoodMotor1.getPosition().getValueAsDouble() / TurretConstants.hoodRatio) * 360);
+        SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
+        applyShooterControl(velocity);
         switch (mode) {
             case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
             case TORQUE_CURRENT_BANG_BANG -> shootMotor1.setControl(shootTorqueBang.withVelocity(velocity));

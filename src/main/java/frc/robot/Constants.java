@@ -105,7 +105,7 @@ public final class Constants {
         public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(4.699), 0);
 
         public static final double delay = 0.0011;
-        public static final double maxDelay = 0.25;
+        public static final double maxDelay = 0.3;
         public static final double riseTime = 0.04;
         public static final double fallTime = 0.18;
         public static final double hoodRetractTime = 0.1; // TODO In Seconds
@@ -122,9 +122,20 @@ public final class Constants {
 
         static {
             // Passing
-            map.put(Double.MAX_VALUE, new ShooterParams(0, 0, 0));
+            map.put(Double.MAX_VALUE, new ShooterParams(7.3, 40, 0));
 
-            map.put(0.0, new ShooterParams(0, 0, 0));
+            map.put(5.386, new ShooterParams(0.23, 46, 2));
+            map.put(5.136, new ShooterParams(0.14, 44, 1));
+            map.put(4.491, new ShooterParams(0.12, 41, 1));
+            map.put(4.409, new ShooterParams(0.08, 41, 1.25));
+            map.put(4.515, new ShooterParams(0.05, 38.5, 1));
+            map.put(3.710, new ShooterParams(0.04, 36, 1));
+            map.put(3.828, new ShooterParams(0.03, 36.5, 1));
+            map.put(4.128, new ShooterParams(0.04, 38, 1));
+            map.put(4.524, new ShooterParams(0.07, 39.5, 1.4));
+            map.put(4.481, new ShooterParams(0.1, 39.8, 1.5));
+            map.put(4.866, new ShooterParams(0.22, 42.5, 1.75));
+            map.put(4.444, new ShooterParams(0.22, 41, 1.5));
 
             climbMap.put(0.0, new ShooterParams(0, 0, 0));
         }
@@ -165,10 +176,10 @@ public final class Constants {
 
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
-        public static final double hoodKp1 = 8.6;
-        public static final double hoodKp2 = 8.6;
-        public static final double hoodKi1 = 0.2;
-        public static final double hoodKi2 = 0.2;
+        public static final double hoodKp1 = 8.78;
+        public static final double hoodKp2 = 8.74;
+        public static final double hoodKi1 = 0.6;
+        public static final double hoodKi2 = 0.45;
         public static final double hoodKd1 = 0.0;
         public static final double hoodKd2 = 0.0;
         public static final double hoodKs1 = 0;
@@ -178,8 +189,8 @@ public final class Constants {
         public static final double hoodKa1 = 0;
         public static final double hoodKa2 = 0;
         public static final double hoodStatorCurrentLimit = 40.0;
-        public static final double hoodVelocity = 75;
-        public static final double hoodAccel = 150;
+        public static final double hoodVelocity = 175;
+        public static final double hoodAccel = 400;
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;
