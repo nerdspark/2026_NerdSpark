@@ -244,9 +244,9 @@ public final class Constants {
         public static final double motionMagicCruiseVelocityFast = 50.0;
         public static final double motionMagicCruiseVelocitySlow = 15.0;
         public static final double motionMagicJerk = 0.0;
-        public static final double deployPos = 2;
-        public static final double homePos = 14;
-        public static final double shakePos = 8;
+        public static final double deployPos = 13.0;
+        public static final double homePos = 0.0;
+        public static final double shakePos = 5.0;
         public static final double rollerPower = 1.0;
     }
 }
