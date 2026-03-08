@@ -52,10 +52,6 @@
     {
       "waypointRelativePos": 0.5,
       "rotationDegrees": -90.0
-    },
-    {
-      "waypointRelativePos": 1.91,
-      "rotationDegrees": -90.0
     }
   ],
   "constraintZones": [
@@ -83,6 +79,17 @@
         "type": "named",
         "data": {
           "name": "intake_deploy"
+        }
+      }
+    },
+    {
+      "name": "indexer_on",
+      "waypointRelativePos": 0.0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "indexer_on"
         }
       }
     }
