@@ -648,6 +648,7 @@ public class Turret extends SubsystemBase {
                 SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
                 SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
                 SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
+                SmartDashboard.putNumber("Turret/IK/test", Double.NaN);
             }
             boolean useIK = SmartDashboard.getBoolean(
                 AutoAimConstants.useIKSolverKey,
