@@ -5,7 +5,6 @@ import static frc.robot.util.TurretUtil.*;
 
 import java.util.function.Supplier;
 
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -86,8 +85,6 @@ public class Turret extends SubsystemBase {
     private double velocity = 0;
     public double tof = 0;
 
-    private final LoggedNetworkNumber hood = new LoggedNetworkNumber("/Tuning/Hood Pose", 0);
-    private final LoggedNetworkNumber shot = new LoggedNetworkNumber("/Tuning/Shooter Speed", 0);
     private final Field2d m_field = new Field2d();
     private final ShooterOffsetMap offsetMap = new ShooterOffsetMap();
 
@@ -238,6 +235,7 @@ public class Turret extends SubsystemBase {
 
         hoodMotor1.setPosition(0);
         hoodMotor2.setPosition(0);
+
     }
 
     // private final SysIdRoutine spin = new SysIdRoutine(
@@ -573,7 +571,6 @@ public class Turret extends SubsystemBase {
                 turretTargetConstants.enableKey,
                 turretTargetConstants.defaultEnable
             );
-            forceTarget = false;
 
             Translation2d goalPose;
             Translation2d passPose;
@@ -616,6 +613,7 @@ public class Turret extends SubsystemBase {
             Translation2d targetPose = shoot ? goalPose : passPose;
             m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
             double distance = turretPose.getTranslation().getDistance(targetPose);
+            SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
 
             tof = TurretConstants.map.get(distance).tof; // Lookup TOF from table
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
@@ -660,15 +658,15 @@ public class Turret extends SubsystemBase {
             }
         } else {
             hoodWheelsZero();
+            SmartDashboard.putNumber("Turret/DistanceToTarget", 0.0);
         }
 
         // spinMotor.setControl(spinPose);
-        hoodPose.Position = hood.get();
+        spinMotor.set(0);
         hoodMotor1.setControl(hoodPose);
         SmartDashboard.putNumber("Hood 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Hood 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
         
-        velocity = shot.get();
         applyShooterControl(velocity);
         switch (mode) {
             case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
