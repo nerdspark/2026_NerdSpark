@@ -162,7 +162,7 @@ public class RobotContainer {
         joystick2.x().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
-        joystick.a().onTrue(new InstantCommand(() -> override = true));
+        joystick2.a().onTrue(new InstantCommand(() -> override = true));
         joystick2.b().onTrue(new InstantCommand(() -> override = false));
 
         // Start-of-shift warning

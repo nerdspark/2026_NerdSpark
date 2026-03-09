@@ -5,6 +5,7 @@ import static frc.robot.util.TurretUtil.*;
 
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -65,6 +66,7 @@ public class Turret extends SubsystemBase {
     private MotionMagicVoltage spinPose = new MotionMagicVoltage(0);
 
     // private VoltageOut sysId = new VoltageOut(0);
+    private final LoggedNetworkNumber hood = new LoggedNetworkNumber("Tuning/Hood Position", 0);
 
     private Supplier<Pose2d> pose;
     private Supplier<ChassisSpeeds> speed;
@@ -678,11 +680,12 @@ public class Turret extends SubsystemBase {
         }
 
         // spinMotor.setControl(spinPose);
-        hoodMotor1.setControl(hoodPose);
+        hoodMotor1.setControl(hoodPose.withPosition(hood.get()));
         SmartDashboard.putNumber("Hood 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Hood 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Turret/HoodCurrentDeg", (hoodMotor1.getPosition().getValueAsDouble() / TurretConstants.hoodRatio) * 360);
         SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
+        applyShooterControl(0);
         switch (mode) {
             case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
             case TORQUE_CURRENT_BANG_BANG -> shootMotor1.setControl(shootTorqueBang.withVelocity(velocity));

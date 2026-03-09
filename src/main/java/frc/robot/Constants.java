@@ -110,11 +110,6 @@ public final class Constants {
         public static final double fallTime = 0.18;
         public static final double hoodRetractTime = 0.1; // TODO In Seconds
 
-        public static InterpolatingTreeMap<Double, ShooterParams> climbMap = new InterpolatingTreeMap<>(
-            InverseInterpolator.forDouble(),
-            (start, end, t) -> start.interpolate(end, t)
-        );
-
         public static InterpolatingTreeMap<Double, ShooterParams> map = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
             (start, end, t) -> start.interpolate(end, t)
@@ -136,8 +131,6 @@ public final class Constants {
             map.put(4.481, new ShooterParams(0.1, 39.8, 1.5));
             map.put(4.866, new ShooterParams(0.22, 42.5, 1.75));
             map.put(4.444, new ShooterParams(0.22, 41, 1.5));
-
-            climbMap.put(0.0, new ShooterParams(0, 0, 0));
         }
     }
 
@@ -182,12 +175,12 @@ public final class Constants {
         public static final double hoodKi2 = 0.45;
         public static final double hoodKd1 = 0.0;
         public static final double hoodKd2 = 0.0;
-        public static final double hoodKs1 = 0;
-        public static final double hoodKs2 = 0;
-        public static final double hoodKv1 = 0;
-        public static final double hoodKv2 = 0;
-        public static final double hoodKa1 = 0;
-        public static final double hoodKa2 = 0;
+        public static final double hoodKs1 = 0.0;
+        public static final double hoodKs2 = 0.0;
+        public static final double hoodKv1 = 0.0;
+        public static final double hoodKv2 = 0.0;
+        public static final double hoodKa1 = 0.0;
+        public static final double hoodKa2 = 0.0;
         public static final double hoodStatorCurrentLimit = 40.0;
         public static final double hoodVelocity = 175;
         public static final double hoodAccel = 400;
