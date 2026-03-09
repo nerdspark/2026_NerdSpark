@@ -37,10 +37,12 @@ import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.turretTargetConstants;
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
+import frc.robot.commands.UpdateLED;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
 import frc.robot.subsystems.RealFuelSubsystem;
 import frc.robot.subsystems.SimFuelIKSubsystem;
@@ -70,6 +72,7 @@ public class RobotContainer {
     private final SimFuelSubsystem fuelSim;
     private final SimFuelIKSubsystem fuelSimIK;
     private final RealFuelSubsystem fuelReal;
+    public final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
@@ -160,6 +163,19 @@ public class RobotContainer {
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
         joystick2.a().onTrue(new InstantCommand(() -> override = true));
         joystick2.b().onTrue(new InstantCommand(() -> override = false));
+
+        //TODO CALL THESE COMMANDS AT DIFFERENT TIMES
+        joystick.a().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.readyToShoot)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.b().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.shooting)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.x().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.intaking)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.y().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.aiming)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.leftBumper().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.noAprilTags)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.rightBumper().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.climbReady)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.povUp().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.idle)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.povDown().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.intakeDeployed)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.povLeft().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.safe)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        joystick.povRight().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.startup)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        
 
         // Start-of-shift warning
         // for (int i = 0; i < 5; i++) {
