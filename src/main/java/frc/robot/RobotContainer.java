@@ -64,6 +64,7 @@ public class RobotContainer {
 
     private final PoseEstimatorSubsystem poseEstimator;
     private final Turret turret;
+    private boolean override = false;
     private final Indexer indexer;
     private final Intake intake;
     private final SimFuelSubsystem fuelSim;
@@ -95,7 +96,7 @@ public class RobotContainer {
                 drivetrain.getState().Speeds,
                 drivetrain.getState().Pose.getRotation()
             ),
-            () -> false
+            () -> override
         );
         HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
@@ -161,6 +162,8 @@ public class RobotContainer {
         joystick2.x().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
+        joystick.a().onTrue(new InstantCommand(() -> override = true));
+        joystick2.b().onTrue(new InstantCommand(() -> override = false));
 
         // Start-of-shift warning
         // for (int i = 0; i < 5; i++) {
@@ -244,6 +247,8 @@ public class RobotContainer {
         NamedCommands.registerCommand("shoot_map", new InstantCommand(() -> startTargeting(false)));
         NamedCommands.registerCommand("shoot_ik", new InstantCommand(() -> startTargeting(true)));
         NamedCommands.registerCommand("shoot_stop", new InstantCommand(this::stopTargeting));
+        NamedCommands.registerCommand("hood_manual", new InstantCommand(() -> override = true));
+        NamedCommands.registerCommand("hood_automatic", new InstantCommand(() -> override = false));
     }
 
     private void configureDefaultCommands() {
