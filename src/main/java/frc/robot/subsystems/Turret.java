@@ -68,7 +68,7 @@ public class Turret extends SubsystemBase {
 
     private Supplier<Pose2d> pose;
     private Supplier<ChassisSpeeds> speed;
-    private Supplier<Boolean> climb;
+    private Supplier<Boolean> manualOverride;
 
     private boolean shortPathCrossesWrap;
     private boolean pathLatched = false;
@@ -88,10 +88,10 @@ public class Turret extends SubsystemBase {
     private final Field2d m_field = new Field2d();
     private final ShooterOffsetMap offsetMap = new ShooterOffsetMap();
 
-    public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> climbing) {
+    public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> manualOverrider) {
         pose = robotPose;
         speed = speeds;
-        climb = climbing;
+        manualOverride = manualOverrider;
 
         canivore = new CANBus(Constants.CANbus);
         
@@ -337,12 +337,7 @@ public class Turret extends SubsystemBase {
      * @return the velocity to shoot at
     */
     private double aimOnFly(double distance) {
-        ShooterParams map;
-        if (climb.get()) {
-            map = TurretConstants.climbMap.get(distance);
-        } else {
-            map = TurretConstants.map.get(distance);
-        }
+        ShooterParams map = TurretConstants.map.get(distance);
 
         hoodPose.Position = map.hoodPose;
 
@@ -613,7 +608,6 @@ public class Turret extends SubsystemBase {
             Translation2d targetPose = shoot ? goalPose : passPose;
             m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
             double distance = turretPose.getTranslation().getDistance(targetPose);
-            SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
 
             tof = TurretConstants.map.get(distance).tof; // Lookup TOF from table
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
@@ -633,40 +627,47 @@ public class Turret extends SubsystemBase {
             double xError = targetPose.getX() - lookaheadTurretPos.getX();
             double yError = targetPose.getY() - lookaheadTurretPos.getY();
             double errorDegrees = Math.atan2(yError, xError);
+            distance = Math.hypot(yError, xError);
+            SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
                         
             aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
-            IkSolution ikSolution = solveIK(distance);
-            double ikCompensatedMotorRps = Double.NaN;
-            if (ikSolution != null) {
-                ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps);
-                SmartDashboard.putBoolean("Turret/IK/HasSolution", true);
-                SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", ikSolution.hoodDegrees);
-                SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", ikSolution.motorRps);
-                SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", ikCompensatedMotorRps);
-            } else {
-                SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
-                SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
-                SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
-                SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
-                SmartDashboard.putNumber("Turret/IK/test", Double.NaN);
-            }
-            boolean useIK = SmartDashboard.getBoolean(
-                AutoAimConstants.useIKSolverKey,
-                AutoAimConstants.defaultUseIKSolver
-            );
-            if (shoot && useIK) {
+            if (forceTarget) {
+                IkSolution ikSolution = solveIK(distance);
+                double ikCompensatedMotorRps = Double.NaN;
                 if (ikSolution != null) {
-                    hoodPose.Position = hoodDegreesToRotations(ikSolution.hoodDegrees);
-                    velocity = applyShooterControl(ikCompensatedMotorRps);
+                    ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps);
+                    SmartDashboard.putBoolean("Turret/IK/HasSolution", true);
+                    SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", ikSolution.hoodDegrees);
+                    SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", ikSolution.motorRps);
+                    SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", ikCompensatedMotorRps);
                 } else {
-                    hoodWheelsZero();
+                    SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
+                    SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
+                    SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
+                    SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
+                    SmartDashboard.putNumber("Turret/IK/test", Double.NaN);
                 }
-            } else if (forceTarget) {
-                velocity = aimOnFly(distance);
+                boolean useIK = SmartDashboard.getBoolean(
+                    AutoAimConstants.useIKSolverKey,
+                    AutoAimConstants.defaultUseIKSolver
+                );
+                if (shoot && useIK) {
+                    if (ikSolution != null) {
+                        hoodPose.Position = hoodDegreesToRotations(ikSolution.hoodDegrees);
+                        velocity = applyShooterControl(ikCompensatedMotorRps);
+                    } else {
+                        hoodWheelsZero();
+                    }
+                } else {
+                    velocity = aimOnFly(shoot ? distance : Double.MAX_VALUE);
+                }
             } else {
-                SmartDashboard.putNumber("Distance To Goal", Math.hypot(yError, xError));
-                velocity = aimOnFly(shoot ? Math.hypot(yError, xError) : Double.MAX_VALUE);
+                velocity = aimOnFly(shoot ? distance : Double.MAX_VALUE);
             }
+        } else if (manualOverride.get()) {
+            hoodPose.Position = 0;
+            velocity = 0;
+            mode = ShootMode.COAST;
         } else {
             hoodWheelsZero();
             SmartDashboard.putNumber("Turret/DistanceToTarget", 0.0);
@@ -677,17 +678,11 @@ public class Turret extends SubsystemBase {
         }
 
         // spinMotor.setControl(spinPose);
-        spinMotor.set(0);
         hoodMotor1.setControl(hoodPose);
         SmartDashboard.putNumber("Hood 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Hood 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber(
-            "Turret/HoodCurrentDeg",
-            (hoodMotor1.getPosition().getValueAsDouble() / TurretConstants.hoodRatio) * 360.0
-        );
+        SmartDashboard.putNumber("Turret/HoodCurrentDeg", (hoodMotor1.getPosition().getValueAsDouble() / TurretConstants.hoodRatio) * 360);
         SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
-        
-        applyShooterControl(velocity);
         switch (mode) {
             case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
             case TORQUE_CURRENT_BANG_BANG -> shootMotor1.setControl(shootTorqueBang.withVelocity(velocity));

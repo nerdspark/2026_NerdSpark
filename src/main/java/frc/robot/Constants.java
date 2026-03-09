@@ -236,7 +236,7 @@ public final class Constants {
 
     public static final class AutoAimConstants {
         public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
-        public static final boolean defaultUseIKSolver = true;
+        public static final boolean defaultUseIKSolver = false;
     }
 
     public static final class IntakeConstants {
