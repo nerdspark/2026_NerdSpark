@@ -149,10 +149,6 @@ public class RobotContainer {
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
 
-        joystick.a()
-            .onTrue(new InstantCommand(() -> startTargeting(true)))
-            .onFalse(new InstantCommand(() -> stopTargeting()));
-
         joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
         joystick.povDown().onTrue(new InstantCommand(() -> target = 0));
@@ -198,7 +194,26 @@ public class RobotContainer {
         // Reset hub shift timer when enabling
         RobotModeTriggers.teleop().onTrue(Commands.runOnce(HubShiftUtil::initialize));
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(HubShiftUtil::initialize));
+
+        // Auto-enable targeting in enabled modes; no button hold needed for spin-up.
+        RobotModeTriggers.teleop().onTrue(Commands.runOnce(() ->
+            enableTargeting(
+                SmartDashboard.getBoolean(
+                    AutoAimConstants.useIKSolverKey,
+                    AutoAimConstants.defaultUseIKSolver
+                )
+            )
+        ));
+        RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() ->
+            enableTargeting(
+                SmartDashboard.getBoolean(
+                    AutoAimConstants.useIKSolverKey,
+                    AutoAimConstants.defaultUseIKSolver
+                )
+            )
+        ));
         RobotModeTriggers.disabled().onTrue(Commands.runOnce(HubShiftUtil::initialize).ignoringDisable(true));
+        RobotModeTriggers.disabled().onTrue(Commands.runOnce(this::stopTargeting).ignoringDisable(true));
     }
 
     public void updateDashboard() {
@@ -284,7 +299,7 @@ public class RobotContainer {
         return FieldConstants.defaultAprilTagType;
     }
 
-    private void startTargeting(boolean useIK) {
+    private void enableTargeting(boolean useIK) {
         SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, useIK);
         Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
         Translation2d target = alliance == Alliance.Red
@@ -297,6 +312,20 @@ public class RobotContainer {
             fuelReal.enableTargeting(true);
             fuelReal.setTarget(target);
         }
+    }
+
+    private void startTargeting(boolean useIK) {
+        enableTargeting(useIK);
+        Translation2d target = new Translation2d(
+            SmartDashboard.getNumber(
+                turretTargetConstants.targetXKey,
+                turretTargetConstants.defaultTargetX
+            ),
+            SmartDashboard.getNumber(
+                turretTargetConstants.targetYKey,
+                turretTargetConstants.defaultTargetY
+            )
+        );
         if (fuelSimIK != null && useIK) {
             Translation3d launchPosition = fuelSimIK.getRobotLaunchPosition();
             Translation3d baseVelocity = fuelSimIK.computeLaunchVelocityToTarget(target);
