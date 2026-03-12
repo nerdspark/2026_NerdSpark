@@ -99,6 +99,8 @@ public final class Constants {
         public static final double targetHeightMeters = Units.inchesToMeters(72);
         public static final double hoodMinDegrees = 17.0;
         public static final double hoodMaxDegrees = 65.0;
+        public static final double ikEntryAngleTargetDeg = 25.0;
+        public static final double ikEntryAngleToleranceDeg = 5.0;
         public static final double passTargetRadiusMeters = Units.inchesToMeters(5.91) / 2.0;
         public static final int passTargetCirclePoints = 24;
 
