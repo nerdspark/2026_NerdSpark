@@ -254,10 +254,10 @@ public final class Constants {
         public static final double deploySupplyCurrentLimit = 30.0;
         public static final double motionMagicCruiseVelocityFast = 50.0;
         public static final double motionMagicCruiseVelocitySlow = 15.0;
-        public static final double motionMagicJerk = 0.0;
-        public static final double deployPos = 13.0;
+        public static final double motionMagicAcceleration = 150.0;
+        public static final double motionMagicJerk = 0;
         public static final double homePos = 0.0;
-        public static final double shakePos = 5.0;
-        public static final double rollerPower = 1.0;
+        public static final double deployPos = 13.0;
+        public static final double shakePos = 5;
     }
 }
