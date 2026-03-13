@@ -677,9 +677,13 @@ public class Turret extends SubsystemBase {
 
             if (useIK) {
                 IkSolution solution = solveIK(distance);
-                tof = tofFromIK(solution.motorRps, solution.hoodDegrees);
+                if (solution != null) {
+                    tof = tofFromIK(solution.motorRps, solution.hoodDegrees, distance);
+                } else {
+                    tof = tofFromMap(TurretConstants.map.get(distance), distance);
+                }
             } else {
-                tof = tofFromMap(TurretConstants.map.get(distance));
+                tof = tofFromMap(TurretConstants.map.get(distance), distance);
             }
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
 
@@ -693,9 +697,13 @@ public class Turret extends SubsystemBase {
                 distance = lookaheadTurretPos.getDistance(targetPose); // Recompute distance
                 if (useIK) { // Recompute TOF for new distance
                     IkSolution solution = solveIK(distance);
-                    tof = tofFromIK(solution.motorRps, solution.hoodDegrees);
+                    if (solution != null) {
+                        tof = tofFromIK(solution.motorRps, solution.hoodDegrees, distance);
+                    } else {
+                        tof = tofFromMap(TurretConstants.map.get(distance), distance);
+                    }
                 } else {
-                    tof = tofFromMap(TurretConstants.map.get(distance));
+                    tof = tofFromMap(TurretConstants.map.get(distance), distance);
                 }
             }
             m_field.getObject("Look Ahead Pose").setPose(lookaheadTurretPos.getMeasureX(), lookaheadTurretPos.getMeasureY(), new Rotation2d());
