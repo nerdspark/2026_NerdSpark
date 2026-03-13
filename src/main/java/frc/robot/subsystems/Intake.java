@@ -21,33 +21,46 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 
 public class Intake extends SubsystemBase {
     private CANBus canivore;
-    private TalonFX roller1, roller2, intakeMotorDeploy;
+    private TalonFX roller1, roller2, deployMotor;
 
     private final TalonFXSimState intakeSim;
 
     private final MotionMagicVoltage m_mmRequest = new MotionMagicVoltage(0);
-    TalonFXConfiguration intakeDeployMotorConfig = new TalonFXConfiguration();
-
-      private MotionMagicConfigs motionMagicfastConfigs = intakeDeployMotorConfig.MotionMagic;
-      private MotionMagicConfigs motionMagicSlowConfigs = intakeDeployMotorConfig.MotionMagic;
+    private TalonFXConfiguration deployMotorConfig = new TalonFXConfiguration();
+    private TalonFXConfiguration rollerMotorConfig = new TalonFXConfiguration();
 
 
-    
+    private MotionMagicConfigs motionMagicFastConfigs = deployMotorConfig.MotionMagic;
+    private MotionMagicConfigs motionMagicSlowConfigs = deployMotorConfig.MotionMagic;
+
     public Intake() {
         canivore = new CANBus(Constants.CANbus);
-        intakeMotorDeploy = new TalonFX(IntakeConstants.deployIntakeMotorId,  canivore);
-        intakeSim = intakeMotorDeploy.getSimState();
+        deployMotor = new TalonFX(IntakeConstants.deployIntakeMotorId,  canivore);
+        intakeSim = deployMotor.getSimState();
         roller1 = new TalonFX(IntakeConstants.roller1id, canivore);
         roller2 = new TalonFX(IntakeConstants.roller2id,  canivore);
 
-        intakeDeployMotorConfig.CurrentLimits = new CurrentLimitsConfigs()
-        .withStatorCurrentLimit(IntakeConstants.intakeCurrentLimit)
-        .withStatorCurrentLimitEnable(true);
-        intakeDeployMotorConfig.Feedback = new FeedbackConfigs()
-        .withFeedbackRotorOffset(0)
-        .withSensorToMechanismRatio(1);
-        // set slot 0 gains
-        intakeDeployMotorConfig.Slot0 = new Slot0Configs()
+        rollerMotorConfig.MotorOutput = new MotorOutputConfigs()
+            .withNeutralMode(NeutralModeValue.Coast)
+            .withInverted(InvertedValue.CounterClockwise_Positive);
+        rollerMotorConfig.CurrentLimits = new CurrentLimitsConfigs()
+            .withStatorCurrentLimit(IntakeConstants.rollerStatorCurrentLimit)
+            .withStatorCurrentLimitEnable(true)
+            .withSupplyCurrentLimit(IntakeConstants.rollerSupplyCurrentLimit)
+            .withSupplyCurrentLimitEnable(true);
+
+        deployMotorConfig.MotorOutput = new MotorOutputConfigs()
+            .withInverted(InvertedValue.Clockwise_Positive)
+            .withNeutralMode(NeutralModeValue.Brake);
+        deployMotorConfig.CurrentLimits = new CurrentLimitsConfigs()
+            .withStatorCurrentLimit(IntakeConstants.deployStatorCurrentLimit)
+            .withStatorCurrentLimitEnable(true)
+            .withSupplyCurrentLimit(IntakeConstants.deploySupplyCurrentLimit)
+            .withSupplyCurrentLimitEnable(true);
+        deployMotorConfig.Feedback = new FeedbackConfigs()
+            .withFeedbackRotorOffset(0)
+            .withSensorToMechanismRatio(1);
+        deployMotorConfig.Slot0 = new Slot0Configs()
             .withKP(IntakeConstants.kP)
             .withKI(IntakeConstants.kI)
             .withKD(IntakeConstants.kD)
@@ -56,31 +69,19 @@ public class Intake extends SubsystemBase {
             .withKA(IntakeConstants.kA)
             .withKV(IntakeConstants.kV);
 
-        
-
-        motionMagicfastConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocityFast;
-        motionMagicfastConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
-        motionMagicfastConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
-
-
+        motionMagicFastConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocityFast;
+        motionMagicFastConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
+        motionMagicFastConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
 
         motionMagicSlowConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocitySlow;
-        motionMagicSlowConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
-        motionMagicSlowConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
 
-        intakeMotorDeploy
-        .getConfigurator()
-        .apply(intakeDeployMotorConfig.withMotorOutput(new MotorOutputConfigs()
-            .withInverted(InvertedValue.Clockwise_Positive)
-            .withNeutralMode(NeutralModeValue.Brake)));
-
-        intakeMotorDeploy.getConfigurator().apply(intakeDeployMotorConfig);
-
-
+        deployMotor.getConfigurator().apply(deployMotorConfig);
+        roller1.getConfigurator().apply(rollerMotorConfig);
+        roller2.getConfigurator().apply(rollerMotorConfig);
     }
     
     public void setDeployPosition(Supplier<Double> rotations) {
-        intakeMotorDeploy.setControl(m_mmRequest.withPosition(rotations.get().doubleValue()));
+        deployMotor.setControl(m_mmRequest.withPosition(rotations.get().doubleValue()));
     }
     
     public void setRollerPower(double power) {
@@ -89,30 +90,27 @@ public class Intake extends SubsystemBase {
     }
 
     public void useFastConfig() {
-        intakeMotorDeploy.getConfigurator().apply(motionMagicfastConfigs);
+        deployMotor.getConfigurator().apply(motionMagicFastConfigs);
     }
     public void useSlowConfig() {
-        intakeMotorDeploy.getConfigurator().apply(motionMagicSlowConfigs);
+        deployMotor.getConfigurator().apply(motionMagicSlowConfigs);
     }
     public void simulationPeriodic() {
-    // double dt = 0.02;
+        // double dt = 0.02;
+        // Read the applied motor voltage
+        double intakeVoltage = intakeSim.getMotorVoltage();
+        intakeSim.addRotorPosition(intakeVoltage);
+    }
 
-    // Read the applied motor voltage
-    double intakeVoltage = intakeSim.getMotorVoltage();
-
-    intakeSim.addRotorPosition(intakeVoltage);
-  }
     public void stopIntake() {
-            intakeMotorDeploy.stopMotor();
-            roller1.stopMotor();
-            roller2.stopMotor();
-
-
+        deployMotor.stopMotor();
+        roller1.stopMotor();
+        roller2.stopMotor();
     }
 
     public void periodic() {
-        SmartDashboard.putNumber("Intake Position", intakeMotorDeploy.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Intake Current",intakeMotorDeploy.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Intake Position", deployMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Intake Current", deployMotor.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Intake Roller Current", roller1.getStatorCurrent().getValueAsDouble());
     }
 

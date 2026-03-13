@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -24,6 +23,7 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -63,6 +63,7 @@ public class RobotContainer {
     private SendableChooser<Command> autoChooser;
     private final PoseEstimatorSubsystem poseEstimator;
     private final Turret turret;
+    private boolean override = false;
     private final Indexer indexer;
     private final Intake intake;
     private final SimFuelSubsystem fuelSim;
@@ -94,9 +95,9 @@ public class RobotContainer {
                 drivetrain.getState().Speeds,
                 drivetrain.getState().Pose.getRotation()
             ),
-            () -> false
+            () -> override
         );
-        HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
+        // HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
         indexer = new Indexer();
         intake = new Intake();
@@ -134,8 +135,8 @@ public class RobotContainer {
             SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
         }));
 
-        joystick.leftBumper()
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 0.6))
+        joystick.leftBumper().and(() -> !turret.pathLatched)
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
 
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
@@ -147,67 +148,95 @@ public class RobotContainer {
         joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
-
-        joystick.a()
-            .onTrue(new InstantCommand(() -> startTargeting(true)))
-            .onFalse(new InstantCommand(() -> stopTargeting()));
+        
+        joystick.y().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
+            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
         joystick.povDown().onTrue(new InstantCommand(() -> target = 0));
         joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
 
-        joystick2.x().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
+        joystick2.a().onTrue(new InstantCommand(() -> override = true));
+        joystick2.b().onTrue(new InstantCommand(() -> override = false));
+        joystick2.y().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
-        joystick2.x().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
-            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
-            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
-
+        Color allianceColor = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Color.kBlue : Color.kRed;
+        Color oppAllianceColor = allianceColor == Color.kBlue ? Color.kRed : Color.kBlue;
         // Start-of-shift warning
-        // for (int i = 0; i < 5; i++) {
-        //     double start = i * 0.75; // 0.25 on + 0.5 break
-        //     double end = start + 0.25; // rumble duration
-
-        //     Trigger shiftJustStarted = new Trigger(() ->
-        //         HubShiftUtil.getShiftedShiftInfo().active()
-        //         && HubShiftUtil.getShiftedShiftInfo().elapsedTime() > start
-        //         && HubShiftUtil.getShiftedShiftInfo().elapsedTime() < end
-        //     );
-
-        //     shiftJustStarted.and(RobotModeTriggers.teleop())
-        //         .onTrue(
-        //             Commands.runEnd(
-        //                 () -> joystick.setRumble(RumbleType.kRightRumble, 1.0),
-        //                 () -> joystick.setRumble(RumbleType.kBothRumble, 0.0)
-        //             ).withTimeout(0.25)
-        //         );
-        // }
+        for (int i = 1; i <= 5; i++) {
+            double time = i; 
+            Trigger shiftAboutToStart = new Trigger(() -> ((HubShiftUtil.getShiftedShiftInfo().remainingTime() < time) 
+                && !HubShiftUtil.getShiftedShiftInfo().active()));
+            shiftAboutToStart.and(RobotModeTriggers.teleop())
+                .onTrue(
+                    Commands.runEnd(
+                        () -> {
+                            joystick.setRumble(RumbleType.kBothRumble, 1.0);
+                            joystick2.setRumble(RumbleType.kBothRumble, 1.0);
+                            SmartDashboard.putString("Hub Active Alliance Color", allianceColor.toHexString());
+                        },
+                        () -> {
+                            joystick.setRumble(RumbleType.kBothRumble, 0);
+                            joystick2.setRumble(RumbleType.kBothRumble, 0);
+                            SmartDashboard.putString("Hub Active Alliance Color", new Color().toHexString());
+                        }
+                    ).withTimeout(0.25)
+                    .andThen(new InstantCommand(() -> SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString())))
+                );
+        }
 
         // End-of-shift warning
-        // for (int i = 1; i <= 5; i++) {
-        //     double time = i;
-        //     Trigger shiftAboutToEnd = new Trigger(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time));
-        //     shiftAboutToEnd.and(RobotModeTriggers.teleop())
-        //         .onTrue(
-        //             Commands.runEnd(
-        //                 () -> joystick.setRumble(RumbleType.kRightRumble, 1.0),
-        //                 () -> joystick.setRumble(RumbleType.kBothRumble, 0.0)
-        //             ).withTimeout(0.25)
-        //         );
-        // }
+        for (int i = 1; i <= 5; i++) {
+            double time = i;
+            Trigger shiftAboutToEnd = new Trigger(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time));
+            shiftAboutToEnd.and(RobotModeTriggers.teleop())
+                .onTrue(
+                    Commands.runEnd(
+                        () -> {
+                            joystick.setRumble(RumbleType.kBothRumble, 1.0);
+                            joystick2.setRumble(RumbleType.kBothRumble, 1.0);
+                            SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString());
+                        },
+                        () -> {
+                            joystick.setRumble(RumbleType.kBothRumble, 0);
+                            joystick2.setRumble(RumbleType.kBothRumble, 0);
+                            SmartDashboard.putString("Hub Active Alliance Color", new Color().toHexString());
+                        }
+                    ).withTimeout(0.25)
+                    .andThen(new InstantCommand(() -> SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString())))
+                );
+        }
 
         // Reset hub shift timer when enabling
         RobotModeTriggers.teleop().onTrue(Commands.runOnce(HubShiftUtil::initialize));
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(HubShiftUtil::initialize));
         RobotModeTriggers.disabled().onTrue(Commands.runOnce(HubShiftUtil::initialize).ignoringDisable(true));
+        RobotModeTriggers.disabled().onTrue(Commands.runOnce(this::stopTargeting).ignoringDisable(true));
+
+        // Auto-enable targeting in enabled modes; no button hold needed for spin-up.
+        RobotModeTriggers.teleop().onTrue(Commands.runOnce(() ->
+            enableTargeting(
+                SmartDashboard.getBoolean(
+                    AutoAimConstants.useIKSolverKey,
+                    AutoAimConstants.defaultUseIKSolver
+                )
+            )
+        ));
+        RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() ->
+            enableTargeting(
+                SmartDashboard.getBoolean(
+                    AutoAimConstants.useIKSolverKey,
+                    AutoAimConstants.defaultUseIKSolver
+                )
+            )
+        ));
     }
 
     public void updateDashboard() {
-        // Publish match time
-        SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
-
         // Update from HubShiftUtil
         SmartDashboard.putString("Shifts/Remaining Shift Time", 
             String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))
@@ -252,6 +281,8 @@ public class RobotContainer {
         NamedCommands.registerCommand("shoot_map", new InstantCommand(() -> startTargeting(false)));
         NamedCommands.registerCommand("shoot_ik", new InstantCommand(() -> startTargeting(true)));
         NamedCommands.registerCommand("shoot_stop", new InstantCommand(this::stopTargeting));
+        NamedCommands.registerCommand("turret_stop", new InstantCommand(() -> override = true));
+        NamedCommands.registerCommand("turret_automatic", new InstantCommand(() -> override = false));
     }
 
     private void configureDefaultCommands() {
@@ -295,7 +326,7 @@ public class RobotContainer {
         return FieldConstants.defaultAprilTagType;
     }
 
-    private void startTargeting(boolean useIK) {
+    private void enableTargeting(boolean useIK) {
         SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, useIK);
         Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
         Translation2d target = alliance == Alliance.Red
@@ -308,6 +339,20 @@ public class RobotContainer {
             fuelReal.enableTargeting(true);
             fuelReal.setTarget(target);
         }
+    }
+
+    private void startTargeting(boolean useIK) {
+        enableTargeting(useIK);
+        Translation2d target = new Translation2d(
+            SmartDashboard.getNumber(
+                turretTargetConstants.targetXKey,
+                turretTargetConstants.defaultTargetX
+            ),
+            SmartDashboard.getNumber(
+                turretTargetConstants.targetYKey,
+                turretTargetConstants.defaultTargetY
+            )
+        );
         if (fuelSimIK != null && useIK) {
             Translation3d launchPosition = fuelSimIK.getRobotLaunchPosition();
             Translation3d baseVelocity = fuelSimIK.computeLaunchVelocityToTarget(target);

@@ -84,57 +84,100 @@ public class SimFuelIKSubsystem {
         }
 
         double deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
-        double alpha = Math.atan2(deltaHeight, distanceMeters);
-        double thetaOptimal = 0.5 * (alpha + (Math.PI / 2.0));
+        double minAngleDeg = TurretConstants.hoodMinDegrees;
+        double maxAngleDeg = TurretConstants.hoodMaxDegrees;
+        double targetEntryDeg = TurretConstants.ikEntryAngleTargetDeg;
+        double toleranceDeg = TurretConstants.ikEntryAngleToleranceDeg;
 
-        double minAngle = Math.toRadians(TurretConstants.hoodMinDegrees);
-        double maxAngle = Math.toRadians(TurretConstants.hoodMaxDegrees);
-        double thetaClamped = clamp(thetaOptimal, minAngle, maxAngle);
+        double bestBandAngleDeg = Double.NaN;
+        double bestBandMotorRps = Double.POSITIVE_INFINITY;
+        double bestBandEntryErrorDeg = Double.POSITIVE_INFINITY;
+        double bestFallbackAngleDeg = Double.NaN;
+        double bestFallbackMotorRps = Double.POSITIVE_INFINITY;
 
-        double bestTheta = Double.NaN;
-        double bestMotorRps = Double.POSITIVE_INFINITY;
-
-        double[] candidates = {thetaClamped, minAngle, maxAngle};
-        for (double theta : candidates) {
-            double speedMps = solveSpeedFromEquation(distanceMeters, alpha, theta);
+        for (double angleDeg = minAngleDeg; angleDeg <= maxAngleDeg; angleDeg += TurretConstants.shotAngleStepDeg) {
+            double angleRad = Math.toRadians(angleDeg);
+            double speedMps = solveSpeedFromEquation(distanceMeters, angleRad, deltaHeight);
             if (!Double.isFinite(speedMps) || speedMps <= 0.0) {
                 continue;
             }
-            double wheelRps = speedMps / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
-            if (wheelRps <= TurretConstants.shooterMaxMotorRps && wheelRps < bestMotorRps) {
-                bestMotorRps = wheelRps;
-                bestTheta = theta;
+
+            double motorRps = speedMps / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
+            if (motorRps > TurretConstants.shooterMaxMotorRps) {
+                continue;
+            }
+
+            if (motorRps < bestFallbackMotorRps) {
+                bestFallbackMotorRps = motorRps;
+                bestFallbackAngleDeg = angleDeg;
+            }
+
+            double entryDeg = computeEntryAngleDeg(distanceMeters, speedMps, angleRad);
+            if (!Double.isFinite(entryDeg)) {
+                continue;
+            }
+
+            double entryErrorDeg = Math.abs(entryDeg - targetEntryDeg);
+            if (entryErrorDeg <= toleranceDeg) {
+                boolean betterRps = motorRps < bestBandMotorRps;
+                boolean tieBreak = Math.abs(motorRps - bestBandMotorRps) < 1e-9
+                    && entryErrorDeg < bestBandEntryErrorDeg;
+                if (betterRps || tieBreak) {
+                    bestBandMotorRps = motorRps;
+                    bestBandAngleDeg = angleDeg;
+                    bestBandEntryErrorDeg = entryErrorDeg;
+                }
             }
         }
 
-        if (!Double.isFinite(bestTheta)) {
+        double selectedAngleDeg = Double.isFinite(bestBandAngleDeg) ? bestBandAngleDeg : bestFallbackAngleDeg;
+        double selectedMotorRps = Double.isFinite(bestBandAngleDeg) ? bestBandMotorRps : bestFallbackMotorRps;
+        if (!Double.isFinite(selectedAngleDeg) || !Double.isFinite(selectedMotorRps)) {
             return null;
         }
 
         ShooterOffsetMap.Offsets offsets = offsetMap.sample(distanceMeters);
         double hoodDeg = clamp(
-            Math.toDegrees(bestTheta) + offsets.hoodOffsetDeg,
+            selectedAngleDeg + offsets.hoodOffsetDeg,
             TurretConstants.hoodMinDegrees,
             TurretConstants.hoodMaxDegrees
         );
         double motorRps = clamp(
-            bestMotorRps + offsets.motorRpsOffset,
+            selectedMotorRps + offsets.motorRpsOffset,
             0.0,
             TurretConstants.shooterMaxMotorRps
         );
         return new ShotSolution(hoodDeg, motorRps);
     }
 
-    private static double solveSpeedFromEquation(double distanceMeters, double alpha, double theta) {
-        double denominator = 2.0 * Math.cos(theta) * Math.sin(theta - alpha);
-        if (denominator <= 1e-9) {
+    private static double solveSpeedFromEquation(double distanceMeters, double thetaRad, double deltaHeightMeters) {
+        double cos = Math.cos(thetaRad);
+        if (Math.abs(cos) < 1e-6) {
             return Double.NaN;
         }
-        double vSquared = (GRAVITY * distanceMeters * Math.cos(alpha)) / denominator;
+        double tan = Math.tan(thetaRad);
+        double denominator = 2.0 * cos * cos * (distanceMeters * tan - deltaHeightMeters);
+        if (denominator <= 0.0) {
+            return Double.NaN;
+        }
+        double vSquared = (GRAVITY * distanceMeters * distanceMeters) / denominator;
         if (vSquared <= 0.0) {
             return Double.NaN;
         }
         return Math.sqrt(vSquared);
+    }
+
+    private static double computeEntryAngleDeg(double distanceMeters, double launchSpeedMps, double launchAngleRad) {
+        double horizontalSpeed = launchSpeedMps * Math.cos(launchAngleRad);
+        if (horizontalSpeed <= 1e-6) {
+            return Double.NaN;
+        }
+        double time = distanceMeters / horizontalSpeed;
+        if (!Double.isFinite(time) || time <= 0.0) {
+            return Double.NaN;
+        }
+        double verticalVelocityAtTarget = launchSpeedMps * Math.sin(launchAngleRad) - GRAVITY * time;
+        return Math.toDegrees(Math.atan2(-verticalVelocityAtTarget, horizontalSpeed));
     }
 
     private static double clamp(double value, double min, double max) {
