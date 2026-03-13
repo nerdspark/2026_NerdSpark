@@ -469,29 +469,56 @@ public class Turret extends SubsystemBase {
             return null;
         }
         double deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
-        double alpha = Math.atan2(deltaHeight, distanceMeters);
-        double thetaOptimal = 0.5 * (alpha + (Math.PI / 2.0));
+        double minAngleDeg = TurretConstants.hoodMinDegrees;
+        double maxAngleDeg = TurretConstants.hoodMaxDegrees;
+        double targetEntryDeg = TurretConstants.ikEntryAngleTargetDeg;
+        double entryToleranceDeg = TurretConstants.ikEntryAngleToleranceDeg;
 
-        double minAngle = Math.toRadians(TurretConstants.hoodMinDegrees);
-        double maxAngle = Math.toRadians(TurretConstants.hoodMaxDegrees);
-        double thetaClamped = Math.max(minAngle, Math.min(maxAngle, thetaOptimal));
+        double bestBandAngleDeg = Double.NaN;
+        double bestBandMotorRps = Double.POSITIVE_INFINITY;
+        double bestBandEntryErrorDeg = Double.POSITIVE_INFINITY;
+        double bestFallbackAngleDeg = Double.NaN;
+        double bestFallbackMotorRps = Double.POSITIVE_INFINITY;
 
-        double bestTheta = Double.NaN;
-        double bestMotorRps = Double.POSITIVE_INFINITY;
-        double[] candidates = {thetaClamped, minAngle, maxAngle};
-        for (double theta : candidates) {
-            double speedMps = solveIKSpeed(distanceMeters, alpha, theta);
+        for (double angleDeg = minAngleDeg; angleDeg <= maxAngleDeg; angleDeg += TurretConstants.shotAngleStepDeg) {
+            double angleRad = Math.toRadians(angleDeg);
+            double speedMps = solveIKSpeed(distanceMeters, angleRad, deltaHeight);
             if (!Double.isFinite(speedMps) || speedMps <= 0.0) {
                 continue;
             }
-            double wheelRps = speedMps / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
-            if (wheelRps <= TurretConstants.shooterMaxMotorRps && wheelRps < bestMotorRps) {
-                bestMotorRps = wheelRps;
-                bestTheta = theta;
+
+            double motorRps = speedMps / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
+            if (motorRps > TurretConstants.shooterMaxMotorRps) {
+                continue;
+            }
+
+            if (motorRps < bestFallbackMotorRps) {
+                bestFallbackMotorRps = motorRps;
+                bestFallbackAngleDeg = angleDeg;
+            }
+
+            double entryDeg = computeEntryAngleDeg(distanceMeters, speedMps, angleRad);
+            if (!Double.isFinite(entryDeg)) {
+                continue;
+            }
+
+            double entryErrorDeg = Math.abs(entryDeg - targetEntryDeg);
+            if (entryErrorDeg <= entryToleranceDeg) {
+                boolean betterRps = motorRps < bestBandMotorRps;
+                boolean tieBreak = Math.abs(motorRps - bestBandMotorRps) < 1e-9
+                    && entryErrorDeg < bestBandEntryErrorDeg;
+                if (betterRps || tieBreak) {
+                    bestBandMotorRps = motorRps;
+                    bestBandAngleDeg = angleDeg;
+                    bestBandEntryErrorDeg = entryErrorDeg;
+                }
             }
         }
 
-        if (!Double.isFinite(bestTheta)) {
+        boolean usingEntryBand = Double.isFinite(bestBandAngleDeg);
+        double selectedAngleDeg = usingEntryBand ? bestBandAngleDeg : bestFallbackAngleDeg;
+        double selectedMotorRps = usingEntryBand ? bestBandMotorRps : bestFallbackMotorRps;
+        if (!Double.isFinite(selectedAngleDeg) || !Double.isFinite(selectedMotorRps)) {
             return null;
         }
 
@@ -500,26 +527,45 @@ public class Turret extends SubsystemBase {
             TurretConstants.hoodMinDegrees,
             Math.min(
                 TurretConstants.hoodMaxDegrees,
-                Math.toDegrees(bestTheta) + offsets.hoodOffsetDeg
+                selectedAngleDeg + offsets.hoodOffsetDeg
             )
         );
         double motorRps = Math.max(
             0.0,
-            Math.min(TurretConstants.shooterMaxMotorRps, bestMotorRps + offsets.motorRpsOffset)
+            Math.min(TurretConstants.shooterMaxMotorRps, selectedMotorRps + offsets.motorRpsOffset)
         );
+        SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", usingEntryBand);
         return new IkSolution(hoodDeg, motorRps);
     }
 
-    private double solveIKSpeed(double distanceMeters, double alpha, double theta) {
-        double denominator = 2.0 * Math.cos(theta) * Math.sin(theta - alpha);
-        if (denominator <= 1e-9) {
+    private double solveIKSpeed(double distanceMeters, double thetaRad, double deltaHeightMeters) {
+        double cos = Math.cos(thetaRad);
+        if (Math.abs(cos) < 1e-6) {
             return Double.NaN;
         }
-        double vSquared = (9.80665 * distanceMeters * Math.cos(alpha)) / denominator;
+        double tan = Math.tan(thetaRad);
+        double denominator = 2.0 * cos * cos * (distanceMeters * tan - deltaHeightMeters);
+        if (denominator <= 0.0) {
+            return Double.NaN;
+        }
+        double vSquared = (9.80665 * distanceMeters * distanceMeters) / denominator;
         if (vSquared <= 0.0) {
             return Double.NaN;
         }
         return Math.sqrt(vSquared);
+    }
+
+    private double computeEntryAngleDeg(double distanceMeters, double launchSpeedMps, double launchAngleRad) {
+        double horizontalSpeed = launchSpeedMps * Math.cos(launchAngleRad);
+        if (horizontalSpeed <= 1e-6) {
+            return Double.NaN;
+        }
+        double time = distanceMeters / horizontalSpeed;
+        if (!Double.isFinite(time) || time <= 0.0) {
+            return Double.NaN;
+        }
+        double verticalVelocityAtTarget = launchSpeedMps * Math.sin(launchAngleRad) - 9.80665 * time;
+        return Math.toDegrees(Math.atan2(-verticalVelocityAtTarget, horizontalSpeed));
     }
 
     private double applyChassisVelocityComp(double motorRps) {
@@ -667,12 +713,16 @@ public class Turret extends SubsystemBase {
                 double ikCompensatedMotorRps = Double.NaN;
                 if (ikSolution != null) {
                     ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps);
-                    hoodPose.Position = hoodDegreesToRotations(ikSolution.hoodDegrees);
-                    velocity = applyShooterControl(ikCompensatedMotorRps);
+                    double predictedEntryDeg = computeEntryAngleDeg(
+                        distance,
+                        ikSolution.motorRps * 2.0 * Math.PI * TurretConstants.shooterWheelRadius,
+                        Math.toRadians(ikSolution.hoodDegrees)
+                    );
                     SmartDashboard.putBoolean("Turret/IK/HasSolution", true);
                     SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", ikSolution.hoodDegrees);
                     SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", ikSolution.motorRps);
                     SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", ikCompensatedMotorRps);
+                    SmartDashboard.putNumber("Turret/IK/PredictedEntryDeg", predictedEntryDeg);
                 } else {
                     hoodWheelsZero();
                     SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
@@ -680,6 +730,20 @@ public class Turret extends SubsystemBase {
                     SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
                     SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
                     SmartDashboard.putNumber("Turret/IK/test", Double.NaN);
+                }
+                boolean useIK = SmartDashboard.getBoolean(
+                    AutoAimConstants.useIKSolverKey,
+                    AutoAimConstants.defaultUseIKSolver
+                );
+                if (shoot && useIK) {
+                    if (ikSolution != null) {
+                        hoodPose.Position = hoodDegreesToRotations(ikSolution.hoodDegrees);
+                        velocity = applyShooterControl(ikCompensatedMotorRps);
+                    } else {
+                        hoodWheelsZero();
+                    }
+                } else {
+                    velocity = aimOnFly(shoot ? distance : Double.MAX_VALUE);
                 }
             } else {
                 velocity = aimOnFly(shoot ? distance : Double.MAX_VALUE, currPose.getRotation().getRadians(), speeds);
@@ -691,6 +755,14 @@ public class Turret extends SubsystemBase {
             SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
             SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
             SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
+            SmartDashboard.putNumber("Turret/IK/PredictedEntryDeg", Double.NaN);
+            SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", false);
+        }
+
+        if (manualOverride.get()) {
+            hoodPose.Position = 0;
+            velocity = 0;
+            mode = ShootMode.COAST;
         }
 
         if (manualOverride.get()) {
