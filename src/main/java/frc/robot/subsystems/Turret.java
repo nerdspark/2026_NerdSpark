@@ -120,9 +120,8 @@ public class Turret extends SubsystemBase {
             )
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(Amps.of(TurretConfig.spinStatorCurrentLimit))
-                .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(Amps.of(TurretConfig.spinSupplyCurrentLimit))
-                .withSupplyCurrentLimitEnable(true)
+                .withStatorCurrentLimitEnable(false)
+                .withSupplyCurrentLimitEnable(false)
             )
             .withMotionMagic(new MotionMagicConfigs()
                 .withMotionMagicCruiseVelocity(TurretConfig.spinVelocity)
@@ -767,7 +766,8 @@ public class Turret extends SubsystemBase {
             mode = ShootMode.COAST;
         }
 
-        // spinMotor.setControl(spinPose);
+        spinMotor.setControl(spinPose);
+        SmartDashboard.putNumber("Turret/SpinAmps", spinMotor.getStatorCurrent().getValueAsDouble());
         hoodMotor1.setControl(hoodPose);
         SmartDashboard.putNumber("Hood 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Hood 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
