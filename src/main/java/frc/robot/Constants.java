@@ -97,7 +97,8 @@ public final class Constants {
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(30);
         public static final double targetHeightMeters = Units.inchesToMeters(72);
-        public static final double hoodMinDegrees = 17.0;
+        public static final double hoodZeroDegrees = 21.0;
+        public static final double hoodMinDegrees = 21.0;
         public static final double hoodMaxDegrees = 65.0;
         public static final double ikEntryAngleTargetDeg = 7.5;
         public static final double ikEntryAngleToleranceDeg = 2.5;

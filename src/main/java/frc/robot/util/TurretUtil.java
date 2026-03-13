@@ -41,21 +41,33 @@ public final class TurretUtil {
     }
 
     public static double hoodDegreesToRotations(double hoodDegrees) {
-        return (hoodDegrees / 360.0) * TurretConstants.hoodRatio;
+        return ((hoodDegrees - TurretConstants.hoodZeroDegrees) / 360.0) * TurretConstants.hoodRatio;
     }
 
-    private static double timeOfFlight(double shooterRps, double hoodRotations) {
-        double hoodRadians = (hoodRotations / TurretConstants.hoodRatio) * (Math.PI * 2);
+    public static double hoodRotationsToDegrees(double hoodRotations) {
+        return TurretConstants.hoodZeroDegrees + ((hoodRotations / TurretConstants.hoodRatio) * 360.0);
+    }
+
+    private static double timeOfFlight(double shooterRps, double hoodRadians, double distanceMeters) {
         double shooterMps = ((Math.PI * 2) * TurretConstants.shooterWheelRadius) * shooterRps;
-        return (shooterMps * Math.sin(hoodRadians) + 
-            Math.sqrt(Math.pow(shooterMps * Math.sin(hoodRadians), 2) - 16.677)) / 9.81;
+        double horizontalMps = shooterMps * Math.cos(hoodRadians);
+        if (horizontalMps <= 1e-6) {
+            return 0.0;
+        }
+        double tof = distanceMeters / horizontalMps;
+        if (!Double.isFinite(tof) || tof < 0.0) {
+            return 0.0;
+        }
+        return tof;
     }
 
-    public static double tofFromMap(ShooterParams params) {
-        return timeOfFlight(params.shooterSpeed, params.hoodPose);
+    public static double tofFromMap(ShooterParams params, double distanceMeters) {
+        double hoodRadians = Math.toRadians(hoodRotationsToDegrees(params.hoodPose));
+        return timeOfFlight(params.shooterSpeed, hoodRadians, distanceMeters);
     }
 
-    public static double tofFromIK(double motorRps, double hoodDeg) {
-        return timeOfFlight(motorRps, hoodDegreesToRotations(hoodDeg));
+    public static double tofFromIK(double motorRps, double hoodDeg, double distanceMeters) {
+        double hoodRadians = Math.toRadians(hoodDeg);
+        return timeOfFlight(motorRps, hoodRadians, distanceMeters);
     }
 }

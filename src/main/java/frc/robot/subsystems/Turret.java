@@ -676,9 +676,13 @@ public class Turret extends SubsystemBase {
 
             if (useIK) {
                 IkSolution solution = solveIK(distance);
-                tof = tofFromIK(solution.motorRps, solution.hoodDegrees);
+                if (solution != null) {
+                    tof = tofFromIK(solution.motorRps, solution.hoodDegrees, distance);
+                } else {
+                    tof = tofFromMap(TurretConstants.map.get(distance), distance);
+                }
             } else {
-                tof = tofFromMap(TurretConstants.map.get(distance));
+                tof = tofFromMap(TurretConstants.map.get(distance), distance);
             }
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
 
@@ -692,9 +696,13 @@ public class Turret extends SubsystemBase {
                 distance = lookaheadTurretPos.getDistance(targetPose); // Recompute distance
                 if (useIK) { // Recompute TOF for new distance
                     IkSolution solution = solveIK(distance);
-                    tof = tofFromIK(solution.motorRps, solution.hoodDegrees);
+                    if (solution != null) {
+                        tof = tofFromIK(solution.motorRps, solution.hoodDegrees, distance);
+                    } else {
+                        tof = tofFromMap(TurretConstants.map.get(distance), distance);
+                    }
                 } else {
-                    tof = tofFromMap(TurretConstants.map.get(distance));
+                    tof = tofFromMap(TurretConstants.map.get(distance), distance);
                 }
             }
             m_field.getObject("Look Ahead Pose").setPose(lookaheadTurretPos.getMeasureX(), lookaheadTurretPos.getMeasureY(), new Rotation2d());
@@ -771,7 +779,7 @@ public class Turret extends SubsystemBase {
         hoodMotor1.setControl(hoodPose);
         SmartDashboard.putNumber("Hood 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Hood 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Turret/HoodCurrentDeg", (hoodMotor1.getPosition().getValueAsDouble() / TurretConstants.hoodRatio) * 360);
+        SmartDashboard.putNumber("Turret/HoodCurrentDeg", hoodRotationsToDegrees(hoodMotor1.getPosition().getValueAsDouble()));
         SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
         switch (mode) {
             case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
