@@ -6,6 +6,7 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -16,8 +17,8 @@ import frc.robot.Constants.IndexConfig;
 
 public class Indexer implements Subsystem {
     private final CANBus canivore;
-    private final TalonFX passThroughMotor;
-    private final TalonFX spindexerMotor;
+    private final TalonFX passThroughMotor, spindexerMotor;
+    private final TorqueCurrentFOC torqueCurrentFOC = new TorqueCurrentFOC(0);
 
     public Indexer() {
 
@@ -27,12 +28,19 @@ public class Indexer implements Subsystem {
 
         TalonFXConfiguration passThroughConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(IndexConfig.passThroughStatorCurrentLimit)
-                .withStatorCurrentLimitEnable(true));
+                .withStatorCurrentLimit(IndexConfig.statorCurretLimit)
+                .withStatorCurrentLimitEnable(true)
+                .withSupplyCurrentLimit(IndexConfig.supplyCurretLimit)
+                .withSupplyCurrentLimitEnable(true))
+            .withMotorOutput(new MotorOutputConfigs()
+                .withInverted(InvertedValue.CounterClockwise_Positive)
+                .withNeutralMode(NeutralModeValue.Coast));
         TalonFXConfiguration indexConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(IndexConfig.indexCurretLimit)
-                .withStatorCurrentLimitEnable(true))
+                .withStatorCurrentLimit(IndexConfig.statorCurretLimit)
+                .withStatorCurrentLimitEnable(true)
+                .withSupplyCurrentLimit(IndexConfig.supplyCurretLimit)
+                .withSupplyCurrentLimitEnable(true))
             .withMotorOutput(new MotorOutputConfigs()
                 .withInverted(InvertedValue.Clockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Coast));
@@ -41,21 +49,14 @@ public class Indexer implements Subsystem {
         spindexerMotor.getConfigurator().apply(indexConfig);
     }
 
-    public void spinDex( Supplier<Double> rollerSpeed) {
-        double speed = rollerSpeed.get();
-        passThroughMotor.set(speed);
-        spindexerMotor.set(speed);
+    public void spinDex(Supplier<Double> rollerSpeed) {
+        double amps = rollerSpeed.get() * IndexConfig.supplyCurretLimit;
+        passThroughMotor.setControl(torqueCurrentFOC.withOutput(amps));
+        spindexerMotor.set(amps);
     }
 
     public void stopPassThrough() {
         passThroughMotor.set(0.0);
         spindexerMotor.set(0.0);
-    }
-
-    public edu.wpi.first.wpilibj2.command.Command incrementSpeed(
-        Supplier<Boolean> isActive,
-        Supplier<Double> increment
-    ) {
-        return edu.wpi.first.wpilibj2.command.Commands.none();
     }
 }

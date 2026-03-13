@@ -117,20 +117,20 @@ public final class Constants {
 
         static {
             // Passing
-            map.put(Double.MAX_VALUE, new ShooterParams(7.3, 40, 0));
+            map.put(Double.MAX_VALUE, new ShooterParams(7.3, 40));
 
-            map.put(5.386, new ShooterParams(0.23, 46, 2));
-            map.put(5.136, new ShooterParams(0.14, 44, 1));
-            map.put(4.491, new ShooterParams(0.12, 41, 1));
-            map.put(4.409, new ShooterParams(0.08, 41, 1.25));
-            map.put(4.515, new ShooterParams(0.05, 38.5, 1));
-            map.put(3.710, new ShooterParams(0.04, 36, 1));
-            map.put(3.828, new ShooterParams(0.03, 36.5, 1));
-            map.put(4.128, new ShooterParams(0.04, 38, 1));
-            map.put(4.524, new ShooterParams(0.07, 39.5, 1.4));
-            map.put(4.481, new ShooterParams(0.1, 39.8, 1.5));
-            map.put(4.866, new ShooterParams(0.22, 42.5, 1.75));
-            map.put(4.444, new ShooterParams(0.22, 41, 1.5));
+            map.put(5.386, new ShooterParams(0.23, 46));
+            map.put(5.136, new ShooterParams(0.14, 44));
+            map.put(4.491, new ShooterParams(0.12, 41));
+            map.put(4.409, new ShooterParams(0.08, 41));
+            map.put(4.515, new ShooterParams(0.05, 38.5));
+            map.put(3.710, new ShooterParams(0.04, 36));
+            map.put(3.828, new ShooterParams(0.03, 36.5));
+            map.put(4.128, new ShooterParams(0.04, 38));
+            map.put(4.524, new ShooterParams(0.07, 39.5));
+            map.put(4.481, new ShooterParams(0.1, 39.8));
+            map.put(4.866, new ShooterParams(0.22, 42.5));
+            map.put(4.444, new ShooterParams(0.22, 41));
         }
     }
 
@@ -152,20 +152,21 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 0.0; // 32.587
+        public static final double spinKp = 32.587;
         public static final double spinKi = 0.0;
-        public static final double spinKd = 0.0; // 1.4534
-        public static final double spinKs = 0.0; // 0.44674
-        public static final double spinKv = 0.0; // 0.12958
-        public static final double spinKa = 0.0; // 0.044218 
-        public static final double spinStatorCurrentLimit = 50.0;
-        public static final double spinVelocity = 150;
-        public static final double spinAccel = 400;
+        public static final double spinKd = 1.4534;
+        public static final double spinKs = 0.44674;
+        public static final double spinKv = 0.12958;
+        public static final double spinKa = 0.044218;
+        public static final double spinStatorCurrentLimit = 60.0; // OG 50
+        public static final double spinSupplyCurrentLimit = 35.0;
+        public static final double spinVelocity = 50;
+        public static final double spinAccel = 100;
 
         public static final int spinCancoder1Id = 26;
-        public static final double spinCancoder1Offset = -0.297607421875;
+        public static final double spinCancoder1Offset = -0.860595703125;
         public static final int spinCancoder2Id = 27;
-        public static final double spinCancoder2Offset = -0.9873046875;
+        public static final double spinCancoder2Offset = -0.15185546875;
 
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
@@ -182,6 +183,7 @@ public final class Constants {
         public static final double hoodKa1 = 0.0;
         public static final double hoodKa2 = 0.0;
         public static final double hoodStatorCurrentLimit = 40.0;
+        public static final double hoodSupplyCurrentLimit = 20.0;
         public static final double hoodVelocity = 175;
         public static final double hoodAccel = 400;
 
@@ -190,14 +192,15 @@ public final class Constants {
         public static final double bangbangKp = 999999;
         public static final double peakDutyCycle = 1;
         public static final double peakTorque = 40;
-        public static final double shootStatorCurrentLimit = 60.0;
+        public static final double shootStatorCurrentLimit = 140.0; // OG 60
+        public static final double shootSupplyCurrentLimit = 70.0;
     }
 
     public static final class IndexConfig {
         public static final int passThroughId = 32;
-        public static final double passThroughStatorCurrentLimit = 40;
         public static final int indexId = 33;
-        public static final double indexCurretLimit = 40;
+        public static final double statorCurretLimit = 50; // OG 40
+        public static final double supplyCurretLimit = 30;
     }
 
     public static final class turretTargetConstants {
@@ -236,7 +239,6 @@ public final class Constants {
         public static final int deployIntakeMotorId = 34;
         public static final int roller1id = 35;
         public static final int roller2id = 36;
-        public static final double intakeCurrentLimit = 40.0;
         public static final double kP = 2.0;
         public static final double kI = 0.0;
         public static final double kD = 0.0;
@@ -244,6 +246,10 @@ public final class Constants {
         public static final double kS = 0.0;
         public static final double kA = 0.0;
         public static final double kV = 0.0;
+        public static final double rollerStatorCurrentLimit = 40.0;
+        public static final double rollerSupplyCurrentLimit = 30.0;
+        public static final double deployStatorCurrentLimit = 60.0; // OG 40
+        public static final double deploySupplyCurrentLimit = 30.0;
         public static final double motionMagicCruiseVelocityFast = 50.0;
         public static final double motionMagicCruiseVelocitySlow = 15.0;
         public static final double motionMagicAcceleration = 150.0;

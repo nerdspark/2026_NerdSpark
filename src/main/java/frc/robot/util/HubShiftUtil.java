@@ -37,15 +37,18 @@ public class HubShiftUtil {
   private static final double[] shiftEndTimes = {10.0, 35.0, 60.0, 85.0, 110.0, 140.0};
 
   @Setter private static Supplier<Optional<Boolean>> allianceWinOverride = () -> Optional.empty();
-  @Setter private static Supplier<Optional<Turret>> turretSupplier = () -> Optional.empty();
+  // @Setter private static Supplier<Optional<Turret>> turretSupplier = () -> Optional.empty();
 
   private static final double minFuelCountDelay = 1.0;
   private static final double maxFuelCountDelay = 2.0;
   private static final double shiftEndFuelCountExtension = 3.0;
-  private static final double tof = turretSupplier.get().isEmpty() ? 0 : turretSupplier.get().get().tof;
-  private static final double approachingActiveFudge = -1 * (tof + minFuelCountDelay);
+  // private static final double tof = turretSupplier.get().isEmpty() ? 0 : turretSupplier.get().get().tof;
+  // private static final double approachingActiveFudge = -1 * (tof + minFuelCountDelay);
+  // private static final double endingActiveFudge =
+  //   shiftEndFuelCountExtension + -1 * (tof + maxFuelCountDelay);
+  private static final double approachingActiveFudge = -1 * minFuelCountDelay;
   private static final double endingActiveFudge =
-    shiftEndFuelCountExtension + -1 * (tof + maxFuelCountDelay);
+    shiftEndFuelCountExtension + -1 * maxFuelCountDelay;
 
   public static final double autoEndTime = 20.0;
   public static final double teleopDuration = 140.0;
