@@ -771,7 +771,7 @@ public class Turret extends SubsystemBase {
         hoodMotor1.setControl(hoodPose);
         SmartDashboard.putNumber("Hood 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Hood 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Turret/HoodCurrentDeg", (hoodMotor1.getPosition().getValueAsDouble() / TurretConstants.hoodRatio) * 360);
+        SmartDashboard.putNumber("Turret/HoodCurrentDeg", hoodRotationsToDegrees(hoodMotor1.getPosition().getValueAsDouble()));
         SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
         switch (mode) {
             case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
