@@ -936,10 +936,11 @@ public class Turret extends SubsystemBase {
             hoodPose.Position = 0;
             velocity = 0;
             mode = ShootMode.COAST;
-            spinPose.Position = spinMotor.getPosition().getValueAsDouble();
+            spinMotor.setControl(new NeutralOut());
+        } else {
+            spinMotor.setControl(spinPose);
         }
 
-        spinMotor.setControl(spinPose);
         SmartDashboard.putNumber("Turret/SpinAmps", spinMotor.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Turret/SpinSupply", spinMotor.getSupplyCurrent().getValueAsDouble());
         hoodMotor1.setControl(hoodPose);

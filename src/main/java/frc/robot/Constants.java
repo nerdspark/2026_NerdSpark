@@ -159,10 +159,10 @@ public final class Constants {
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
         // TODO Tune kp, kd, ks, maybe ki
-        public static final double spinKp = 1.25;
+        public static final double spinKp = 1.0;
         public static final double spinKi = 0.0;
         public static final double spinKd = 0.25;
-        public static final double spinKs = 1.3;
+        public static final double spinKs = 1.1;
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
         public static final double spinStatorCurrentLimit = 80.0;
