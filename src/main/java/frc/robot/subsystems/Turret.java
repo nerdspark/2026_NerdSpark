@@ -5,6 +5,8 @@ import static frc.robot.util.TurretUtil.*;
 
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
@@ -77,7 +79,6 @@ public class Turret extends SubsystemBase {
     private double turretAngle;
     private boolean neutralMode = false;
     private double lastTurretAngle = 0;
-    private LoggedNetworkNumber hood = new LoggedNetworkNumber("/Tuning/Hood Pose", 0);
 
     private double filteredTurretDelaySec = TurretConstants.delay;
     public static double delaySum = 0.0;
@@ -913,10 +914,7 @@ public class Turret extends SubsystemBase {
 
         SmartDashboard.putNumber("Turret/SpinAmps", spinMotor.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Turret/SpinSupply", spinMotor.getSupplyCurrent().getValueAsDouble());
-        hoodMotor1.setControl(hoodPose.withPosition(hood.get()));
-        SmartDashboard.putNumber("Hood Current", hoodMotor1.getStatorCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Hood 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Hood 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
+        hoodMotor1.setControl(hoodPose);
         SmartDashboard.putNumber("Turret/HoodCurrentDeg", hoodRotationsToDegrees(hoodMotor1.getPosition().getValueAsDouble()));
         SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
         switch (mode) {

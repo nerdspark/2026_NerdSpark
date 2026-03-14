@@ -94,10 +94,10 @@ public final class Constants {
         public static final double hoodRatio = 50;
         public static final double shooterWheelRadius = Units.inchesToMeters(4);
         // Ball exit speed as a fraction of wheel surface speed.
-        public static final double shooterLaunchEfficiency = 0.30;
+        public static final double shooterLaunchEfficiency = 0.40;
         public static final double shooterMaxMotorRps = 6000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
-        public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(30);
+        public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
         public static final double targetHeightMeters = Units.inchesToMeters(72);
         public static final double hoodZeroDegrees = 21.0;
         public static final double hoodMinDegrees = 21.0;
@@ -110,7 +110,7 @@ public final class Constants {
         public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(4.699), 0);
 
         public static final double delay = 0.0011;
-        public static final double maxDelay = 0.3;
+        public static final double maxDelay = 0.5;
         public static final double riseTime = 0.04;
         public static final double fallTime = 0.18;
         public static final double hoodRetractTime = 0.1; // TODO In Seconds
@@ -158,15 +158,15 @@ public final class Constants {
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
         // TODO Tune kp, kd, ks, maybe ki
-        public static final double spinKp = 1.56;
+        public static final double spinKp = 1.549;
         public static final double spinKi = 0.0;
-        public static final double spinKd = 0.28;
+        public static final double spinKd = 0.254;
         public static final double spinKs = 1.3;
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
         public static final double spinStatorCurrentLimit = 80.0;
         public static final double spinSupplyCurrent = 35.0;
-        public static final double spinVelocity = 25;
+        public static final double spinVelocity = 50;
         public static final double spinAccel = spinVelocity / 0.25; // 0.25 seconds to max speed
 
         public static final int spinCancoder1Id = 26;
@@ -177,14 +177,14 @@ public final class Constants {
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
         // TODO Tune kp, kd, ks, maybe ki
-        public static final double hoodKp1 = 8.72; //8.78 
-        public static final double hoodKp2 = 8.74; //8.74
-        public static final double hoodKi1 = 0.5; //0.6
-        public static final double hoodKi2 = 0.45; //0.45
-        public static final double hoodKd1 = 0.0;
-        public static final double hoodKd2 = 0.0;
-        public static final double hoodKs1 = 2.5;
-        public static final double hoodKs2 = 2.5;
+        public static final double hoodKp1 = 16;
+        public static final double hoodKp2 = 16;
+        public static final double hoodKi1 = 0.0;
+        public static final double hoodKi2 = 0.0; 
+        public static final double hoodKd1 = 0.12;
+        public static final double hoodKd2 = 0.12;
+        public static final double hoodKs1 = 2.54;
+        public static final double hoodKs2 = 2.54;
         public static final double hoodKv1 = 0.0;
         public static final double hoodKv2 = 0.0;
         public static final double hoodKa1 = 0.0;
@@ -248,7 +248,7 @@ public final class Constants {
         public static final String kAKey = "HoodTune/kA";
         public static final String cruiseVelocityKey = "HoodTune/CruiseVelocity";
         public static final String accelerationKey = "HoodTune/Acceleration";
-        public static final boolean defaultEnable = true;
+        public static final boolean defaultEnable = false;
     }
 
     public static final class AutoAimConstants {
