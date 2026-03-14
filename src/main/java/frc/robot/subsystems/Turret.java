@@ -380,11 +380,17 @@ public class Turret extends SubsystemBase {
 
         hoodPose.Position = map.hoodPose;
 
+        boolean useShootOnMoveComp = SmartDashboard.getBoolean(
+            AutoAimConstants.useShootOnMoveCompKey,
+            AutoAimConstants.defaultUseShootOnMoveComp
+        );
         double shooterFOA = robotHeading + turretAngle;
         double robotSpeed = Math.hypot(robotROS.vxMetersPerSecond, robotROS.vyMetersPerSecond);
         double robotVelAngle = Math.atan2(robotROS.vyMetersPerSecond, robotROS.vxMetersPerSecond);
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
-        double deltaMotorRPS = launchSpeedMpsToMotorRps(vParallel);
+        double deltaMotorRPS = useShootOnMoveComp ? launchSpeedMpsToMotorRps(vParallel) : 0.0;
+        SmartDashboard.putNumber("Turret/SOTM/ParallelVelocityMps", vParallel);
+        SmartDashboard.putNumber("Turret/SOTM/DeltaMotorRps", deltaMotorRPS);
 
         double velo =  map.shooterSpeed - deltaMotorRPS;
 
@@ -502,6 +508,20 @@ public class Turret extends SubsystemBase {
         return motorRps;
     }
 
+    private double getConfiguredMuzzleHeightMeters() {
+        return SmartDashboard.getNumber(
+            AutoAimConstants.modelMuzzleHeightMetersKey,
+            TurretConstants.shooterMuzzleHeightMeters
+        );
+    }
+
+    private double getConfiguredTargetHeightMeters() {
+        return SmartDashboard.getNumber(
+            AutoAimConstants.modelTargetHeightMetersKey,
+            TurretConstants.targetHeightMeters
+        );
+    }
+
     private IkSolution solveIK(double distanceMeters) {
         if (distanceMeters <= 0.0) {
             return null;
@@ -510,7 +530,7 @@ public class Turret extends SubsystemBase {
             AutoAimConstants.useEntryAngleIKKey,
             AutoAimConstants.defaultUseEntryAngleIK
         );
-        double deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
+        double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
         double minAngleDeg = TurretConstants.hoodMinDegrees;
         double maxAngleDeg = TurretConstants.hoodMaxDegrees;
         double targetEntryDeg = TurretConstants.ikEntryAngleTargetDeg;
@@ -612,13 +632,19 @@ public class Turret extends SubsystemBase {
     }
 
     private double applyChassisVelocityComp(double motorRps) {
+        boolean useShootOnMoveComp = SmartDashboard.getBoolean(
+            AutoAimConstants.useShootOnMoveCompKey,
+            AutoAimConstants.defaultUseShootOnMoveComp
+        );
         double robotHeading = pose.get().getRotation().getRadians();
         double shooterFOA = robotHeading + turretAngle;
         ChassisSpeeds robotFOS = speed.get();
         double robotSpeed = Math.hypot(robotFOS.vxMetersPerSecond, robotFOS.vyMetersPerSecond);
         double robotVelAngle = Math.atan2(robotFOS.vyMetersPerSecond, robotFOS.vxMetersPerSecond);
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
-        double deltaMotorRPS = launchSpeedMpsToMotorRps(vParallel);
+        double deltaMotorRPS = useShootOnMoveComp ? launchSpeedMpsToMotorRps(vParallel) : 0.0;
+        SmartDashboard.putNumber("Turret/SOTM/ParallelVelocityMps", vParallel);
+        SmartDashboard.putNumber("Turret/SOTM/DeltaMotorRps", deltaMotorRPS);
         return motorRps - deltaMotorRPS;
     }
 

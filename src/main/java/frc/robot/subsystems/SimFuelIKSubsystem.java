@@ -33,7 +33,7 @@ public class SimFuelIKSubsystem {
         return new Translation3d(
             turretTranslation.getX(),
             turretTranslation.getY(),
-            TurretConstants.shooterMuzzleHeightMeters
+            getConfiguredMuzzleHeightMeters()
         );
     }
 
@@ -92,7 +92,7 @@ public class SimFuelIKSubsystem {
             AutoAimConstants.useEntryAngleIKKey,
             AutoAimConstants.defaultUseEntryAngleIK
         );
-        double deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
+        double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
         double minAngleDeg = TurretConstants.hoodMinDegrees;
         double maxAngleDeg = TurretConstants.hoodMaxDegrees;
         double targetEntryDeg = TurretConstants.ikEntryAngleTargetDeg;
@@ -161,6 +161,20 @@ public class SimFuelIKSubsystem {
             TurretConstants.shooterMaxMotorRps
         );
         return new ShotSolution(hoodDeg, motorRps);
+    }
+
+    private double getConfiguredMuzzleHeightMeters() {
+        return SmartDashboard.getNumber(
+            AutoAimConstants.modelMuzzleHeightMetersKey,
+            TurretConstants.shooterMuzzleHeightMeters
+        );
+    }
+
+    private double getConfiguredTargetHeightMeters() {
+        return SmartDashboard.getNumber(
+            AutoAimConstants.modelTargetHeightMetersKey,
+            TurretConstants.targetHeightMeters
+        );
     }
 
     private static double solveSpeedFromEquation(double distanceMeters, double thetaRad, double deltaHeightMeters) {

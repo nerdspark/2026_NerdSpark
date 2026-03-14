@@ -97,6 +97,30 @@ public class RobotContainer {
             AutoAimConstants.useEntryAngleIKKey,
             AutoAimConstants.defaultUseEntryAngleIK
         );
+        SmartDashboard.setDefaultBoolean(
+            AutoAimConstants.useShootOnMoveCompKey,
+            AutoAimConstants.defaultUseShootOnMoveComp
+        );
+        SmartDashboard.putBoolean(
+            AutoAimConstants.useShootOnMoveCompKey,
+            AutoAimConstants.defaultUseShootOnMoveComp
+        );
+        SmartDashboard.setDefaultNumber(
+            AutoAimConstants.modelMuzzleHeightMetersKey,
+            Constants.TurretConstants.shooterMuzzleHeightMeters
+        );
+        SmartDashboard.putNumber(
+            AutoAimConstants.modelMuzzleHeightMetersKey,
+            Constants.TurretConstants.shooterMuzzleHeightMeters
+        );
+        SmartDashboard.setDefaultNumber(
+            AutoAimConstants.modelTargetHeightMetersKey,
+            Constants.TurretConstants.targetHeightMeters
+        );
+        SmartDashboard.putNumber(
+            AutoAimConstants.modelTargetHeightMetersKey,
+            Constants.TurretConstants.targetHeightMeters
+        );
 
         poseEstimator = new PoseEstimatorSubsystem(drivetrain);
 
