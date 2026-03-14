@@ -21,7 +21,6 @@ public class Indexer implements Subsystem {
     private final TorqueCurrentFOC torqueCurrentFOC = new TorqueCurrentFOC(0);
 
     public Indexer() {
-
         canivore = new CANBus(Constants.CANbus);
         passThroughMotor = new TalonFX(IndexConfig.passThroughId, canivore);
         spindexerMotor = new TalonFX(IndexConfig.indexId, canivore);

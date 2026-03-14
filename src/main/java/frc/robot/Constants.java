@@ -16,9 +16,9 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.util.ShooterParams;
 
 public final class Constants {
-    public static final double gyroP = 7.7635;
+    public static final double gyroP = 6; //7.4213
     public static final double gyroI = 0.0;
-    public static final double gyroD = 0.75752;
+    public static final double gyroD = 0.9; //0.85752
 
     public static final String CANbus = "canivore1";
 
@@ -155,27 +155,30 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 6;
+        // TODO Tune kp, kd, ks, maybe ki
+        public static final double spinKp = 1.5;
         public static final double spinKi = 0.0;
-        public static final double spinKd = 1;
-        public static final double spinKs = 0.44674;
-        public static final double spinKv = 0.12958;
-        public static final double spinKa = 0.044218;
-        public static final double spinStatorCurrentLimit = 120.0;
-        public static final double spinVelocity = 75;
-        public static final double spinAccel = 250;
+        public static final double spinKd = 0.2;
+        public static final double spinKs = 1.3;
+        public static final double spinKv = 0.0;
+        public static final double spinKa = 0.0;
+        public static final double spinStatorCurrentLimit = 80.0;
+        public static final double spinSupplyCurrent = 35.0;
+        public static final double spinVelocity = 25;
+        public static final double spinAccel = 100;
 
         public static final int spinCancoder1Id = 26;
-        public static final double spinCancoder1Offset = -0.860595703125;
+        public static final double spinCancoder1Offset = -0.619873046875;
         public static final int spinCancoder2Id = 27;
-        public static final double spinCancoder2Offset = -0.15185546875;
+        public static final double spinCancoder2Offset = -0.890869140625;
 
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
-        public static final double hoodKp1 = 8.78;
-        public static final double hoodKp2 = 8.74;
-        public static final double hoodKi1 = 0.6;
-        public static final double hoodKi2 = 0.45;
+        // TODO Tune kp, kd, ks, maybe ki
+        public static final double hoodKp1 = 0.0; //8.78 
+        public static final double hoodKp2 = 0.0; //8.74
+        public static final double hoodKi1 = 0.0; //0.6
+        public static final double hoodKi2 = 0.0; //0.45
         public static final double hoodKd1 = 0.0;
         public static final double hoodKd2 = 0.0;
         public static final double hoodKs1 = 0.0;
@@ -234,7 +237,7 @@ public final class Constants {
 
     public static final class AutoAimConstants {
         public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
-        public static final boolean defaultUseIKSolver = true;
+        public static final boolean defaultUseIKSolver = false;
     }
 
     public static final class IntakeConstants {

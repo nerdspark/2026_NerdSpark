@@ -79,6 +79,10 @@ public class Intake extends SubsystemBase {
         roller1.getConfigurator().apply(rollerMotorConfig);
         roller2.getConfigurator().apply(rollerMotorConfig);
     }
+
+    public Boolean intakeIsIn() {
+        return deployMotor.getPosition().getValueAsDouble() < 3;
+    }
     
     public void setDeployPosition(Supplier<Double> rotations) {
         deployMotor.setControl(m_mmRequest.withPosition(rotations.get().doubleValue()));

@@ -16,7 +16,9 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -62,7 +64,7 @@ public class Turret extends SubsystemBase {
 
     private VelocityDutyCycle shootDutyBang = new VelocityDutyCycle(0);
     private VelocityTorqueCurrentFOC shootTorqueBang = new VelocityTorqueCurrentFOC(0);
-    private MotionMagicVoltage hoodPose = new MotionMagicVoltage(0);
+    private MotionMagicTorqueCurrentFOC hoodPose = new MotionMagicTorqueCurrentFOC(0);
     private MotionMagicVoltage spinPose = new MotionMagicVoltage(0);
 
     // private VoltageOut sysId = new VoltageOut(0);
@@ -74,6 +76,8 @@ public class Turret extends SubsystemBase {
     private boolean shortPathCrossesWrap;
     public boolean pathLatched = false;
     private double turretAngle;
+    private boolean neutralMode = false;
+    private double lastTurretAngle = 0;
 
     private double filteredTurretDelaySec = TurretConstants.delay;
     public static double delaySum = 0.0;
@@ -120,8 +124,9 @@ public class Turret extends SubsystemBase {
             )
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(Amps.of(TurretConfig.spinStatorCurrentLimit))
-                .withStatorCurrentLimitEnable(false)
-                .withSupplyCurrentLimitEnable(false)
+                .withStatorCurrentLimitEnable(true)
+                .withSupplyCurrentLimit(TurretConfig.spinSupplyCurrent)
+                .withSupplyCurrentLimitEnable(true)
             )
             .withMotionMagic(new MotionMagicConfigs()
                 .withMotionMagicCruiseVelocity(TurretConfig.spinVelocity)
@@ -348,17 +353,17 @@ public class Turret extends SubsystemBase {
      * 
      * @param distance the distance to the center of the hub from the center of the robot
      * @param robotHeading the curret heading of the robot
-     * @param robotFOS the current field centric speeds of the robot
+     * @param robotROS the current robot centric speeds of the robot
      * @return the velocity to shoot at
     */
-    private double aimOnFly(double distance, double robotHeading, ChassisSpeeds robotFOS) {
+    private double aimOnFly(double distance, double robotHeading, ChassisSpeeds robotROS) {
         ShooterParams map = TurretConstants.map.get(distance);
 
         hoodPose.Position = map.hoodPose;
 
         double shooterFOA = robotHeading + turretAngle;
-        double robotSpeed = Math.hypot(robotFOS.vxMetersPerSecond, robotFOS.vyMetersPerSecond);
-        double robotVelAngle = Math.atan2(robotFOS.vyMetersPerSecond, robotFOS.vxMetersPerSecond);
+        double robotSpeed = Math.hypot(robotROS.vxMetersPerSecond, robotROS.vyMetersPerSecond);
+        double robotVelAngle = Math.atan2(robotROS.vyMetersPerSecond, robotROS.vxMetersPerSecond);
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
         double deltaMotorRPS = vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
 
@@ -405,7 +410,7 @@ public class Turret extends SubsystemBase {
         turretAngle = normalizeRadians(turretAngle);
         SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
 
-        neededAngle = normalizeRadians(neededAngle + 155);
+        neededAngle = normalizeRadians(neededAngle - Math.toRadians(145));
         SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
 
         // Update phase delay here, 20ms loop
@@ -416,8 +421,19 @@ public class Turret extends SubsystemBase {
             0.02
         );
 
-        // Compute angular error
-        double error = neededAngle - turretAngle;
+        // --- Logical angle to handle overshoot ---
+        double diff = turretAngle - lastTurretAngle;
+        if (diff > Math.PI) diff -= TWO_PI;
+        if (diff < -Math.PI) diff += TWO_PI;
+
+        double logicalTurretAngle = turretAngle;
+        if (Math.signum(turretAngle) != Math.signum(lastTurretAngle) && Math.abs(diff) < Math.PI) {
+            // Overshoot happened, extrapolate past ±180° instead of wrapping
+            logicalTurretAngle = lastTurretAngle + diff;
+        }
+
+        // Compute angular error using logical angle
+        double error = neededAngle - logicalTurretAngle;
 
         // Find the shortest path
         double shortError = error;
@@ -433,7 +449,6 @@ public class Turret extends SubsystemBase {
                 Math.abs(turretAngle) > Math.PI / 2.0 &&
                 Math.abs(neededAngle) > Math.PI / 2.0 &&
                 Math.signum(turretAngle) != Math.signum(neededAngle);
-
             pathLatched = true;
         }
 
@@ -444,9 +459,14 @@ public class Turret extends SubsystemBase {
             pathLatched = false;
         }
 
+        // Neutral zone
+        neutralMode = Math.abs(chosenError) < Math.toRadians(4);
+
         // Command motor
         double motorDelta = (chosenError / TWO_PI) * TurretConstants.spinRatio;
         spinPose.Position = motorDelta + spinMotor.getPosition().getValueAsDouble();
+
+        lastTurretAngle = turretAngle;
     }
 
     private double applyShooterControl(double motorRps) {
@@ -688,8 +708,8 @@ public class Turret extends SubsystemBase {
 
             for (int i = 0; i < 10; i++) {
                 Translation2d robotFieldVelocity = new Translation2d(
-                    speeds.vxMetersPerSecond,
-                    speeds.vyMetersPerSecond
+                    robotSpeeds.vxMetersPerSecond,
+                    robotSpeeds.vyMetersPerSecond
                 );
                 Translation2d flightOffset = robotFieldVelocity.times(tof); // How far robot moves during ball flight
                 lookaheadTurretPos = turretPose.getTranslation().plus(flightOffset); // Effective launch point
@@ -746,10 +766,10 @@ public class Turret extends SubsystemBase {
                         hoodWheelsZero();
                     }
                 } else {
-                    velocity = aimOnFly(Double.MAX_VALUE, currPose.getRotation().getRadians(), speeds);
+                    velocity = aimOnFly(Double.MAX_VALUE, currPose.getRotation().getRadians(), robotSpeeds);
                 }
             } else {
-                velocity = aimOnFly(shoot ? distance : Double.MAX_VALUE, currPose.getRotation().getRadians(), speeds);
+                velocity = aimOnFly(shoot ? distance : Double.MAX_VALUE, currPose.getRotation().getRadians(), robotSpeeds);
             }
         } else {
             hoodWheelsZero();
@@ -766,16 +786,17 @@ public class Turret extends SubsystemBase {
             hoodPose.Position = 0;
             velocity = 0;
             mode = ShootMode.COAST;
+            neutralMode = true;
         }
 
-        if (manualOverride.get()) {
-            hoodPose.Position = 0;
-            velocity = 0;
-            mode = ShootMode.COAST;
+        if (neutralMode) {
+            spinMotor.setControl(new NeutralOut());
+        } else {
+            spinMotor.setControl(spinPose);
         }
 
-        spinMotor.setControl(spinPose);
         SmartDashboard.putNumber("Turret/SpinAmps", spinMotor.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Turret/SpinSupply", spinMotor.getSupplyCurrent().getValueAsDouble());
         hoodMotor1.setControl(hoodPose);
         SmartDashboard.putNumber("Hood 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Hood 2 Pose", hoodMotor2.getPosition().getValueAsDouble());

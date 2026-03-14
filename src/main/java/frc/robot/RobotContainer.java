@@ -64,12 +64,14 @@ public class RobotContainer {
 
     private final PoseEstimatorSubsystem poseEstimator;
     private final Turret turret;
-    private boolean override = false;
+    private boolean override = true;
     private final Indexer indexer;
     private final Intake intake;
     private final SimFuelSubsystem fuelSim;
     private final SimFuelIKSubsystem fuelSimIK;
     private final RealFuelSubsystem fuelReal;
+
+    private final Trigger intakeHome;
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
@@ -102,6 +104,8 @@ public class RobotContainer {
 
         indexer = new Indexer();
         intake = new Intake();
+        intakeHome = new Trigger(() -> intake.intakeIsIn());
+
         fuelSim = RobotBase.isSimulation()
             ? new SimFuelSubsystem(
                 () -> drivetrain.getState().Pose,
@@ -137,7 +141,7 @@ public class RobotContainer {
         }));
 
         joystick.leftBumper().and(() -> !turret.pathLatched)
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 0.9))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
 
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
@@ -159,13 +163,14 @@ public class RobotContainer {
         joystick.povDown().onTrue(new InstantCommand(() -> target = 0));
         joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
 
-        joystick2.a().onTrue(new InstantCommand(() -> override = true));
-        joystick2.b().onTrue(new InstantCommand(() -> override = false));
+        joystick2.a().or(intakeHome)
+            .onTrue(new InstantCommand(() -> override = true))
+            .onFalse(new InstantCommand(() -> override = false));
         joystick2.y().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
-        Color allianceColor = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Color.kBlue : Color.kRed;
+        Color allianceColor = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue ? Color.kBlue : Color.kRed;
         Color oppAllianceColor = allianceColor == Color.kBlue ? Color.kRed : Color.kBlue;
         // Start-of-shift warning
         for (int i = 1; i <= 5; i++) {
@@ -186,7 +191,7 @@ public class RobotContainer {
                             SmartDashboard.putString("Hub Active Alliance Color", new Color().toHexString());
                         }
                     ).withTimeout(0.25)
-                    .andThen(new InstantCommand(() -> SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString())))
+                    .andThen(new InstantCommand(() -> SmartDashboard.putString("Hub Active Alliance Color", allianceColor.toHexString())))
                 );
         }
 
@@ -238,6 +243,7 @@ public class RobotContainer {
     }
 
     public void updateDashboard() {
+        SmartDashboard.putBoolean("Intake is in", intakeHome.getAsBoolean());
         // Update from HubShiftUtil
         SmartDashboard.putString("Shifts/Remaining Shift Time", 
             String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))
