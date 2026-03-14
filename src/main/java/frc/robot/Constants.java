@@ -252,6 +252,20 @@ public final class Constants {
         public static final boolean defaultEnable = false;
     }
 
+    public static final class SpinTuneConstants {
+        public static final String enableKey = "SpinTune/Enable";
+        public static final String targetDegKey = "SpinTune/TargetDeg";
+        public static final String kPKey = "SpinTune/kP";
+        public static final String kIKey = "SpinTune/kI";
+        public static final String kDKey = "SpinTune/kD";
+        public static final String kSKey = "SpinTune/kS";
+        public static final String kVKey = "SpinTune/kV";
+        public static final String kAKey = "SpinTune/kA";
+        public static final String cruiseVelocityKey = "SpinTune/CruiseVelocity";
+        public static final String accelerationKey = "SpinTune/Acceleration";
+        public static final boolean defaultEnable = false;
+    }
+
     public static final class AutoAimConstants {
         public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
         public static final boolean defaultUseIKSolver = true;
