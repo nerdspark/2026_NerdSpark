@@ -522,6 +522,18 @@ public class Turret extends SubsystemBase {
         );
     }
 
+    private static final class DirectIkSelection {
+        private final double hoodDegrees;
+        private final double motorRps;
+        private final boolean usedPrimaryObjective;
+
+        private DirectIkSelection(double hoodDegrees, double motorRps, boolean usedPrimaryObjective) {
+            this.hoodDegrees = hoodDegrees;
+            this.motorRps = motorRps;
+            this.usedPrimaryObjective = usedPrimaryObjective;
+        }
+    }
+
     private IkSolution solveIK(double distanceMeters) {
         if (distanceMeters <= 0.0) {
             return null;
@@ -531,70 +543,11 @@ public class Turret extends SubsystemBase {
             AutoAimConstants.defaultUseEntryAngleIK
         );
         double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
-        double minAngleDeg = TurretConstants.hoodMinDegrees;
-        double maxAngleDeg = TurretConstants.hoodMaxDegrees;
-        double targetEntryDeg = TurretConstants.ikEntryAngleTargetDeg;
-        double entryToleranceDeg = TurretConstants.ikEntryAngleToleranceDeg;
 
-        double bestBandAngleDeg = Double.NaN;
-        double bestBandMotorRps = Double.POSITIVE_INFINITY;
-        double bestBandEntryErrorDeg = Double.POSITIVE_INFINITY;
-        double bestFallbackAngleDeg = Double.NaN;
-        double bestFallbackMotorRps = Double.POSITIVE_INFINITY;
-        double bestLowHoodAngleDeg = Double.NaN;
-        double bestLowHoodMotorRps = Double.NaN;
-
-        for (double angleDeg = minAngleDeg; angleDeg <= maxAngleDeg; angleDeg += TurretConstants.shotAngleStepDeg) {
-            double angleRad = Math.toRadians(angleDeg);
-            double speedMps = solveIKSpeed(distanceMeters, angleRad, deltaHeight);
-            if (!Double.isFinite(speedMps) || speedMps <= 0.0) {
-                continue;
-            }
-
-            double motorRps = launchSpeedMpsToMotorRps(speedMps);
-
-            if (!Double.isFinite(bestLowHoodAngleDeg)
-                || angleDeg < bestLowHoodAngleDeg
-                || (Math.abs(angleDeg - bestLowHoodAngleDeg) < 1e-9 && motorRps > bestLowHoodMotorRps)) {
-                bestLowHoodAngleDeg = angleDeg;
-                bestLowHoodMotorRps = motorRps;
-            }
-
-            if (motorRps > TurretConstants.shooterMaxMotorRps) {
-                continue;
-            }
-
-            if (motorRps < bestFallbackMotorRps) {
-                bestFallbackMotorRps = motorRps;
-                bestFallbackAngleDeg = angleDeg;
-            }
-
-            double entryDeg = computeEntryAngleDeg(distanceMeters, speedMps, angleRad);
-            if (!Double.isFinite(entryDeg)) {
-                continue;
-            }
-
-            double entryErrorDeg = Math.abs(entryDeg - targetEntryDeg);
-            if (entryErrorDeg <= entryToleranceDeg) {
-                boolean betterRps = motorRps < bestBandMotorRps;
-                boolean tieBreak = Math.abs(motorRps - bestBandMotorRps) < 1e-9
-                    && entryErrorDeg < bestBandEntryErrorDeg;
-                if (betterRps || tieBreak) {
-                    bestBandMotorRps = motorRps;
-                    bestBandAngleDeg = angleDeg;
-                    bestBandEntryErrorDeg = entryErrorDeg;
-                }
-            }
-        }
-
-        boolean usingEntryBand = useEntryAngleIK && Double.isFinite(bestBandAngleDeg);
-        double selectedAngleDeg = useEntryAngleIK
-            ? (usingEntryBand ? bestBandAngleDeg : bestFallbackAngleDeg)
-            : bestLowHoodAngleDeg;
-        double selectedMotorRps = useEntryAngleIK
-            ? (usingEntryBand ? bestBandMotorRps : bestFallbackMotorRps)
-            : bestLowHoodMotorRps;
-        if (!Double.isFinite(selectedAngleDeg) || !Double.isFinite(selectedMotorRps)) {
+        DirectIkSelection selection = useEntryAngleIK
+            ? solveEntryAngleIKDirect(distanceMeters, deltaHeight)
+            : solveLowHoodHighRpsDirect(distanceMeters, deltaHeight);
+        if (selection == null) {
             return null;
         }
 
@@ -603,22 +556,77 @@ public class Turret extends SubsystemBase {
             TurretConstants.hoodMinDegrees,
             Math.min(
                 TurretConstants.hoodMaxDegrees,
-                selectedAngleDeg + offsets.hoodOffsetDeg
+                selection.hoodDegrees + offsets.hoodOffsetDeg
             )
         );
         double motorRps = Math.max(
             0.0,
             useEntryAngleIK
-                ? Math.min(TurretConstants.shooterMaxMotorRps, selectedMotorRps + offsets.motorRpsOffset)
-                : selectedMotorRps + offsets.motorRpsOffset
+                ? Math.min(TurretConstants.shooterMaxMotorRps, selection.motorRps + offsets.motorRpsOffset)
+                : selection.motorRps + offsets.motorRpsOffset
         );
         SmartDashboard.putBoolean("Turret/IK/UseEntryAngleMode", useEntryAngleIK);
-        SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", usingEntryBand);
+        SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", selection.usedPrimaryObjective);
         SmartDashboard.putString(
             "Turret/IK/SolverMode",
             useEntryAngleIK ? "EntryAngle" : "LowHoodHighRps"
         );
         return new IkSolution(hoodDeg, motorRps);
+    }
+
+    private DirectIkSelection solveEntryAngleIKDirect(
+        double distanceMeters,
+        double deltaHeightMeters
+    ) {
+        double targetEntryRad = Math.toRadians(TurretConstants.ikEntryAngleTargetDeg);
+        double desiredThetaRad = Math.atan(Math.tan(targetEntryRad) + (2.0 * deltaHeightMeters / distanceMeters));
+        double desiredThetaDeg = Math.toDegrees(desiredThetaRad);
+        if (!Double.isFinite(desiredThetaDeg)) {
+            return solveMinimumSpeedIKDirect(distanceMeters, deltaHeightMeters);
+        }
+        if (desiredThetaDeg < TurretConstants.hoodMinDegrees || desiredThetaDeg > TurretConstants.hoodMaxDegrees) {
+            return solveMinimumSpeedIKDirect(distanceMeters, deltaHeightMeters);
+        }
+        double speedMps = solveIKSpeed(distanceMeters, Math.toRadians(desiredThetaDeg), deltaHeightMeters);
+        double motorRps = launchSpeedMpsToMotorRps(speedMps);
+        if (Double.isFinite(motorRps) && motorRps > 0.0 && motorRps <= TurretConstants.shooterMaxMotorRps) {
+            return new DirectIkSelection(desiredThetaDeg, motorRps, true);
+        }
+
+        return solveMinimumSpeedIKDirect(distanceMeters, deltaHeightMeters);
+    }
+
+    private DirectIkSelection solveMinimumSpeedIKDirect(
+        double distanceMeters,
+        double deltaHeightMeters
+    ) {
+        double alphaRad = Math.atan2(deltaHeightMeters, distanceMeters);
+        double thetaDeg = Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
+        if (thetaDeg < TurretConstants.hoodMinDegrees || thetaDeg > TurretConstants.hoodMaxDegrees) {
+            return null;
+        }
+        double speedMps = solveIKSpeed(distanceMeters, Math.toRadians(thetaDeg), deltaHeightMeters);
+        double motorRps = launchSpeedMpsToMotorRps(speedMps);
+        if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
+            return null;
+        }
+        return new DirectIkSelection(thetaDeg, motorRps, false);
+    }
+
+    private DirectIkSelection solveLowHoodHighRpsDirect(
+        double distanceMeters,
+        double deltaHeightMeters
+    ) {
+        double preferredAngleDeg = TurretConstants.lowHoodPreferredDegrees;
+        if (preferredAngleDeg < TurretConstants.hoodMinDegrees || preferredAngleDeg > TurretConstants.hoodMaxDegrees) {
+            return null;
+        }
+        double speedMps = solveIKSpeed(distanceMeters, Math.toRadians(preferredAngleDeg), deltaHeightMeters);
+        double motorRps = launchSpeedMpsToMotorRps(speedMps);
+        if (!Double.isFinite(motorRps) || motorRps <= 0.0) {
+            return null;
+        }
+        return new DirectIkSelection(preferredAngleDeg, motorRps, true);
     }
 
     private double solveIKSpeed(double distanceMeters, double thetaRad, double deltaHeightMeters) {

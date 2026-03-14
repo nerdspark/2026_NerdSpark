@@ -93,84 +93,81 @@ public class SimFuelIKSubsystem {
             AutoAimConstants.defaultUseEntryAngleIK
         );
         double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
-        double minAngleDeg = TurretConstants.hoodMinDegrees;
-        double maxAngleDeg = TurretConstants.hoodMaxDegrees;
-        double targetEntryDeg = TurretConstants.ikEntryAngleTargetDeg;
-        double toleranceDeg = TurretConstants.ikEntryAngleToleranceDeg;
 
-        double bestBandAngleDeg = Double.NaN;
-        double bestBandMotorRps = Double.POSITIVE_INFINITY;
-        double bestBandEntryErrorDeg = Double.POSITIVE_INFINITY;
-        double bestFallbackAngleDeg = Double.NaN;
-        double bestFallbackMotorRps = Double.POSITIVE_INFINITY;
-        double bestLowHoodAngleDeg = Double.NaN;
-        double bestLowHoodMotorRps = Double.NaN;
-
-        for (double angleDeg = minAngleDeg; angleDeg <= maxAngleDeg; angleDeg += TurretConstants.shotAngleStepDeg) {
-            double angleRad = Math.toRadians(angleDeg);
-            double speedMps = solveSpeedFromEquation(distanceMeters, angleRad, deltaHeight);
-            if (!Double.isFinite(speedMps) || speedMps <= 0.0) {
-                continue;
-            }
-
-            double motorRps = launchSpeedMpsToMotorRps(speedMps);
-
-            if (!Double.isFinite(bestLowHoodAngleDeg)
-                || angleDeg < bestLowHoodAngleDeg
-                || (Math.abs(angleDeg - bestLowHoodAngleDeg) < 1e-9 && motorRps > bestLowHoodMotorRps)) {
-                bestLowHoodAngleDeg = angleDeg;
-                bestLowHoodMotorRps = motorRps;
-            }
-
-            if (motorRps > TurretConstants.shooterMaxMotorRps) {
-                continue;
-            }
-
-            if (motorRps < bestFallbackMotorRps) {
-                bestFallbackMotorRps = motorRps;
-                bestFallbackAngleDeg = angleDeg;
-            }
-
-            double entryDeg = computeEntryAngleDeg(distanceMeters, speedMps, angleRad);
-            if (!Double.isFinite(entryDeg)) {
-                continue;
-            }
-
-            double entryErrorDeg = Math.abs(entryDeg - targetEntryDeg);
-            if (entryErrorDeg <= toleranceDeg) {
-                boolean betterRps = motorRps < bestBandMotorRps;
-                boolean tieBreak = Math.abs(motorRps - bestBandMotorRps) < 1e-9
-                    && entryErrorDeg < bestBandEntryErrorDeg;
-                if (betterRps || tieBreak) {
-                    bestBandMotorRps = motorRps;
-                    bestBandAngleDeg = angleDeg;
-                    bestBandEntryErrorDeg = entryErrorDeg;
-                }
-            }
-        }
-
-        double selectedAngleDeg = useEntryAngleIK
-            ? (Double.isFinite(bestBandAngleDeg) ? bestBandAngleDeg : bestFallbackAngleDeg)
-            : bestLowHoodAngleDeg;
-        double selectedMotorRps = useEntryAngleIK
-            ? (Double.isFinite(bestBandAngleDeg) ? bestBandMotorRps : bestFallbackMotorRps)
-            : bestLowHoodMotorRps;
-        if (!Double.isFinite(selectedAngleDeg) || !Double.isFinite(selectedMotorRps)) {
+        DirectShotSelection selection = useEntryAngleIK
+            ? solveEntryAngleIKDirect(distanceMeters, deltaHeight)
+            : solveLowHoodHighRpsDirect(distanceMeters, deltaHeight);
+        if (selection == null) {
             return null;
         }
 
         ShooterOffsetMap.Offsets offsets = offsetMap.sample(distanceMeters);
         double hoodDeg = clamp(
-            selectedAngleDeg + offsets.hoodOffsetDeg,
+            selection.hoodDegrees + offsets.hoodOffsetDeg,
             TurretConstants.hoodMinDegrees,
             TurretConstants.hoodMaxDegrees
         );
         double motorRps = clamp(
-            selectedMotorRps + offsets.motorRpsOffset,
+            selection.motorRps + offsets.motorRpsOffset,
             0.0,
             useEntryAngleIK ? TurretConstants.shooterMaxMotorRps : Double.POSITIVE_INFINITY
         );
         return new ShotSolution(hoodDeg, motorRps);
+    }
+
+    private DirectShotSelection solveEntryAngleIKDirect(
+        double distanceMeters,
+        double deltaHeightMeters
+    ) {
+        double targetEntryRad = Math.toRadians(TurretConstants.ikEntryAngleTargetDeg);
+        double desiredThetaRad = Math.atan(Math.tan(targetEntryRad) + (2.0 * deltaHeightMeters / distanceMeters));
+        double desiredThetaDeg = Math.toDegrees(desiredThetaRad);
+        if (!Double.isFinite(desiredThetaDeg)) {
+            return solveMinimumSpeedIKDirect(distanceMeters, deltaHeightMeters);
+        }
+        if (desiredThetaDeg < TurretConstants.hoodMinDegrees || desiredThetaDeg > TurretConstants.hoodMaxDegrees) {
+            return solveMinimumSpeedIKDirect(distanceMeters, deltaHeightMeters);
+        }
+        double speedMps = solveSpeedFromEquation(distanceMeters, Math.toRadians(desiredThetaDeg), deltaHeightMeters);
+        double motorRps = launchSpeedMpsToMotorRps(speedMps);
+        if (Double.isFinite(motorRps) && motorRps > 0.0 && motorRps <= TurretConstants.shooterMaxMotorRps) {
+            return new DirectShotSelection(desiredThetaDeg, motorRps, true);
+        }
+
+        return solveMinimumSpeedIKDirect(distanceMeters, deltaHeightMeters);
+    }
+
+    private DirectShotSelection solveMinimumSpeedIKDirect(
+        double distanceMeters,
+        double deltaHeightMeters
+    ) {
+        double alphaRad = Math.atan2(deltaHeightMeters, distanceMeters);
+        double thetaDeg = Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
+        if (thetaDeg < TurretConstants.hoodMinDegrees || thetaDeg > TurretConstants.hoodMaxDegrees) {
+            return null;
+        }
+        double speedMps = solveSpeedFromEquation(distanceMeters, Math.toRadians(thetaDeg), deltaHeightMeters);
+        double motorRps = launchSpeedMpsToMotorRps(speedMps);
+        if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
+            return null;
+        }
+        return new DirectShotSelection(thetaDeg, motorRps, false);
+    }
+
+    private DirectShotSelection solveLowHoodHighRpsDirect(
+        double distanceMeters,
+        double deltaHeightMeters
+    ) {
+        double preferredAngleDeg = TurretConstants.lowHoodPreferredDegrees;
+        if (preferredAngleDeg < TurretConstants.hoodMinDegrees || preferredAngleDeg > TurretConstants.hoodMaxDegrees) {
+            return null;
+        }
+        double speedMps = solveSpeedFromEquation(distanceMeters, Math.toRadians(preferredAngleDeg), deltaHeightMeters);
+        double motorRps = launchSpeedMpsToMotorRps(speedMps);
+        if (!Double.isFinite(motorRps) || motorRps <= 0.0) {
+            return null;
+        }
+        return new DirectShotSelection(preferredAngleDeg, motorRps, true);
     }
 
     private double getConfiguredMuzzleHeightMeters() {
@@ -228,6 +225,19 @@ public class SimFuelIKSubsystem {
         private ShotSolution(double hoodDegrees, double motorRps) {
             this.hoodDegrees = hoodDegrees;
             this.motorRps = motorRps;
+        }
+    }
+
+    private static final class DirectShotSelection {
+        private final double hoodDegrees;
+        private final double motorRps;
+        @SuppressWarnings("unused")
+        private final boolean usedPrimaryObjective;
+
+        private DirectShotSelection(double hoodDegrees, double motorRps, boolean usedPrimaryObjective) {
+            this.hoodDegrees = hoodDegrees;
+            this.motorRps = motorRps;
+            this.usedPrimaryObjective = usedPrimaryObjective;
         }
     }
 }
