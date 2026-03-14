@@ -1,11 +1,16 @@
 package frc.robot.subsystems;
 
+import static frc.robot.util.TurretUtil.launchSpeedMpsToMotorRps;
+import static frc.robot.util.TurretUtil.motorRpsToLaunchSpeedMps;
+
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.util.ShooterOffsetMap;
 
@@ -58,7 +63,7 @@ public class SimFuelIKSubsystem {
         }
 
         double hoodRad = Math.toRadians(solution.hoodDegrees);
-        double muzzleSpeed = solution.motorRps * 2.0 * Math.PI * TurretConstants.shooterWheelRadius;
+        double muzzleSpeed = motorRpsToLaunchSpeedMps(solution.motorRps);
         double horizontalSpeed = muzzleSpeed * Math.cos(hoodRad);
         double verticalSpeed = muzzleSpeed * Math.sin(hoodRad);
 
@@ -83,6 +88,10 @@ public class SimFuelIKSubsystem {
             return null;
         }
 
+        boolean useEntryAngleIK = SmartDashboard.getBoolean(
+            AutoAimConstants.useEntryAngleIKKey,
+            AutoAimConstants.defaultUseEntryAngleIK
+        );
         double deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
         double minAngleDeg = TurretConstants.hoodMinDegrees;
         double maxAngleDeg = TurretConstants.hoodMaxDegrees;
@@ -102,7 +111,7 @@ public class SimFuelIKSubsystem {
                 continue;
             }
 
-            double motorRps = speedMps / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
+            double motorRps = launchSpeedMpsToMotorRps(speedMps);
             if (motorRps > TurretConstants.shooterMaxMotorRps) {
                 continue;
             }
@@ -130,8 +139,12 @@ public class SimFuelIKSubsystem {
             }
         }
 
-        double selectedAngleDeg = Double.isFinite(bestBandAngleDeg) ? bestBandAngleDeg : bestFallbackAngleDeg;
-        double selectedMotorRps = Double.isFinite(bestBandAngleDeg) ? bestBandMotorRps : bestFallbackMotorRps;
+        double selectedAngleDeg = useEntryAngleIK && Double.isFinite(bestBandAngleDeg)
+            ? bestBandAngleDeg
+            : bestFallbackAngleDeg;
+        double selectedMotorRps = useEntryAngleIK && Double.isFinite(bestBandAngleDeg)
+            ? bestBandMotorRps
+            : bestFallbackMotorRps;
         if (!Double.isFinite(selectedAngleDeg) || !Double.isFinite(selectedMotorRps)) {
             return null;
         }

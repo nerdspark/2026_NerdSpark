@@ -93,7 +93,9 @@ public final class Constants {
 
         public static final double hoodRatio = 50;
         public static final double shooterWheelRadius = Units.inchesToMeters(4);
-        public static final double shooterMaxMotorRps = 4000.0 / 60.0;
+        // Ball exit speed as a fraction of wheel surface speed.
+        public static final double shooterLaunchEfficiency = 0.30;
+        public static final double shooterMaxMotorRps = 6000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(30);
         public static final double targetHeightMeters = Units.inchesToMeters(72);
@@ -235,9 +237,25 @@ public final class Constants {
         public static final boolean defaultEnable = false;
     }
 
+    public static final class HoodTuneConstants {
+        public static final String enableKey = "HoodTune/Enable";
+        public static final String targetDegKey = "HoodTune/TargetDeg";
+        public static final String kPKey = "HoodTune/kP";
+        public static final String kIKey = "HoodTune/kI";
+        public static final String kDKey = "HoodTune/kD";
+        public static final String kSKey = "HoodTune/kS";
+        public static final String kVKey = "HoodTune/kV";
+        public static final String kAKey = "HoodTune/kA";
+        public static final String cruiseVelocityKey = "HoodTune/CruiseVelocity";
+        public static final String accelerationKey = "HoodTune/Acceleration";
+        public static final boolean defaultEnable = true;
+    }
+
     public static final class AutoAimConstants {
         public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
         public static final boolean defaultUseIKSolver = true;
+        public static final String useEntryAngleIKKey = "TurretTarget/UseEntryAngleIK";
+        public static final boolean defaultUseEntryAngleIK = true;
     }
 
     public static final class IntakeConstants {

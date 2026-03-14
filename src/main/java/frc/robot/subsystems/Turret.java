@@ -5,8 +5,6 @@ import static frc.robot.util.TurretUtil.*;
 
 import java.util.function.Supplier;
 
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
@@ -45,6 +43,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.AutoAimConstants;
+import frc.robot.Constants.HoodTuneConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.util.ShooterParams;
 import frc.robot.Constants.TurretConfig;
@@ -90,6 +89,15 @@ public class Turret extends SubsystemBase {
     private ShootMode mode = ShootMode.COAST;
     private double velocity = 0;
     public double tof = 0;
+
+    private double appliedHoodKp = Double.NaN;
+    private double appliedHoodKi = Double.NaN;
+    private double appliedHoodKd = Double.NaN;
+    private double appliedHoodKs = Double.NaN;
+    private double appliedHoodKv = Double.NaN;
+    private double appliedHoodKa = Double.NaN;
+    private double appliedHoodCruiseVelocity = Double.NaN;
+    private double appliedHoodAcceleration = Double.NaN;
 
     private final Field2d m_field = new Field2d();
     private final ShooterOffsetMap offsetMap = new ShooterOffsetMap();
@@ -255,6 +263,15 @@ public class Turret extends SubsystemBase {
         hoodMotor1.setPosition(0);
         hoodMotor2.setPosition(0);
 
+        initializeHoodTuneDashboard();
+        appliedHoodKp = TurretConfig.hoodKp1;
+        appliedHoodKi = TurretConfig.hoodKi1;
+        appliedHoodKd = TurretConfig.hoodKd1;
+        appliedHoodKs = TurretConfig.hoodKs1;
+        appliedHoodKv = TurretConfig.hoodKv1;
+        appliedHoodKa = TurretConfig.hoodKa1;
+        appliedHoodCruiseVelocity = TurretConfig.hoodVelocity;
+        appliedHoodAcceleration = TurretConfig.hoodAccel;
     }
 
     // private final SysIdRoutine spin = new SysIdRoutine(
@@ -366,7 +383,7 @@ public class Turret extends SubsystemBase {
         double robotSpeed = Math.hypot(robotROS.vxMetersPerSecond, robotROS.vyMetersPerSecond);
         double robotVelAngle = Math.atan2(robotROS.vyMetersPerSecond, robotROS.vxMetersPerSecond);
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
-        double deltaMotorRPS = vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
+        double deltaMotorRPS = launchSpeedMpsToMotorRps(vParallel);
 
         double velo =  map.shooterSpeed - deltaMotorRPS;
 
@@ -488,6 +505,10 @@ public class Turret extends SubsystemBase {
         if (distanceMeters <= 0.0) {
             return null;
         }
+        boolean useEntryAngleIK = SmartDashboard.getBoolean(
+            AutoAimConstants.useEntryAngleIKKey,
+            AutoAimConstants.defaultUseEntryAngleIK
+        );
         double deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
         double minAngleDeg = TurretConstants.hoodMinDegrees;
         double maxAngleDeg = TurretConstants.hoodMaxDegrees;
@@ -507,7 +528,7 @@ public class Turret extends SubsystemBase {
                 continue;
             }
 
-            double motorRps = speedMps / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
+            double motorRps = launchSpeedMpsToMotorRps(speedMps);
             if (motorRps > TurretConstants.shooterMaxMotorRps) {
                 continue;
             }
@@ -535,7 +556,7 @@ public class Turret extends SubsystemBase {
             }
         }
 
-        boolean usingEntryBand = Double.isFinite(bestBandAngleDeg);
+        boolean usingEntryBand = useEntryAngleIK && Double.isFinite(bestBandAngleDeg);
         double selectedAngleDeg = usingEntryBand ? bestBandAngleDeg : bestFallbackAngleDeg;
         double selectedMotorRps = usingEntryBand ? bestBandMotorRps : bestFallbackMotorRps;
         if (!Double.isFinite(selectedAngleDeg) || !Double.isFinite(selectedMotorRps)) {
@@ -554,6 +575,7 @@ public class Turret extends SubsystemBase {
             0.0,
             Math.min(TurretConstants.shooterMaxMotorRps, selectedMotorRps + offsets.motorRpsOffset)
         );
+        SmartDashboard.putBoolean("Turret/IK/UseEntryAngleMode", useEntryAngleIK);
         SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", usingEntryBand);
         return new IkSolution(hoodDeg, motorRps);
     }
@@ -595,12 +617,97 @@ public class Turret extends SubsystemBase {
         double robotSpeed = Math.hypot(robotFOS.vxMetersPerSecond, robotFOS.vyMetersPerSecond);
         double robotVelAngle = Math.atan2(robotFOS.vyMetersPerSecond, robotFOS.vxMetersPerSecond);
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
-        double deltaMotorRPS = vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
+        double deltaMotorRPS = launchSpeedMpsToMotorRps(vParallel);
         return motorRps - deltaMotorRPS;
+    }
+
+    private void initializeHoodTuneDashboard() {
+        SmartDashboard.setDefaultBoolean(HoodTuneConstants.enableKey, HoodTuneConstants.defaultEnable);
+        SmartDashboard.setDefaultNumber(HoodTuneConstants.targetDegKey, TurretConstants.hoodMinDegrees);
+        SmartDashboard.setDefaultNumber(HoodTuneConstants.kPKey, TurretConfig.hoodKp1);
+        SmartDashboard.setDefaultNumber(HoodTuneConstants.kIKey, TurretConfig.hoodKi1);
+        SmartDashboard.setDefaultNumber(HoodTuneConstants.kDKey, TurretConfig.hoodKd1);
+        SmartDashboard.setDefaultNumber(HoodTuneConstants.kSKey, TurretConfig.hoodKs1);
+        SmartDashboard.setDefaultNumber(HoodTuneConstants.kVKey, TurretConfig.hoodKv1);
+        SmartDashboard.setDefaultNumber(HoodTuneConstants.kAKey, TurretConfig.hoodKa1);
+        SmartDashboard.setDefaultNumber(HoodTuneConstants.cruiseVelocityKey, TurretConfig.hoodVelocity);
+        SmartDashboard.setDefaultNumber(HoodTuneConstants.accelerationKey, TurretConfig.hoodAccel);
+    }
+
+    private void applyLiveHoodTuneConfigIfChanged() {
+        double kP = SmartDashboard.getNumber(HoodTuneConstants.kPKey, TurretConfig.hoodKp1);
+        double kI = SmartDashboard.getNumber(HoodTuneConstants.kIKey, TurretConfig.hoodKi1);
+        double kD = SmartDashboard.getNumber(HoodTuneConstants.kDKey, TurretConfig.hoodKd1);
+        double kS = SmartDashboard.getNumber(HoodTuneConstants.kSKey, TurretConfig.hoodKs1);
+        double kV = SmartDashboard.getNumber(HoodTuneConstants.kVKey, TurretConfig.hoodKv1);
+        double kA = SmartDashboard.getNumber(HoodTuneConstants.kAKey, TurretConfig.hoodKa1);
+        double cruiseVelocity = SmartDashboard.getNumber(
+            HoodTuneConstants.cruiseVelocityKey,
+            TurretConfig.hoodVelocity
+        );
+        double acceleration = SmartDashboard.getNumber(
+            HoodTuneConstants.accelerationKey,
+            TurretConfig.hoodAccel
+        );
+
+        boolean slotChanged = Double.compare(appliedHoodKp, kP) != 0
+            || Double.compare(appliedHoodKi, kI) != 0
+            || Double.compare(appliedHoodKd, kD) != 0
+            || Double.compare(appliedHoodKs, kS) != 0
+            || Double.compare(appliedHoodKv, kV) != 0
+            || Double.compare(appliedHoodKa, kA) != 0;
+        boolean motionMagicChanged = Double.compare(appliedHoodCruiseVelocity, cruiseVelocity) != 0
+            || Double.compare(appliedHoodAcceleration, acceleration) != 0;
+
+        if (slotChanged) {
+            Slot0Configs slot0 = new Slot0Configs()
+                .withKP(kP)
+                .withKI(kI)
+                .withKD(kD)
+                .withKS(kS)
+                .withKV(kV)
+                .withKA(kA)
+                .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
+            hoodMotor1.getConfigurator().apply(slot0);
+            hoodMotor2.getConfigurator().apply(slot0);
+            appliedHoodKp = kP;
+            appliedHoodKi = kI;
+            appliedHoodKd = kD;
+            appliedHoodKs = kS;
+            appliedHoodKv = kV;
+            appliedHoodKa = kA;
+        }
+
+        if (motionMagicChanged) {
+            MotionMagicConfigs motionMagic = new MotionMagicConfigs()
+                .withMotionMagicCruiseVelocity(cruiseVelocity)
+                .withMotionMagicAcceleration(acceleration);
+            hoodMotor1.getConfigurator().apply(motionMagic);
+            hoodMotor2.getConfigurator().apply(motionMagic);
+            appliedHoodCruiseVelocity = cruiseVelocity;
+            appliedHoodAcceleration = acceleration;
+        }
+    }
+
+    private void applyLiveHoodTuneOverride() {
+        double targetDeg = MathUtil.clamp(
+            SmartDashboard.getNumber(HoodTuneConstants.targetDegKey, TurretConstants.hoodMinDegrees),
+            TurretConstants.hoodMinDegrees,
+            TurretConstants.hoodMaxDegrees
+        );
+        hoodPose.Position = hoodDegreesToRotations(targetDeg);
+        velocity = 0.0;
+        mode = ShootMode.COAST;
+        neutralMode = true;
+        double currentDeg = hoodRotationsToDegrees(hoodMotor1.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("HoodTune/CurrentDeg", currentDeg);
+        SmartDashboard.putNumber("HoodTune/ErrorDeg", targetDeg - currentDeg);
     }
 
     @Override
     public void periodic() {
+        applyLiveHoodTuneConfigIfChanged();
+
         ChassisSpeeds speeds = speed.get();
         Pose2d currPose = pose.get();
         ChassisSpeeds robotSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, currPose.getRotation());
@@ -743,7 +850,7 @@ public class Turret extends SubsystemBase {
                     ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps);
                     double predictedEntryDeg = computeEntryAngleDeg(
                         distance,
-                        ikSolution.motorRps * 2.0 * Math.PI * TurretConstants.shooterWheelRadius,
+                        motorRpsToLaunchSpeedMps(ikSolution.motorRps),
                         Math.toRadians(ikSolution.hoodDegrees)
                     );
                     SmartDashboard.putBoolean("Turret/IK/HasSolution", true);
@@ -781,6 +888,14 @@ public class Turret extends SubsystemBase {
             SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
             SmartDashboard.putNumber("Turret/IK/PredictedEntryDeg", Double.NaN);
             SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", false);
+        }
+
+        boolean hoodTuneEnabled = SmartDashboard.getBoolean(
+            HoodTuneConstants.enableKey,
+            HoodTuneConstants.defaultEnable
+        );
+        if (hoodTuneEnabled) {
+            applyLiveHoodTuneOverride();
         }
 
         if (manualOverride.get()) {

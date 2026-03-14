@@ -89,6 +89,14 @@ public class RobotContainer {
             AutoAimConstants.useIKSolverKey,
             AutoAimConstants.defaultUseIKSolver
         );
+        SmartDashboard.setDefaultBoolean(
+            AutoAimConstants.useEntryAngleIKKey,
+            AutoAimConstants.defaultUseEntryAngleIK
+        );
+        SmartDashboard.putBoolean(
+            AutoAimConstants.useEntryAngleIKKey,
+            AutoAimConstants.defaultUseEntryAngleIK
+        );
 
         poseEstimator = new PoseEstimatorSubsystem(drivetrain);
 
@@ -133,11 +141,11 @@ public class RobotContainer {
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         joystick.b().onTrue(new InstantCommand(() -> {
-            boolean useIK = SmartDashboard.getBoolean(
-                AutoAimConstants.useIKSolverKey,
-                AutoAimConstants.defaultUseIKSolver
+            boolean useEntryAngleIK = SmartDashboard.getBoolean(
+                AutoAimConstants.useEntryAngleIKKey,
+                AutoAimConstants.defaultUseEntryAngleIK
             );
-            SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
+            SmartDashboard.putBoolean(AutoAimConstants.useEntryAngleIKKey, !useEntryAngleIK);
         }));
 
         joystick.leftBumper().and(() -> !turret.pathLatched)
