@@ -435,7 +435,7 @@ public class Turret extends SubsystemBase {
         turretAngle = normalizeRadians(turretAngle);
         SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
 
-        neededAngle = normalizeRadians(neededAngle - Math.toRadians(145));
+        neededAngle = normalizeRadians(neededAngle - Math.toRadians(142));
         SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
 
         // Update phase delay here, 20ms loop
@@ -841,10 +841,10 @@ public class Turret extends SubsystemBase {
             }
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
 
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 4; i++) {
                 Translation2d robotFieldVelocity = new Translation2d(
-                    robotSpeeds.vxMetersPerSecond,
-                    robotSpeeds.vyMetersPerSecond
+                    speeds.vxMetersPerSecond,
+                    speeds.vyMetersPerSecond
                 );
                 Translation2d flightOffset = robotFieldVelocity.times(tof); // How far robot moves during ball flight
                 lookaheadTurretPos = turretPose.getTranslation().plus(flightOffset); // Effective launch point

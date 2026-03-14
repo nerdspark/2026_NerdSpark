@@ -16,9 +16,9 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.util.ShooterParams;
 
 public final class Constants {
-    public static final double gyroP = 5; //7.4213
+    public static final double gyroP = 4; //7.4213
     public static final double gyroI = 0.0;
-    public static final double gyroD = 0.9; //0.85752
+    public static final double gyroD = 0.8; //0.85752
 
     public static final String CANbus = "canivore1";
 
@@ -98,9 +98,9 @@ public final class Constants {
         public static final double shooterMaxMotorRps = 6000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
-        public static final double targetHeightMeters = Units.inchesToMeters(72);
+        public static final double targetHeightMeters = Units.inchesToMeters(130);
         public static final double hoodZeroDegrees = 21.0;
-        public static final double hoodMinDegrees = 21.0;
+        public static final double hoodMinDegrees = 10.0;
         public static final double hoodMaxDegrees = 65.0;
         public static final double ikEntryAngleTargetDeg = 7.5;
         public static final double ikEntryAngleToleranceDeg = 2.5;
@@ -158,7 +158,7 @@ public final class Constants {
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
         // TODO Tune kp, kd, ks, maybe ki
-        public static final double spinKp = 1.549;
+        public static final double spinKp = 1.542;
         public static final double spinKi = 0.0;
         public static final double spinKd = 0.254;
         public static final double spinKs = 1.3;
