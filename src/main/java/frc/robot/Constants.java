@@ -237,6 +237,20 @@ public final class Constants {
         public static final boolean defaultEnable = false;
     }
 
+    public static final class HoodTuneConstants {
+        public static final String enableKey = "HoodTune/Enable";
+        public static final String targetDegKey = "HoodTune/TargetDeg";
+        public static final String kPKey = "HoodTune/kP";
+        public static final String kIKey = "HoodTune/kI";
+        public static final String kDKey = "HoodTune/kD";
+        public static final String kSKey = "HoodTune/kS";
+        public static final String kVKey = "HoodTune/kV";
+        public static final String kAKey = "HoodTune/kA";
+        public static final String cruiseVelocityKey = "HoodTune/CruiseVelocity";
+        public static final String accelerationKey = "HoodTune/Acceleration";
+        public static final boolean defaultEnable = true;
+    }
+
     public static final class AutoAimConstants {
         public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
         public static final boolean defaultUseIKSolver = true;
