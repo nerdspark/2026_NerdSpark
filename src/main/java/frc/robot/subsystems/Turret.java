@@ -77,8 +77,6 @@ public class Turret extends SubsystemBase {
     private double turretAngle;
     private boolean neutralMode = false;
     private double lastTurretAngle = 0;
-    private LoggedNetworkNumber hood = new LoggedNetworkNumber("/Tuning/Hood Pose", 0);
-
     private double filteredTurretDelaySec = TurretConstants.delay;
     public static double delaySum = 0.0;
     public static int delaySamples = 0;
@@ -379,11 +377,17 @@ public class Turret extends SubsystemBase {
 
         hoodPose.Position = map.hoodPose;
 
+        boolean useShootOnMoveComp = SmartDashboard.getBoolean(
+            AutoAimConstants.useShootOnMoveCompKey,
+            AutoAimConstants.defaultUseShootOnMoveComp
+        );
         double shooterFOA = robotHeading + turretAngle;
         double robotSpeed = Math.hypot(robotROS.vxMetersPerSecond, robotROS.vyMetersPerSecond);
         double robotVelAngle = Math.atan2(robotROS.vyMetersPerSecond, robotROS.vxMetersPerSecond);
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
-        double deltaMotorRPS = launchSpeedMpsToMotorRps(vParallel);
+        double deltaMotorRPS = useShootOnMoveComp ? launchSpeedMpsToMotorRps(vParallel) : 0.0;
+        SmartDashboard.putNumber("Turret/SOTM/ParallelVelocityMps", vParallel);
+        SmartDashboard.putNumber("Turret/SOTM/DeltaMotorRps", deltaMotorRPS);
 
         double velo =  map.shooterSpeed - deltaMotorRPS;
 
@@ -501,6 +505,20 @@ public class Turret extends SubsystemBase {
         return motorRps;
     }
 
+    private double getConfiguredMuzzleHeightMeters() {
+        return SmartDashboard.getNumber(
+            AutoAimConstants.modelMuzzleHeightMetersKey,
+            TurretConstants.shooterMuzzleHeightMeters
+        );
+    }
+
+    private double getConfiguredTargetHeightMeters() {
+        return SmartDashboard.getNumber(
+            AutoAimConstants.modelTargetHeightMetersKey,
+            TurretConstants.targetHeightMeters
+        );
+    }
+
     private IkSolution solveIK(double distanceMeters) {
         if (distanceMeters <= 0.0) {
             return null;
@@ -509,7 +527,7 @@ public class Turret extends SubsystemBase {
             AutoAimConstants.useEntryAngleIKKey,
             AutoAimConstants.defaultUseEntryAngleIK
         );
-        double deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
+        double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
         double minAngleDeg = TurretConstants.hoodMinDegrees;
         double maxAngleDeg = TurretConstants.hoodMaxDegrees;
         double targetEntryDeg = TurretConstants.ikEntryAngleTargetDeg;
@@ -611,13 +629,19 @@ public class Turret extends SubsystemBase {
     }
 
     private double applyChassisVelocityComp(double motorRps) {
+        boolean useShootOnMoveComp = SmartDashboard.getBoolean(
+            AutoAimConstants.useShootOnMoveCompKey,
+            AutoAimConstants.defaultUseShootOnMoveComp
+        );
         double robotHeading = pose.get().getRotation().getRadians();
         double shooterFOA = robotHeading + turretAngle;
         ChassisSpeeds robotFOS = speed.get();
         double robotSpeed = Math.hypot(robotFOS.vxMetersPerSecond, robotFOS.vyMetersPerSecond);
         double robotVelAngle = Math.atan2(robotFOS.vyMetersPerSecond, robotFOS.vxMetersPerSecond);
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
-        double deltaMotorRPS = launchSpeedMpsToMotorRps(vParallel);
+        double deltaMotorRPS = useShootOnMoveComp ? launchSpeedMpsToMotorRps(vParallel) : 0.0;
+        SmartDashboard.putNumber("Turret/SOTM/ParallelVelocityMps", vParallel);
+        SmartDashboard.putNumber("Turret/SOTM/DeltaMotorRps", deltaMotorRPS);
         return motorRps - deltaMotorRPS;
     }
 
@@ -913,7 +937,7 @@ public class Turret extends SubsystemBase {
 
         SmartDashboard.putNumber("Turret/SpinAmps", spinMotor.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Turret/SpinSupply", spinMotor.getSupplyCurrent().getValueAsDouble());
-        hoodMotor1.setControl(hoodPose.withPosition(hood.get()));
+        hoodMotor1.setControl(hoodPose);
         SmartDashboard.putNumber("Hood Current", hoodMotor1.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Hood 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Hood 2 Pose", hoodMotor2.getPosition().getValueAsDouble());

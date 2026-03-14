@@ -256,6 +256,10 @@ public final class Constants {
         public static final boolean defaultUseIKSolver = true;
         public static final String useEntryAngleIKKey = "TurretTarget/UseEntryAngleIK";
         public static final boolean defaultUseEntryAngleIK = true;
+        public static final String useShootOnMoveCompKey = "TurretTarget/UseShootOnMoveComp";
+        public static final boolean defaultUseShootOnMoveComp = true;
+        public static final String modelMuzzleHeightMetersKey = "TurretTarget/ModelMuzzleHeightMeters";
+        public static final String modelTargetHeightMetersKey = "TurretTarget/ModelTargetHeightMeters";
     }
 
     public static final class IntakeConstants {
