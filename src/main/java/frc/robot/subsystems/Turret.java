@@ -538,6 +538,8 @@ public class Turret extends SubsystemBase {
         double bestBandEntryErrorDeg = Double.POSITIVE_INFINITY;
         double bestFallbackAngleDeg = Double.NaN;
         double bestFallbackMotorRps = Double.POSITIVE_INFINITY;
+        double bestLowHoodAngleDeg = Double.NaN;
+        double bestLowHoodMotorRps = Double.NaN;
 
         for (double angleDeg = minAngleDeg; angleDeg <= maxAngleDeg; angleDeg += TurretConstants.shotAngleStepDeg) {
             double angleRad = Math.toRadians(angleDeg);
@@ -547,6 +549,14 @@ public class Turret extends SubsystemBase {
             }
 
             double motorRps = launchSpeedMpsToMotorRps(speedMps);
+
+            if (!Double.isFinite(bestLowHoodAngleDeg)
+                || angleDeg < bestLowHoodAngleDeg
+                || (Math.abs(angleDeg - bestLowHoodAngleDeg) < 1e-9 && motorRps > bestLowHoodMotorRps)) {
+                bestLowHoodAngleDeg = angleDeg;
+                bestLowHoodMotorRps = motorRps;
+            }
+
             if (motorRps > TurretConstants.shooterMaxMotorRps) {
                 continue;
             }
@@ -575,8 +585,12 @@ public class Turret extends SubsystemBase {
         }
 
         boolean usingEntryBand = useEntryAngleIK && Double.isFinite(bestBandAngleDeg);
-        double selectedAngleDeg = usingEntryBand ? bestBandAngleDeg : bestFallbackAngleDeg;
-        double selectedMotorRps = usingEntryBand ? bestBandMotorRps : bestFallbackMotorRps;
+        double selectedAngleDeg = useEntryAngleIK
+            ? (usingEntryBand ? bestBandAngleDeg : bestFallbackAngleDeg)
+            : bestLowHoodAngleDeg;
+        double selectedMotorRps = useEntryAngleIK
+            ? (usingEntryBand ? bestBandMotorRps : bestFallbackMotorRps)
+            : bestLowHoodMotorRps;
         if (!Double.isFinite(selectedAngleDeg) || !Double.isFinite(selectedMotorRps)) {
             return null;
         }
@@ -591,10 +605,16 @@ public class Turret extends SubsystemBase {
         );
         double motorRps = Math.max(
             0.0,
-            Math.min(TurretConstants.shooterMaxMotorRps, selectedMotorRps + offsets.motorRpsOffset)
+            useEntryAngleIK
+                ? Math.min(TurretConstants.shooterMaxMotorRps, selectedMotorRps + offsets.motorRpsOffset)
+                : selectedMotorRps + offsets.motorRpsOffset
         );
         SmartDashboard.putBoolean("Turret/IK/UseEntryAngleMode", useEntryAngleIK);
         SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", usingEntryBand);
+        SmartDashboard.putString(
+            "Turret/IK/SolverMode",
+            useEntryAngleIK ? "EntryAngle" : "LowHoodHighRps"
+        );
         return new IkSolution(hoodDeg, motorRps);
     }
 

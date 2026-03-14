@@ -104,6 +104,7 @@ public final class Constants {
         public static final double hoodMaxDegrees = 65.0;
         public static final double ikEntryAngleTargetDeg = 7.5;
         public static final double ikEntryAngleToleranceDeg = 2.5;
+        public static final double lowHoodPreferredDegrees = hoodMinDegrees;
         public static final double passTargetRadiusMeters = Units.inchesToMeters(5.91) / 2.0;
         public static final int passTargetCirclePoints = 24;
 

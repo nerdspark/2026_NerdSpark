@@ -103,6 +103,8 @@ public class SimFuelIKSubsystem {
         double bestBandEntryErrorDeg = Double.POSITIVE_INFINITY;
         double bestFallbackAngleDeg = Double.NaN;
         double bestFallbackMotorRps = Double.POSITIVE_INFINITY;
+        double bestLowHoodAngleDeg = Double.NaN;
+        double bestLowHoodMotorRps = Double.NaN;
 
         for (double angleDeg = minAngleDeg; angleDeg <= maxAngleDeg; angleDeg += TurretConstants.shotAngleStepDeg) {
             double angleRad = Math.toRadians(angleDeg);
@@ -112,6 +114,14 @@ public class SimFuelIKSubsystem {
             }
 
             double motorRps = launchSpeedMpsToMotorRps(speedMps);
+
+            if (!Double.isFinite(bestLowHoodAngleDeg)
+                || angleDeg < bestLowHoodAngleDeg
+                || (Math.abs(angleDeg - bestLowHoodAngleDeg) < 1e-9 && motorRps > bestLowHoodMotorRps)) {
+                bestLowHoodAngleDeg = angleDeg;
+                bestLowHoodMotorRps = motorRps;
+            }
+
             if (motorRps > TurretConstants.shooterMaxMotorRps) {
                 continue;
             }
@@ -139,12 +149,12 @@ public class SimFuelIKSubsystem {
             }
         }
 
-        double selectedAngleDeg = useEntryAngleIK && Double.isFinite(bestBandAngleDeg)
-            ? bestBandAngleDeg
-            : bestFallbackAngleDeg;
-        double selectedMotorRps = useEntryAngleIK && Double.isFinite(bestBandAngleDeg)
-            ? bestBandMotorRps
-            : bestFallbackMotorRps;
+        double selectedAngleDeg = useEntryAngleIK
+            ? (Double.isFinite(bestBandAngleDeg) ? bestBandAngleDeg : bestFallbackAngleDeg)
+            : bestLowHoodAngleDeg;
+        double selectedMotorRps = useEntryAngleIK
+            ? (Double.isFinite(bestBandAngleDeg) ? bestBandMotorRps : bestFallbackMotorRps)
+            : bestLowHoodMotorRps;
         if (!Double.isFinite(selectedAngleDeg) || !Double.isFinite(selectedMotorRps)) {
             return null;
         }
@@ -158,7 +168,7 @@ public class SimFuelIKSubsystem {
         double motorRps = clamp(
             selectedMotorRps + offsets.motorRpsOffset,
             0.0,
-            TurretConstants.shooterMaxMotorRps
+            useEntryAngleIK ? TurretConstants.shooterMaxMotorRps : Double.POSITIVE_INFINITY
         );
         return new ShotSolution(hoodDeg, motorRps);
     }
