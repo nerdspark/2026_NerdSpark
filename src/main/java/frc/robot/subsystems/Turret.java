@@ -397,15 +397,11 @@ public class Turret extends SubsystemBase {
 
         hoodPose.Position = map.hoodPose;
 
-        boolean useShootOnMoveComp = SmartDashboard.getBoolean(
-            AutoAimConstants.useShootOnMoveCompKey,
-            AutoAimConstants.defaultUseShootOnMoveComp
-        );
         double shooterFOA = robotHeading + turretAngle;
         double robotSpeed = Math.hypot(robotROS.vxMetersPerSecond, robotROS.vyMetersPerSecond);
         double robotVelAngle = Math.atan2(robotROS.vyMetersPerSecond, robotROS.vxMetersPerSecond);
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
-        double deltaMotorRPS = useShootOnMoveComp ? launchSpeedMpsToMotorRps(vParallel) : 0.0;
+        double deltaMotorRPS =  vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
         SmartDashboard.putNumber("Turret/SOTM/ParallelVelocityMps", vParallel);
         SmartDashboard.putNumber("Turret/SOTM/DeltaMotorRps", deltaMotorRPS);
 

@@ -94,13 +94,13 @@ public final class Constants {
         public static final double hoodRatio = 50;
         public static final double shooterWheelRadius = Units.inchesToMeters(4);
         // Ball exit speed as a fraction of wheel surface speed.
-        public static final double shooterLaunchEfficiency = 0.40;
+        public static final double shooterLaunchEfficiency = 0.46;
         public static final double shooterMaxMotorRps = 6000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
         public static final double targetHeightMeters = Units.inchesToMeters(72);
         public static final double hoodZeroDegrees = 21.0;
-        public static final double hoodMinDegrees = 21.0;
+        public static final double hoodMinDegrees = 18.0;
         public static final double hoodMaxDegrees = 65.0;
         public static final double ikEntryAngleTargetDeg = 7.5;
         public static final double ikEntryAngleToleranceDeg = 2.5;
