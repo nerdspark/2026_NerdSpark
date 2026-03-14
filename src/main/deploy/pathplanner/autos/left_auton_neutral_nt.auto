@@ -7,13 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "test_auton_outpost1"
+            "pathName": "left_auton_neutral_nt1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "indexer_on"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "test_autos",
+  "folder": "left_autos",
   "choreoAuto": false
 }

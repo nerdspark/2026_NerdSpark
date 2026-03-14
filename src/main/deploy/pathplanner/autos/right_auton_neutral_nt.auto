@@ -7,13 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": null
+            "pathName": "right_auton_neutral_nt1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "indexer_on"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "right_autos",
   "choreoAuto": false
 }
