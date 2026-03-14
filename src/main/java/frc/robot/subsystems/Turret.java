@@ -5,6 +5,8 @@ import static frc.robot.util.TurretUtil.*;
 
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
@@ -77,6 +79,7 @@ public class Turret extends SubsystemBase {
     private double turretAngle;
     private boolean neutralMode = false;
     private double lastTurretAngle = 0;
+
     private double filteredTurretDelaySec = TurretConstants.delay;
     public static double delaySum = 0.0;
     public static int delaySamples = 0;
@@ -432,7 +435,7 @@ public class Turret extends SubsystemBase {
         turretAngle = normalizeRadians(turretAngle);
         SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
 
-        neededAngle = normalizeRadians(neededAngle - Math.toRadians(145));
+        neededAngle = normalizeRadians(neededAngle - Math.toRadians(142));
         SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
 
         // Update phase delay here, 20ms loop
@@ -858,10 +861,10 @@ public class Turret extends SubsystemBase {
             }
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
 
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 4; i++) {
                 Translation2d robotFieldVelocity = new Translation2d(
-                    robotSpeeds.vxMetersPerSecond,
-                    robotSpeeds.vyMetersPerSecond
+                    speeds.vxMetersPerSecond,
+                    speeds.vyMetersPerSecond
                 );
                 Translation2d flightOffset = robotFieldVelocity.times(tof); // How far robot moves during ball flight
                 lookaheadTurretPos = turretPose.getTranslation().plus(flightOffset); // Effective launch point
@@ -958,9 +961,6 @@ public class Turret extends SubsystemBase {
         SmartDashboard.putNumber("Turret/SpinAmps", spinMotor.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Turret/SpinSupply", spinMotor.getSupplyCurrent().getValueAsDouble());
         hoodMotor1.setControl(hoodPose);
-        SmartDashboard.putNumber("Hood Current", hoodMotor1.getStatorCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Hood 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Hood 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Turret/HoodCurrentDeg", hoodRotationsToDegrees(hoodMotor1.getPosition().getValueAsDouble()));
         SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
         switch (mode) {
