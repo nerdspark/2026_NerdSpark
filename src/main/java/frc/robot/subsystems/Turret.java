@@ -77,7 +77,6 @@ public class Turret extends SubsystemBase {
     private boolean shortPathCrossesWrap;
     public boolean pathLatched = false;
     private double turretAngle;
-    private boolean neutralMode = false;
     private double lastTurretAngle = 0;
 
     private double filteredTurretDelaySec = TurretConstants.delay;
@@ -484,9 +483,6 @@ public class Turret extends SubsystemBase {
             pathLatched = false;
         }
 
-        // Neutral zone
-        neutralMode = Math.abs(chosenError) < Math.toRadians(1);
-
         // Command motor
         double motorDelta = (chosenError / TWO_PI) * TurretConstants.spinRatio;
         spinPose.Position = motorDelta + spinMotor.getPosition().getValueAsDouble();
@@ -601,7 +597,7 @@ public class Turret extends SubsystemBase {
         double deltaHeightMeters
     ) {
         double alphaRad = Math.atan2(deltaHeightMeters, distanceMeters);
-        double thetaDeg = Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
+        double thetaDeg = 90 - Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
         if (thetaDeg < TurretConstants.hoodMinDegrees || thetaDeg > TurretConstants.hoodMaxDegrees) {
             return null;
         }
@@ -753,7 +749,6 @@ public class Turret extends SubsystemBase {
         hoodPose.Position = hoodDegreesToRotations(targetDeg);
         velocity = 0.0;
         mode = ShootMode.COAST;
-        neutralMode = true;
         double currentDeg = hoodRotationsToDegrees(hoodMotor1.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("HoodTune/CurrentDeg", currentDeg);
         SmartDashboard.putNumber("HoodTune/ErrorDeg", targetDeg - currentDeg);
@@ -957,15 +952,10 @@ public class Turret extends SubsystemBase {
             hoodPose.Position = 0;
             velocity = 0;
             mode = ShootMode.COAST;
-            neutralMode = true;
+            spinPose.Position = spinMotor.getPosition().getValueAsDouble();
         }
 
-        if (neutralMode) {
-            spinMotor.setControl(new NeutralOut());
-        } else {
-            spinMotor.setControl(spinPose);
-        }
-
+        spinMotor.setControl(spinPose);
         SmartDashboard.putNumber("Turret/SpinAmps", spinMotor.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Turret/SpinSupply", spinMotor.getSupplyCurrent().getValueAsDouble());
         hoodMotor1.setControl(hoodPose);

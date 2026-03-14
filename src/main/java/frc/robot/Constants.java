@@ -100,7 +100,7 @@ public final class Constants {
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
         public static final double targetHeightMeters = Units.inchesToMeters(72);
         public static final double hoodZeroDegrees = 21.0;
-        public static final double hoodMinDegrees = 10.0;
+        public static final double hoodMinDegrees = 21.0;
         public static final double hoodMaxDegrees = 65.0;
         public static final double ikEntryAngleTargetDeg = 7.5;
         public static final double ikEntryAngleToleranceDeg = 2.5;
@@ -159,9 +159,9 @@ public final class Constants {
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
         // TODO Tune kp, kd, ks, maybe ki
-        public static final double spinKp = 1.542;
+        public static final double spinKp = 1.25;
         public static final double spinKi = 0.0;
-        public static final double spinKd = 0.254;
+        public static final double spinKd = 0.25;
         public static final double spinKs = 1.3;
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
