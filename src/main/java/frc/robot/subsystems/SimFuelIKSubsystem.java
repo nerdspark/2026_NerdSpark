@@ -96,7 +96,7 @@ public class SimFuelIKSubsystem {
 
         DirectShotSelection selection = useEntryAngleIK
             ? solveEntryAngleIKDirect(distanceMeters, deltaHeight)
-            : solveLowHoodHighRpsDirect(distanceMeters, deltaHeight);
+            : solveMinimumSpeedIKDirect(distanceMeters, deltaHeight);
         if (selection == null) {
             return null;
         }
@@ -152,22 +152,6 @@ public class SimFuelIKSubsystem {
             return null;
         }
         return new DirectShotSelection(thetaDeg, motorRps, false);
-    }
-
-    private DirectShotSelection solveLowHoodHighRpsDirect(
-        double distanceMeters,
-        double deltaHeightMeters
-    ) {
-        double preferredAngleDeg = TurretConstants.lowHoodPreferredDegrees;
-        if (preferredAngleDeg < TurretConstants.hoodMinDegrees || preferredAngleDeg > TurretConstants.hoodMaxDegrees) {
-            return null;
-        }
-        double speedMps = solveSpeedFromEquation(distanceMeters, Math.toRadians(preferredAngleDeg), deltaHeightMeters);
-        double motorRps = launchSpeedMpsToMotorRps(speedMps);
-        if (!Double.isFinite(motorRps) || motorRps <= 0.0) {
-            return null;
-        }
-        return new DirectShotSelection(preferredAngleDeg, motorRps, true);
     }
 
     private double getConfiguredMuzzleHeightMeters() {

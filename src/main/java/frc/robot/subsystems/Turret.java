@@ -542,7 +542,7 @@ public class Turret extends SubsystemBase {
 
         DirectIkSelection selection = useEntryAngleIK
             ? solveEntryAngleIKDirect(distanceMeters, deltaHeight)
-            : solveLowHoodHighRpsDirect(distanceMeters, deltaHeight);
+            : solveMinimumSpeedIKDirect(distanceMeters, deltaHeight);
         if (selection == null) {
             return null;
         }
@@ -565,7 +565,7 @@ public class Turret extends SubsystemBase {
         SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", selection.usedPrimaryObjective);
         SmartDashboard.putString(
             "Turret/IK/SolverMode",
-            useEntryAngleIK ? "EntryAngle" : "LowHoodHighRps"
+            useEntryAngleIK ? "EntryAngle" : "MinimumSpeed"
         );
         return new IkSolution(hoodDeg, motorRps);
     }
@@ -607,22 +607,6 @@ public class Turret extends SubsystemBase {
             return null;
         }
         return new DirectIkSelection(thetaDeg, motorRps, false);
-    }
-
-    private DirectIkSelection solveLowHoodHighRpsDirect(
-        double distanceMeters,
-        double deltaHeightMeters
-    ) {
-        double preferredAngleDeg = TurretConstants.lowHoodPreferredDegrees;
-        if (preferredAngleDeg < TurretConstants.hoodMinDegrees || preferredAngleDeg > TurretConstants.hoodMaxDegrees) {
-            return null;
-        }
-        double speedMps = solveIKSpeed(distanceMeters, Math.toRadians(preferredAngleDeg), deltaHeightMeters);
-        double motorRps = launchSpeedMpsToMotorRps(speedMps);
-        if (!Double.isFinite(motorRps) || motorRps <= 0.0) {
-            return null;
-        }
-        return new DirectIkSelection(preferredAngleDeg, motorRps, true);
     }
 
     private double solveIKSpeed(double distanceMeters, double thetaRad, double deltaHeightMeters) {
