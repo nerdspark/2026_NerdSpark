@@ -365,7 +365,7 @@ public class Turret extends SubsystemBase {
         double robotSpeed = Math.hypot(robotROS.vxMetersPerSecond, robotROS.vyMetersPerSecond);
         double robotVelAngle = Math.atan2(robotROS.vyMetersPerSecond, robotROS.vxMetersPerSecond);
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
-        double deltaMotorRPS = vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
+        double deltaMotorRPS = launchSpeedMpsToMotorRps(vParallel);
 
         double velo =  map.shooterSpeed - deltaMotorRPS;
 
@@ -487,6 +487,10 @@ public class Turret extends SubsystemBase {
         if (distanceMeters <= 0.0) {
             return null;
         }
+        boolean useEntryAngleIK = SmartDashboard.getBoolean(
+            AutoAimConstants.useEntryAngleIKKey,
+            AutoAimConstants.defaultUseEntryAngleIK
+        );
         double deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
         double minAngleDeg = TurretConstants.hoodMinDegrees;
         double maxAngleDeg = TurretConstants.hoodMaxDegrees;
@@ -506,7 +510,7 @@ public class Turret extends SubsystemBase {
                 continue;
             }
 
-            double motorRps = speedMps / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
+            double motorRps = launchSpeedMpsToMotorRps(speedMps);
             if (motorRps > TurretConstants.shooterMaxMotorRps) {
                 continue;
             }
@@ -534,7 +538,7 @@ public class Turret extends SubsystemBase {
             }
         }
 
-        boolean usingEntryBand = Double.isFinite(bestBandAngleDeg);
+        boolean usingEntryBand = useEntryAngleIK && Double.isFinite(bestBandAngleDeg);
         double selectedAngleDeg = usingEntryBand ? bestBandAngleDeg : bestFallbackAngleDeg;
         double selectedMotorRps = usingEntryBand ? bestBandMotorRps : bestFallbackMotorRps;
         if (!Double.isFinite(selectedAngleDeg) || !Double.isFinite(selectedMotorRps)) {
@@ -553,6 +557,7 @@ public class Turret extends SubsystemBase {
             0.0,
             Math.min(TurretConstants.shooterMaxMotorRps, selectedMotorRps + offsets.motorRpsOffset)
         );
+        SmartDashboard.putBoolean("Turret/IK/UseEntryAngleMode", useEntryAngleIK);
         SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", usingEntryBand);
         return new IkSolution(hoodDeg, motorRps);
     }
@@ -594,7 +599,7 @@ public class Turret extends SubsystemBase {
         double robotSpeed = Math.hypot(robotFOS.vxMetersPerSecond, robotFOS.vyMetersPerSecond);
         double robotVelAngle = Math.atan2(robotFOS.vyMetersPerSecond, robotFOS.vxMetersPerSecond);
         double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
-        double deltaMotorRPS = vParallel / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
+        double deltaMotorRPS = launchSpeedMpsToMotorRps(vParallel);
         return motorRps - deltaMotorRPS;
     }
 
@@ -742,7 +747,7 @@ public class Turret extends SubsystemBase {
                     ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps);
                     double predictedEntryDeg = computeEntryAngleDeg(
                         distance,
-                        ikSolution.motorRps * 2.0 * Math.PI * TurretConstants.shooterWheelRadius,
+                        motorRpsToLaunchSpeedMps(ikSolution.motorRps),
                         Math.toRadians(ikSolution.hoodDegrees)
                     );
                     SmartDashboard.putBoolean("Turret/IK/HasSolution", true);

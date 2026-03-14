@@ -93,7 +93,9 @@ public final class Constants {
 
         public static final double hoodRatio = 50;
         public static final double shooterWheelRadius = Units.inchesToMeters(4);
-        public static final double shooterMaxMotorRps = 4000.0 / 60.0;
+        // Ball exit speed as a fraction of wheel surface speed.
+        public static final double shooterLaunchEfficiency = 0.30;
+        public static final double shooterMaxMotorRps = 6000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(30);
         public static final double targetHeightMeters = Units.inchesToMeters(72);
@@ -237,7 +239,9 @@ public final class Constants {
 
     public static final class AutoAimConstants {
         public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
-        public static final boolean defaultUseIKSolver = false;
+        public static final boolean defaultUseIKSolver = true;
+        public static final String useEntryAngleIKKey = "TurretTarget/UseEntryAngleIK";
+        public static final boolean defaultUseEntryAngleIK = true;
     }
 
     public static final class IntakeConstants {
