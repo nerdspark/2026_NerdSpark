@@ -78,6 +78,7 @@ public class Turret extends SubsystemBase {
     private double turretAngle;
     private boolean neutralMode = false;
     private double lastTurretAngle = 0;
+    private LoggedNetworkNumber hood = new LoggedNetworkNumber("/Tuning/Hood Pose", 0);
 
     private double filteredTurretDelaySec = TurretConstants.delay;
     public static double delaySum = 0.0;
@@ -460,7 +461,7 @@ public class Turret extends SubsystemBase {
         }
 
         // Neutral zone
-        neutralMode = Math.abs(chosenError) < Math.toRadians(4);
+        neutralMode = Math.abs(chosenError) < Math.toRadians(1);
 
         // Command motor
         double motorDelta = (chosenError / TWO_PI) * TurretConstants.spinRatio;
@@ -797,7 +798,8 @@ public class Turret extends SubsystemBase {
 
         SmartDashboard.putNumber("Turret/SpinAmps", spinMotor.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Turret/SpinSupply", spinMotor.getSupplyCurrent().getValueAsDouble());
-        hoodMotor1.setControl(hoodPose);
+        hoodMotor1.setControl(hoodPose.withPosition(hood.get()));
+        SmartDashboard.putNumber("Hood Current", hoodMotor1.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Hood 1 Pose", hoodMotor1.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Hood 2 Pose", hoodMotor2.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Turret/HoodCurrentDeg", hoodRotationsToDegrees(hoodMotor1.getPosition().getValueAsDouble()));

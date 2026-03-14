@@ -141,7 +141,7 @@ public class RobotContainer {
         }));
 
         joystick.leftBumper().and(() -> !turret.pathLatched)
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 0.9))
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
 
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
