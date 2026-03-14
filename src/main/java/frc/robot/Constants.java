@@ -98,7 +98,7 @@ public final class Constants {
         public static final double shooterMaxMotorRps = 6000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
-        public static final double targetHeightMeters = Units.inchesToMeters(130);
+        public static final double targetHeightMeters = Units.inchesToMeters(72);
         public static final double hoodZeroDegrees = 21.0;
         public static final double hoodMinDegrees = 10.0;
         public static final double hoodMaxDegrees = 65.0;
@@ -283,7 +283,7 @@ public final class Constants {
         public static final double motionMagicAcceleration = 150.0;
         public static final double motionMagicJerk = 0;
         public static final double homePos = 0.0;
-        public static final double deployPos = 13.0;
+        public static final double deployPos = 13.5;
         public static final double shakePos = 5;
     }
 }

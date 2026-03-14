@@ -861,7 +861,7 @@ public class Turret extends SubsystemBase {
             }
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
 
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 5; i++) {
                 Translation2d robotFieldVelocity = new Translation2d(
                     speeds.vxMetersPerSecond,
                     speeds.vyMetersPerSecond
