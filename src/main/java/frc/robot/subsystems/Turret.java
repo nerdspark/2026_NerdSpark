@@ -743,7 +743,7 @@ public class Turret extends SubsystemBase {
             }
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 40; i++) {
                 Translation2d fieldVelocity = new Translation2d(
                     speeds.vxMetersPerSecond,
                     speeds.vyMetersPerSecond
@@ -753,7 +753,7 @@ public class Turret extends SubsystemBase {
                 Translation2d flightOffset = fieldVelocity.times(tof); // How far robot moves during ball flight
                 SmartDashboard.putNumber("Turret/debug/flightOffsetX", flightOffset.getX());
                 SmartDashboard.putNumber("Turret/debug/flightOffsetY", flightOffset.getY());
-                lookaheadTurretPos = lookaheadTurretPos.plus(flightOffset); // Effective launch point
+                lookaheadTurretPos = turretPose.getTranslation().plus(flightOffset); // Effective launch point
                 distance = lookaheadTurretPos.getDistance(targetPose); // Recompute distance
                 if (useIK) { // Recompute TOF for new distance
                     IkSolution solution = solveIK(distance);
