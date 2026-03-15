@@ -563,10 +563,11 @@ public class Turret extends SubsystemBase {
     ) {
         double alphaRad = Math.atan2(deltaHeightMeters, distanceMeters);
         double thetaDeg = 90 - Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
+        double thetaSpeed = 45 + Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
         if (thetaDeg < TurretConstants.hoodMinDegrees || thetaDeg > TurretConstants.hoodMaxDegrees) {
             return null;
         }
-        double speedMps = solveIKSpeed(distanceMeters, Math.toRadians(thetaDeg), deltaHeightMeters);
+        double speedMps = solveIKSpeed(distanceMeters, Math.toRadians(thetaSpeed), deltaHeightMeters);
         double motorRps = launchSpeedMpsToMotorRps(speedMps);
         if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
             return null;

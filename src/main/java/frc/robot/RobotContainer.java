@@ -170,10 +170,6 @@ public class RobotContainer {
             SmartDashboard.putBoolean(AutoAimConstants.useEntryAngleIKKey, !useEntryAngleIK);
         }));
 
-        joystick.leftBumper()//.and(() -> turret.turretOnTarget())
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
-            .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
-
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake)));
@@ -183,19 +179,23 @@ public class RobotContainer {
         joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
-        
-        joystick.y().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
-            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
-            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
         joystick.povDown().onTrue(new InstantCommand(() -> target = 0));
         joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
 
-        joystick2.a().or(intakeHome)
+        joystick2.b().or(intakeHome)
             .onTrue(new InstantCommand(() -> override = true))
             .onFalse(new InstantCommand(() -> override = false));
+
+        joystick2.leftBumper().and(() -> turret.turretOnTarget())
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
+            .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+        
+        joystick2.rightBumper().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
+            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         Color allianceColor = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue ? Color.kBlue : Color.kRed;
         Color oppAllianceColor = allianceColor == Color.kBlue ? Color.kRed : Color.kBlue;

@@ -234,12 +234,12 @@ public final class Constants {
         public static final String enableKey = "MapTune/Enable";
         public static final String hoodKey = "MapTune/HoodTarget";
         public static final String shooterKey = "MapTune/ShooterTarget";
-        public static final boolean defaultEnable = true;
+        public static final boolean defaultEnable = false;
     }
 
     public static final class AutoAimConstants {
         public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
-        public static final boolean defaultUseIKSolver = false;
+        public static final boolean defaultUseIKSolver = true;
         public static final String useEntryAngleIKKey = "TurretTarget/UseEntryAngleIK";
         public static final boolean defaultUseEntryAngleIK = true;
         public static final String useShootOnMoveCompKey = "TurretTarget/UseShootOnMoveComp";
