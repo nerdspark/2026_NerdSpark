@@ -173,11 +173,13 @@ public class RobotContainer {
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake)));
 
-        joystick.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
+        joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(-1.0), intake));
 
-        joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
+        joystick.leftBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
+
+        joystick.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
