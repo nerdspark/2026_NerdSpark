@@ -94,7 +94,8 @@ public final class Constants {
         public static final double hoodRatio = 50;
         public static final double shooterWheelRadius = Units.inchesToMeters(4);
         // Ball exit speed as a fraction of wheel surface speed.
-        public static final double shooterLaunchEfficiency = 0.46;
+        // Set to 1.0 for pure physics model; slippage is handled by SlippageCorrectionMap.
+        public static final double shooterLaunchEfficiency = 1.0;
         public static final double shooterMaxMotorRps = 6000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
@@ -241,6 +242,19 @@ public final class Constants {
         public static final boolean defaultUseShootOnMoveComp = true;
         public static final String modelMuzzleHeightMetersKey = "TurretTarget/ModelMuzzleHeightMeters";
         public static final String modelTargetHeightMetersKey = "TurretTarget/ModelTargetHeightMeters";
+    }
+
+    public static final class SlippageCorrectionConstants {
+        public static final String enableKey = "Slippage/Enable";
+        public static final boolean defaultEnable = false;
+        // Hood angle (degrees) held fixed during characterization shots.
+        // The ballistics inversion uses this to back-calculate exit speed from distance.
+        public static final String charHoodDegKey = "Slippage/CharHoodDeg";
+        public static final double defaultCharHoodDeg = 20.0;
+        // Parallel arrays: commanded RPS and observed landing distance (meters) at
+        // each RPS using the characterization hood angle above.
+        public static final String commandedRpsPointsKey = "Slippage/CommandedRpsPoints";
+        public static final String observedDistancePointsKey = "Slippage/ObservedDistanceMeters";
     }
 
     public static final class IntakeConstants {

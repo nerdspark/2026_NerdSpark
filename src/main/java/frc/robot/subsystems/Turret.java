@@ -54,6 +54,7 @@ import frc.robot.Constants.ShootMode;
 import frc.robot.Constants.IkSolution;
 import frc.robot.Constants.MapTuneConstants;
 import frc.robot.util.ShooterOffsetMap;
+import frc.robot.util.SlippageCorrectionMap;
 
 public class Turret extends SubsystemBase {
     private static final double TWO_PI = 2.0 * Math.PI;
@@ -90,6 +91,7 @@ public class Turret extends SubsystemBase {
 
     private final Field2d m_field = new Field2d();
     private final ShooterOffsetMap offsetMap = new ShooterOffsetMap();
+    private final SlippageCorrectionMap slippageMap = new SlippageCorrectionMap();
 
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> manualOverrider) {
         pose = robotPose;
@@ -506,18 +508,23 @@ public class Turret extends SubsystemBase {
                 selection.hoodDegrees + offsets.hoodOffsetDeg
             )
         );
-        double motorRps = Math.max(
+        double theoreticalMotorRps = Math.max(
             0.0,
             useEntryAngleIK
                 ? Math.min(TurretConstants.shooterMaxMotorRps, selection.motorRps + offsets.motorRpsOffset)
                 : selection.motorRps + offsets.motorRpsOffset
         );
+        double slippageFactor = slippageMap.efficiencyAt(theoreticalMotorRps);
+        double motorRps = slippageMap.correctedMotorRps(theoreticalMotorRps);
         SmartDashboard.putBoolean("Turret/IK/UseEntryAngleMode", useEntryAngleIK);
         SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", selection.usedPrimaryObjective);
         SmartDashboard.putString(
             "Turret/IK/SolverMode",
             useEntryAngleIK ? "EntryAngle" : "MinimumSpeed"
         );
+        SmartDashboard.putNumber("Turret/Slippage/TheoreticalMotorRps", theoreticalMotorRps);
+        SmartDashboard.putNumber("Turret/Slippage/CorrectedMotorRps", motorRps);
+        SmartDashboard.putNumber("Turret/Slippage/EfficiencyFactor", slippageFactor);
         return new IkSolution(hoodDeg, motorRps);
     }
 
