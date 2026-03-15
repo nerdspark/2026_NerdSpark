@@ -64,12 +64,28 @@
     },
     {
       "anchor": {
-        "x": 0.5636235119047619,
+        "x": 2.5538392857142855,
         "y": 0.6428
       },
       "prevControl": {
-        "x": 2.039077859402574,
-        "y": 0.6427999999999998
+        "x": 3.4120706748446583,
+        "y": 0.6553968675542046
+      },
+      "nextControl": {
+        "x": 1.6956078965839154,
+        "y": 0.6302031324457955
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.6076711309523812,
+        "y": 1.5553869047619049
+      },
+      "prevControl": {
+        "x": 1.4902157738095239,
+        "y": 0.5570163690476195
       },
       "nextControl": null,
       "isLocked": false,
@@ -115,6 +131,19 @@
         "nominalVoltage": 12.0,
         "unlimited": false
       }
+    },
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 3.9,
+      "maxWaypointRelativePos": 5.0,
+      "constraints": {
+        "maxVelocity": 0.5,
+        "maxAcceleration": 0.5,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
     }
   ],
   "pointTowardsZones": [],
@@ -137,6 +166,17 @@
       "command": null
     },
     {
+      "name": "indexer_on",
+      "waypointRelativePos": 0.4246575342465754,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "indexer_on"
+        }
+      }
+    },
+    {
       "name": "turret_automatic",
       "waypointRelativePos": 0.47260273972602806,
       "endWaypointRelativePos": null,
@@ -144,17 +184,6 @@
         "type": "named",
         "data": {
           "name": "turret_automatic"
-        }
-      }
-    },
-    {
-      "name": "indexer_on",
-      "waypointRelativePos": 0.47260273972602823,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "indexer_on"
         }
       }
     },
@@ -182,7 +211,7 @@
     },
     {
       "name": "turret_automatic",
-      "waypointRelativePos": 3.5,
+      "waypointRelativePos": 4.0,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -193,7 +222,7 @@
     },
     {
       "name": "indexer_on",
-      "waypointRelativePos": 3.5,
+      "waypointRelativePos": 4.184931506849315,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
