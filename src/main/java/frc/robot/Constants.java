@@ -16,7 +16,7 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.util.ShooterParams;
 
 public final class Constants {
-    public static final double gyroP = 3; //7.4213
+    public static final double gyroP = 4.5; //7.4213
     public static final double gyroI = 0.0;
     public static final double gyroD = 0.8; //0.85752
 
@@ -29,25 +29,25 @@ public final class Constants {
         public static final String kCameraNameFrontRight = "FrontRightCamera";
         public static final Transform3d kRobotToCamFrontRight = new Transform3d(
             new Translation3d(Units.inchesToMeters(10.93), -Units.inchesToMeters(10.59), Units.inchesToMeters(7.74)),
-            new Rotation3d(Math.toRadians(0), Math.toRadians(-65), Math.toRadians(-50))
+            new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(-50))
         );
 
         public static final String kCameraNameFrontLeft = "FrontLeftCamera";
         public static final Transform3d kRobotToCamFrontLeft = new Transform3d(
             new Translation3d(Units.inchesToMeters(10.93), Units.inchesToMeters(10.59), Units.inchesToMeters(7.74)),
-            new Rotation3d(Math.toRadians(0), Math.toRadians(-65), Math.toRadians(50))
+            new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(50))
         );
 
         public static final String kCameraNameBackRight = "BackRightCamera";
         public static final Transform3d kRobotToCamBackRight = new Transform3d(
             new Translation3d(Units.inchesToMeters(8.12), -Units.inchesToMeters(11.06), Units.inchesToMeters(7.74)),
-            new Rotation3d(Math.toRadians(0), Math.toRadians(-65), Math.toRadians(-110))
+            new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(-110))
         );
 
         public static final String kCameraNameBackLeft = "BackLeftCamera";
         public static final Transform3d kRobotToCamBackLeft = new Transform3d(
             new Translation3d(Units.inchesToMeters(8.12), Units.inchesToMeters(11.06), Units.inchesToMeters(7.74)),
-            new Rotation3d(Math.toRadians(0), Math.toRadians(-65), Math.toRadians(110))
+            new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(110))
         );
 
         public static final AprilTagFieldLayout kTagLayout =
@@ -94,7 +94,8 @@ public final class Constants {
         public static final double hoodRatio = 50;
         public static final double shooterWheelRadius = Units.inchesToMeters(4);
         // Ball exit speed as a fraction of wheel surface speed.
-        public static final double shooterLaunchEfficiency = 0.46;
+        // Set to 1.0 for pure physics model; slippage is handled by SlippageCorrectionMap.
+        public static final double shooterLaunchEfficiency = 1.0;
         public static final double shooterMaxMotorRps = 6000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
@@ -102,7 +103,7 @@ public final class Constants {
         public static final double hoodZeroDegrees = 21.0;
         public static final double hoodMinDegrees = 18.0;
         public static final double hoodMaxDegrees = 65.0;
-        public static final double ikEntryAngleTargetDeg = 7.5;
+        public static final double ikEntryAngleTargetDeg = 40.0;
         public static final double ikEntryAngleToleranceDeg = 2.5;
         public static final double lowHoodPreferredDegrees = hoodMinDegrees;
         public static final double passTargetRadiusMeters = Units.inchesToMeters(5.91) / 2.0;
@@ -125,7 +126,11 @@ public final class Constants {
             // Passing
             map.put(Double.MAX_VALUE, new ShooterParams(7.3, 40));
 
-            
+            map.put(3.422, new ShooterParams(0.0, 32));
+            map.put(5.084, new ShooterParams(1.25, 38));
+            map.put(4.34, new ShooterParams(1.0, 35));
+            map.put(3.678, new ShooterParams(0.0, 35));
+            map.put(2.323, new ShooterParams(0.0, 28));
         }
     }
 
@@ -147,10 +152,10 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 10.0;
+        public static final double spinKp = 15.0;
         public static final double spinKi = 0.0;
         public static final double spinKd = 0.5;
-        public static final double spinKs = 0.5;
+        public static final double spinKs = 0.35;
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
         public static final double spinStatorCurrentLimit = 80.0;
@@ -229,18 +234,53 @@ public final class Constants {
         public static final String enableKey = "MapTune/Enable";
         public static final String hoodKey = "MapTune/HoodTarget";
         public static final String shooterKey = "MapTune/ShooterTarget";
-        public static final boolean defaultEnable = true;
+        public static final boolean defaultEnable = false;
     }
 
     public static final class AutoAimConstants {
         public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
-        public static final boolean defaultUseIKSolver = false;
+        public static final boolean defaultUseIKSolver = true;
         public static final String useEntryAngleIKKey = "TurretTarget/UseEntryAngleIK";
-        public static final boolean defaultUseEntryAngleIK = true;
+        public static final boolean defaultUseEntryAngleIK = false;
         public static final String useShootOnMoveCompKey = "TurretTarget/UseShootOnMoveComp";
         public static final boolean defaultUseShootOnMoveComp = true;
         public static final String modelMuzzleHeightMetersKey = "TurretTarget/ModelMuzzleHeightMeters";
         public static final String modelTargetHeightMetersKey = "TurretTarget/ModelTargetHeightMeters";
+    }
+
+    public static final class SlippageCorrectionConstants {
+        public static final String enableKey = "Slippage/Enable";
+        public static final boolean defaultEnable = true;
+
+        // Hood angle (degrees) held fixed during characterization shots.
+        public static final String charHoodDegKey = "Slippage/CharHoodDeg";
+        public static final double defaultCharHoodDeg = 27.0;
+
+        // Height (meters) of the surface where characterization balls land.
+        // 0.0 = floor shots. Set to targetHeightMeters if shooting at the hub.
+        public static final String charTargetHeightMetersKey = "Slippage/CharTargetHeightMeters";
+        public static final double defaultCharTargetHeightMeters = 0.0;
+
+        // Characterization data — HA=27 deg, floor shots.
+        // X: commanded RPS   Y: observed horizontal distance (meters)
+        public static final double[] defaultCommandedRpsPoints    = { 10.0, 20.0,   30.0,   40.0,   50.0  };
+        public static final double[] defaultObservedDistanceMeters = {  0.784, 2.0828, 4.0132, 5.4864, 6.223 };
+
+        // SmartDashboard keys for the parallel arrays.
+        public static final String commandedRpsPointsKey      = "Slippage/CommandedRpsPoints";
+        public static final String observedDistancePointsKey  = "Slippage/ObservedDistanceMeters";
+
+        // Additive offset applied to every efficiency value after interpolation.
+        // +offset = curve shifts up → less correction → lower commanded RPS
+        // -offset = curve shifts down → more correction → higher commanded RPS
+        public static final String efficiencyOffsetKey = "Slippage/EfficiencyOffset";
+        public static final double defaultEfficiencyOffset = 0.0;
+
+        // Multiplicative scalar applied after the additive offset.
+        // >1.0 = magnifies efficiency → less correction → lower commanded RPS
+        // <1.0 = shrinks efficiency → more correction → higher commanded RPS
+        public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
+        public static final double defaultEfficiencyScale = 1.1;
     }
 
     public static final class IntakeConstants {

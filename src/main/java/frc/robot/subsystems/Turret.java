@@ -54,6 +54,7 @@ import frc.robot.Constants.ShootMode;
 import frc.robot.Constants.IkSolution;
 import frc.robot.Constants.MapTuneConstants;
 import frc.robot.util.ShooterOffsetMap;
+import frc.robot.util.SlippageCorrectionMap;
 
 public class Turret extends SubsystemBase {
     private static final double TWO_PI = 2.0 * Math.PI;
@@ -90,6 +91,7 @@ public class Turret extends SubsystemBase {
 
     private final Field2d m_field = new Field2d();
     private final ShooterOffsetMap offsetMap = new ShooterOffsetMap();
+    private final SlippageCorrectionMap slippageMap = new SlippageCorrectionMap();
 
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> manualOverrider) {
         pose = robotPose;
@@ -383,9 +385,8 @@ public class Turret extends SubsystemBase {
 
         hoodPose.Position = map.hoodPose;
 
-         // Field heading of shooter (radians)
+        // Field heading of shooter (radians)
         double shooterFOA = robotHeading + turretAngle;
-
 
         // Compute velocity component parallel to shooter FOA using field-frame speeds
         // v_parallel = vx * cos(shooterFOA) + vy * sin(shooterFOA)
@@ -422,17 +423,19 @@ public class Turret extends SubsystemBase {
         neededAngle = Math.round(neededAngle * 100.0) / 100.0;
         SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
 
-        // Update phase delay here, 20ms loop
-        estimateTurretPhaseDelaySec(
-            neededAngle, 
-            turretAngle, 
-            spinMotor.getVelocity().getValueAsDouble() * TWO_PI, 
-            0.02
-        );
+        if (!brake) {
+            // Update phase delay here, 20ms loop
+            estimateTurretPhaseDelaySec(
+                neededAngle, 
+                turretAngle, 
+                spinMotor.getVelocity().getValueAsDouble() * TWO_PI, 
+                0.02
+            );
+        }
 
         double motorRots = (neededAngle * TurretConstants.spinRatio) / TWO_PI;
 
-        brake = Math.abs(motorRots - spinMotor.getPosition().getValueAsDouble()) <= 0.0138889;
+        brake = Math.abs(motorRots - spinMotor.getPosition().getValueAsDouble()) <= 0.01389;
 
         spinPose.Position = motorRots;
     }
@@ -506,18 +509,28 @@ public class Turret extends SubsystemBase {
                 selection.hoodDegrees + offsets.hoodOffsetDeg
             )
         );
-        double motorRps = Math.max(
+        double theoreticalMotorRps = Math.max(
             0.0,
             useEntryAngleIK
                 ? Math.min(TurretConstants.shooterMaxMotorRps, selection.motorRps + offsets.motorRpsOffset)
                 : selection.motorRps + offsets.motorRpsOffset
         );
+        double slippageFactor = slippageMap.efficiencyAt(theoreticalMotorRps);
+        double motorRps = slippageMap.correctedMotorRps(theoreticalMotorRps);
+        // After slippage correction the commanded RPS can exceed the motor's physical
+        // limit even if the theoretical RPS was within bounds — reject the solution.
+        if (motorRps > TurretConstants.shooterMaxMotorRps) {
+            return null;
+        }
         SmartDashboard.putBoolean("Turret/IK/UseEntryAngleMode", useEntryAngleIK);
         SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", selection.usedPrimaryObjective);
         SmartDashboard.putString(
             "Turret/IK/SolverMode",
             useEntryAngleIK ? "EntryAngle" : "MinimumSpeed"
         );
+        SmartDashboard.putNumber("Turret/Slippage/TheoreticalMotorRps", theoreticalMotorRps);
+        SmartDashboard.putNumber("Turret/Slippage/CorrectedMotorRps", motorRps);
+        SmartDashboard.putNumber("Turret/Slippage/EfficiencyFactor", slippageFactor);
         return new IkSolution(hoodDeg, motorRps);
     }
 
@@ -549,10 +562,11 @@ public class Turret extends SubsystemBase {
     ) {
         double alphaRad = Math.atan2(deltaHeightMeters, distanceMeters);
         double thetaDeg = 90 - Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
+        double thetaSpeed = Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
         if (thetaDeg < TurretConstants.hoodMinDegrees || thetaDeg > TurretConstants.hoodMaxDegrees) {
             return null;
         }
-        double speedMps = solveIKSpeed(distanceMeters, Math.toRadians(thetaDeg), deltaHeightMeters);
+        double speedMps = solveIKSpeed(distanceMeters, Math.toRadians(thetaSpeed), deltaHeightMeters);
         double motorRps = launchSpeedMpsToMotorRps(speedMps);
         if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
             return null;
@@ -590,20 +604,22 @@ public class Turret extends SubsystemBase {
         return Math.toDegrees(Math.atan2(-verticalVelocityAtTarget, horizontalSpeed));
     }
 
-    private double applyChassisVelocityComp(double motorRps) {
+    private double applyChassisVelocityComp(double motorRps, double robotHeading, ChassisSpeeds robotFOS) {
         boolean useShootOnMoveComp = SmartDashboard.getBoolean(
             AutoAimConstants.useShootOnMoveCompKey,
             AutoAimConstants.defaultUseShootOnMoveComp
         );
-        double robotHeading = pose.get().getRotation().getRadians();
+
+        // Field heading of shooter (radians)
         double shooterFOA = robotHeading + turretAngle;
-        ChassisSpeeds robotFOS = speed.get();
-        double robotSpeed = Math.hypot(robotFOS.vxMetersPerSecond, robotFOS.vyMetersPerSecond);
-        double robotVelAngle = Math.atan2(robotFOS.vyMetersPerSecond, robotFOS.vxMetersPerSecond);
-        double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
-        double deltaMotorRPS = useShootOnMoveComp ? launchSpeedMpsToMotorRps(vParallel) : 0.0;
-        SmartDashboard.putNumber("Turret/SOTM/ParallelVelocityMps", vParallel);
-        SmartDashboard.putNumber("Turret/SOTM/DeltaMotorRps", deltaMotorRPS);
+
+        // Compute velocity component parallel to shooter FOA using field-frame speeds
+        // v_parallel = vx * cos(shooterFOA) + vy * sin(shooterFOA)
+        double vParallel = robotFOS.vxMetersPerSecond * Math.cos(shooterFOA) 
+                         + robotFOS.vyMetersPerSecond * Math.sin(shooterFOA);
+        double deltaMotorRPS =  useShootOnMoveComp ? vParallel / (TWO_PI * TurretConstants.shooterWheelRadius) : 0.0;
+        SmartDashboard.putNumber("Turret/debug/vParallel", vParallel);
+        SmartDashboard.putNumber("Turret/debug/deltaMotorRps", deltaMotorRPS);
         return motorRps - deltaMotorRPS;
     }
 
@@ -631,9 +647,9 @@ public class Turret extends SubsystemBase {
             robotSpeeds.omegaRadiansPerSecond * filteredTurretDelaySec
         ));
         SmartDashboard.putNumber("Phase Delay", filteredTurretDelaySec);
-        m_field.getObject("Delay Pose").setPose(delayPose);
-        Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(delayPose.getRotation());
-        Pose2d turretPose = new Pose2d(delayPose.getTranslation().plus(rotationOffset), delayPose.getRotation());
+        // m_field.getObject("Delay Pose").setPose(delayPose);
+        Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(currPose.getRotation()); // TODO CHANGE TO DELAYPOSE
+        Pose2d turretPose = new Pose2d(currPose.getTranslation().plus(rotationOffset), currPose.getRotation()); // TODO CHANGE TO DELAYPOSE
 
         boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
         SmartDashboard.putBoolean("Is Blue", isBlue);
@@ -737,7 +753,7 @@ public class Turret extends SubsystemBase {
                 Translation2d flightOffset = fieldVelocity.times(tof); // How far robot moves during ball flight
                 SmartDashboard.putNumber("Turret/debug/flightOffsetX", flightOffset.getX());
                 SmartDashboard.putNumber("Turret/debug/flightOffsetY", flightOffset.getY());
-                lookaheadTurretPos = turretPose.getTranslation().plus(flightOffset); // Effective launch point
+                lookaheadTurretPos = lookaheadTurretPos.plus(flightOffset); // Effective launch point
                 distance = lookaheadTurretPos.getDistance(targetPose); // Recompute distance
                 if (useIK) { // Recompute TOF for new distance
                     IkSolution solution = solveIK(distance);
@@ -765,7 +781,7 @@ public class Turret extends SubsystemBase {
                 IkSolution ikSolution = solveIK(distance);
                 double ikCompensatedMotorRps = Double.NaN;
                 if (ikSolution != null) {
-                    ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps);
+                    ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps, currPose.getRotation().getRadians(), speeds);
                     double predictedEntryDeg = computeEntryAngleDeg(
                         distance,
                         motorRpsToLaunchSpeedMps(ikSolution.motorRps),

@@ -162,16 +162,12 @@ public class RobotContainer {
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         joystick.b().onTrue(new InstantCommand(() -> {
-            boolean useEntryAngleIK = SmartDashboard.getBoolean(
-                AutoAimConstants.useEntryAngleIKKey,
-                AutoAimConstants.defaultUseEntryAngleIK
+            boolean useIK = SmartDashboard.getBoolean(
+                AutoAimConstants.useIKSolverKey,
+                AutoAimConstants.defaultUseIKSolver
             );
-            SmartDashboard.putBoolean(AutoAimConstants.useEntryAngleIKKey, !useEntryAngleIK);
+            SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
         }));
-
-        joystick.leftBumper().and(() -> turret.turretOnTarget())
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
-            .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
 
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake))
@@ -182,20 +178,25 @@ public class RobotContainer {
         joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
-        
-        joystick.y().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
-            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
-            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
         joystick.povDown().onTrue(new InstantCommand(() -> target = 0));
         joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
 
-        joystick2.a().or(intakeHome)
+        joystick2.b().or(intakeHome)
             .onTrue(new InstantCommand(() -> override = true))
             .onFalse(new InstantCommand(() -> override = false));
-        joystick2.y().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
+
+        joystick2.leftBumper().and(() -> turret.turretOnTarget())
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
+            .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+        
+        joystick2.a() // TODO new reverse command, change binding later
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> -0.25))
+            .onFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+        
+        joystick2.rightBumper().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
