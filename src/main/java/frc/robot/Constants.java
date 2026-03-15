@@ -103,7 +103,7 @@ public final class Constants {
         public static final double hoodZeroDegrees = 21.0;
         public static final double hoodMinDegrees = 18.0;
         public static final double hoodMaxDegrees = 65.0;
-        public static final double ikEntryAngleTargetDeg = 7.5;
+        public static final double ikEntryAngleTargetDeg = 40.0;
         public static final double ikEntryAngleToleranceDeg = 2.5;
         public static final double lowHoodPreferredDegrees = hoodMinDegrees;
         public static final double passTargetRadiusMeters = Units.inchesToMeters(5.91) / 2.0;
@@ -246,15 +246,37 @@ public final class Constants {
 
     public static final class SlippageCorrectionConstants {
         public static final String enableKey = "Slippage/Enable";
-        public static final boolean defaultEnable = false;
+        public static final boolean defaultEnable = true;
+
         // Hood angle (degrees) held fixed during characterization shots.
-        // The ballistics inversion uses this to back-calculate exit speed from distance.
         public static final String charHoodDegKey = "Slippage/CharHoodDeg";
-        public static final double defaultCharHoodDeg = 20.0;
-        // Parallel arrays: commanded RPS and observed landing distance (meters) at
-        // each RPS using the characterization hood angle above.
-        public static final String commandedRpsPointsKey = "Slippage/CommandedRpsPoints";
-        public static final String observedDistancePointsKey = "Slippage/ObservedDistanceMeters";
+        public static final double defaultCharHoodDeg = 27.0;
+
+        // Height (meters) of the surface where characterization balls land.
+        // 0.0 = floor shots. Set to targetHeightMeters if shooting at the hub.
+        public static final String charTargetHeightMetersKey = "Slippage/CharTargetHeightMeters";
+        public static final double defaultCharTargetHeightMeters = 0.0;
+
+        // Characterization data — HA=27 deg, floor shots.
+        // X: commanded RPS   Y: observed horizontal distance (meters)
+        public static final double[] defaultCommandedRpsPoints    = { 10.0, 20.0,   30.0,   40.0,   50.0  };
+        public static final double[] defaultObservedDistanceMeters = {  0.784, 2.0828, 4.0132, 5.4864, 6.223 };
+
+        // SmartDashboard keys for the parallel arrays.
+        public static final String commandedRpsPointsKey      = "Slippage/CommandedRpsPoints";
+        public static final String observedDistancePointsKey  = "Slippage/ObservedDistanceMeters";
+
+        // Additive offset applied to every efficiency value after interpolation.
+        // +offset = curve shifts up → less correction → lower commanded RPS
+        // -offset = curve shifts down → more correction → higher commanded RPS
+        public static final String efficiencyOffsetKey = "Slippage/EfficiencyOffset";
+        public static final double defaultEfficiencyOffset = 0.0;
+
+        // Multiplicative scalar applied after the additive offset.
+        // >1.0 = magnifies efficiency → less correction → lower commanded RPS
+        // <1.0 = shrinks efficiency → more correction → higher commanded RPS
+        public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
+        public static final double defaultEfficiencyScale = 1.0;
     }
 
     public static final class IntakeConstants {

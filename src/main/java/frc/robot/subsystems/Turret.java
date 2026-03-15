@@ -516,6 +516,11 @@ public class Turret extends SubsystemBase {
         );
         double slippageFactor = slippageMap.efficiencyAt(theoreticalMotorRps);
         double motorRps = slippageMap.correctedMotorRps(theoreticalMotorRps);
+        // After slippage correction the commanded RPS can exceed the motor's physical
+        // limit even if the theoretical RPS was within bounds — reject the solution.
+        if (motorRps > TurretConstants.shooterMaxMotorRps) {
+            return null;
+        }
         SmartDashboard.putBoolean("Turret/IK/UseEntryAngleMode", useEntryAngleIK);
         SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", selection.usedPrimaryObjective);
         SmartDashboard.putString(
