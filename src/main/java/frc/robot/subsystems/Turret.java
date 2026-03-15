@@ -422,17 +422,19 @@ public class Turret extends SubsystemBase {
         neededAngle = Math.round(neededAngle * 100.0) / 100.0;
         SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
 
-        // Update phase delay here, 20ms loop
-        estimateTurretPhaseDelaySec(
-            neededAngle, 
-            turretAngle, 
-            spinMotor.getVelocity().getValueAsDouble() * TWO_PI, 
-            0.02
-        );
+        if (!brake) {
+            // Update phase delay here, 20ms loop
+            estimateTurretPhaseDelaySec(
+                neededAngle, 
+                turretAngle, 
+                spinMotor.getVelocity().getValueAsDouble() * TWO_PI, 
+                0.02
+            );
+        }
 
         double motorRots = (neededAngle * TurretConstants.spinRatio) / TWO_PI;
 
-        brake = Math.abs(motorRots - spinMotor.getPosition().getValueAsDouble()) <= 0.0138889;
+        brake = Math.abs(motorRots - spinMotor.getPosition().getValueAsDouble()) <= 0.01389;
 
         spinPose.Position = motorRots;
     }
@@ -632,8 +634,8 @@ public class Turret extends SubsystemBase {
         ));
         SmartDashboard.putNumber("Phase Delay", filteredTurretDelaySec);
         m_field.getObject("Delay Pose").setPose(delayPose);
-        Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(delayPose.getRotation());
-        Pose2d turretPose = new Pose2d(delayPose.getTranslation().plus(rotationOffset), delayPose.getRotation());
+        Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(currPose.getRotation()); // TODO CHANGE TO DELAYPOSE
+        Pose2d turretPose = new Pose2d(currPose.getTranslation().plus(rotationOffset), currPose.getRotation()); // TODO CHANGE TO DELAYPOSE
 
         boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
         SmartDashboard.putBoolean("Is Blue", isBlue);
@@ -727,7 +729,7 @@ public class Turret extends SubsystemBase {
             }
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 4; i++) {
                 Translation2d fieldVelocity = new Translation2d(
                     speeds.vxMetersPerSecond,
                     speeds.vyMetersPerSecond
@@ -752,8 +754,8 @@ public class Turret extends SubsystemBase {
             }
             m_field.getObject("Look Ahead Pose").setPose(lookaheadTurretPos.getMeasureX(), lookaheadTurretPos.getMeasureY(), new Rotation2d());
 
-            double xError = targetPose.getX() - lookaheadTurretPos.getX();
-            double yError = targetPose.getY() - lookaheadTurretPos.getY();
+            double xError = targetPose.getX() - turretPose.getX(); // TODO CHANGE TO LOOKAHEADPOSE
+            double yError = targetPose.getY() - turretPose.getY(); // TODO CHANGE TO LOOKAHEADPOSE
             double errorDegrees = Math.atan2(yError, xError);
             SmartDashboard.putNumber("Turret/debug/neededDeg", Math.toDegrees(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians())));
             distance = Math.hypot(yError, xError);
