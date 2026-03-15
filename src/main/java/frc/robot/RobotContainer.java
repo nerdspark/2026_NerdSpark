@@ -193,6 +193,10 @@ public class RobotContainer {
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
         
+        joystick2.a() // TODO new reverse command, change binding later
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> -0.25))
+            .onFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+        
         joystick2.rightBumper().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
