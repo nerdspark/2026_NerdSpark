@@ -241,7 +241,7 @@ public final class Constants {
         public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
         public static final boolean defaultUseIKSolver = true;
         public static final String useEntryAngleIKKey = "TurretTarget/UseEntryAngleIK";
-        public static final boolean defaultUseEntryAngleIK = true;
+        public static final boolean defaultUseEntryAngleIK = false;
         public static final String useShootOnMoveCompKey = "TurretTarget/UseShootOnMoveComp";
         public static final boolean defaultUseShootOnMoveComp = true;
         public static final String modelMuzzleHeightMetersKey = "TurretTarget/ModelMuzzleHeightMeters";
@@ -280,7 +280,7 @@ public final class Constants {
         // >1.0 = magnifies efficiency → less correction → lower commanded RPS
         // <1.0 = shrinks efficiency → more correction → higher commanded RPS
         public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
-        public static final double defaultEfficiencyScale = 1.0;
+        public static final double defaultEfficiencyScale = 1.1;
     }
 
     public static final class IntakeConstants {

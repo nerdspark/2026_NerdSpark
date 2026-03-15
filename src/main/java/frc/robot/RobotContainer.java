@@ -163,11 +163,11 @@ public class RobotContainer {
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         joystick.b().onTrue(new InstantCommand(() -> {
-            boolean useEntryAngleIK = SmartDashboard.getBoolean(
-                AutoAimConstants.useEntryAngleIKKey,
-                AutoAimConstants.defaultUseEntryAngleIK
+            boolean useIK = SmartDashboard.getBoolean(
+                AutoAimConstants.useIKSolverKey,
+                AutoAimConstants.defaultUseIKSolver
             );
-            SmartDashboard.putBoolean(AutoAimConstants.useEntryAngleIKKey, !useEntryAngleIK);
+            SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
         }));
 
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)

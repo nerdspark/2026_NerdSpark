@@ -385,9 +385,8 @@ public class Turret extends SubsystemBase {
 
         hoodPose.Position = map.hoodPose;
 
-         // Field heading of shooter (radians)
+        // Field heading of shooter (radians)
         double shooterFOA = robotHeading + turretAngle;
-
 
         // Compute velocity component parallel to shooter FOA using field-frame speeds
         // v_parallel = vx * cos(shooterFOA) + vy * sin(shooterFOA)
@@ -563,7 +562,7 @@ public class Turret extends SubsystemBase {
     ) {
         double alphaRad = Math.atan2(deltaHeightMeters, distanceMeters);
         double thetaDeg = 90 - Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
-        double thetaSpeed = 45 + Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
+        double thetaSpeed = Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
         if (thetaDeg < TurretConstants.hoodMinDegrees || thetaDeg > TurretConstants.hoodMaxDegrees) {
             return null;
         }
@@ -605,20 +604,22 @@ public class Turret extends SubsystemBase {
         return Math.toDegrees(Math.atan2(-verticalVelocityAtTarget, horizontalSpeed));
     }
 
-    private double applyChassisVelocityComp(double motorRps) {
+    private double applyChassisVelocityComp(double motorRps, double robotHeading, ChassisSpeeds robotFOS) {
         boolean useShootOnMoveComp = SmartDashboard.getBoolean(
             AutoAimConstants.useShootOnMoveCompKey,
             AutoAimConstants.defaultUseShootOnMoveComp
         );
-        double robotHeading = pose.get().getRotation().getRadians();
+
+        // Field heading of shooter (radians)
         double shooterFOA = robotHeading + turretAngle;
-        ChassisSpeeds robotFOS = speed.get();
-        double robotSpeed = Math.hypot(robotFOS.vxMetersPerSecond, robotFOS.vyMetersPerSecond);
-        double robotVelAngle = Math.atan2(robotFOS.vyMetersPerSecond, robotFOS.vxMetersPerSecond);
-        double vParallel = robotSpeed * Math.cos(robotVelAngle - shooterFOA);
-        double deltaMotorRPS = useShootOnMoveComp ? launchSpeedMpsToMotorRps(vParallel) : 0.0;
-        SmartDashboard.putNumber("Turret/SOTM/ParallelVelocityMps", vParallel);
-        SmartDashboard.putNumber("Turret/SOTM/DeltaMotorRps", deltaMotorRPS);
+
+        // Compute velocity component parallel to shooter FOA using field-frame speeds
+        // v_parallel = vx * cos(shooterFOA) + vy * sin(shooterFOA)
+        double vParallel = robotFOS.vxMetersPerSecond * Math.cos(shooterFOA) 
+                         + robotFOS.vyMetersPerSecond * Math.sin(shooterFOA);
+        double deltaMotorRPS =  useShootOnMoveComp ? vParallel / (TWO_PI * TurretConstants.shooterWheelRadius) : 0.0;
+        SmartDashboard.putNumber("Turret/debug/vParallel", vParallel);
+        SmartDashboard.putNumber("Turret/debug/deltaMotorRps", deltaMotorRPS);
         return motorRps - deltaMotorRPS;
     }
 
@@ -646,7 +647,7 @@ public class Turret extends SubsystemBase {
             robotSpeeds.omegaRadiansPerSecond * filteredTurretDelaySec
         ));
         SmartDashboard.putNumber("Phase Delay", filteredTurretDelaySec);
-        m_field.getObject("Delay Pose").setPose(delayPose);
+        // m_field.getObject("Delay Pose").setPose(delayPose);
         Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(currPose.getRotation()); // TODO CHANGE TO DELAYPOSE
         Pose2d turretPose = new Pose2d(currPose.getTranslation().plus(rotationOffset), currPose.getRotation()); // TODO CHANGE TO DELAYPOSE
 
@@ -742,7 +743,7 @@ public class Turret extends SubsystemBase {
             }
             Translation2d lookaheadTurretPos = turretPose.getTranslation();
 
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 5; i++) {
                 Translation2d fieldVelocity = new Translation2d(
                     speeds.vxMetersPerSecond,
                     speeds.vyMetersPerSecond
@@ -752,7 +753,7 @@ public class Turret extends SubsystemBase {
                 Translation2d flightOffset = fieldVelocity.times(tof); // How far robot moves during ball flight
                 SmartDashboard.putNumber("Turret/debug/flightOffsetX", flightOffset.getX());
                 SmartDashboard.putNumber("Turret/debug/flightOffsetY", flightOffset.getY());
-                lookaheadTurretPos = turretPose.getTranslation().plus(flightOffset); // Effective launch point
+                lookaheadTurretPos = lookaheadTurretPos.plus(flightOffset); // Effective launch point
                 distance = lookaheadTurretPos.getDistance(targetPose); // Recompute distance
                 if (useIK) { // Recompute TOF for new distance
                     IkSolution solution = solveIK(distance);
@@ -767,8 +768,8 @@ public class Turret extends SubsystemBase {
             }
             m_field.getObject("Look Ahead Pose").setPose(lookaheadTurretPos.getMeasureX(), lookaheadTurretPos.getMeasureY(), new Rotation2d());
 
-            double xError = targetPose.getX() - turretPose.getX(); // TODO CHANGE TO LOOKAHEADPOSE
-            double yError = targetPose.getY() - turretPose.getY(); // TODO CHANGE TO LOOKAHEADPOSE
+            double xError = targetPose.getX() - lookaheadTurretPos.getX();
+            double yError = targetPose.getY() - lookaheadTurretPos.getY();
             double errorDegrees = Math.atan2(yError, xError);
             SmartDashboard.putNumber("Turret/debug/neededDeg", Math.toDegrees(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians())));
             distance = Math.hypot(yError, xError);
@@ -780,7 +781,7 @@ public class Turret extends SubsystemBase {
                 IkSolution ikSolution = solveIK(distance);
                 double ikCompensatedMotorRps = Double.NaN;
                 if (ikSolution != null) {
-                    ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps);
+                    ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps, currPose.getRotation().getRadians(), speeds);
                     double predictedEntryDeg = computeEntryAngleDeg(
                         distance,
                         motorRpsToLaunchSpeedMps(ikSolution.motorRps),
