@@ -11,7 +11,7 @@
     "left_auton_neutral_nb",
     "left_auton_neutralx2",
     "right_auton_neutral",
-    "right_auton_outpost",
+    "auton_outpost",
     "tests"
   ],
   "autoFolders": [

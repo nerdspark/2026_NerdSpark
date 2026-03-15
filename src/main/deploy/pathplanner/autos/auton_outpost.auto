@@ -7,13 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "left_auton_neutralnb1"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "left_auton_neutralnb2"
+            "pathName": "auton_outpost1"
           }
         }
       ]
