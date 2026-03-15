@@ -8,34 +8,13 @@ import frc.robot.Constants.TurretConstants;
 
 /**
  * Builds a slippage efficiency curve from (commandedRps, observedDistanceMeters) pairs
- * at a fixed characterization hood angle, and uses it to correct the IK solver's
- * theoretical motor RPS output.
+ * at a fixed characterization hood angle and target height, then uses it to correct
+ * the IK solver's theoretical motor RPS output.
  *
- * <h3>Protocol</h3>
- * <ol>
- *   <li>Set {@code Slippage/CharHoodDeg} to a fixed hood angle (e.g. 20 deg) and hold
- *       it there via MapTune.</li>
- *   <li>Shoot at RPS steps (e.g. 100, 200, 300, 400). Record where each ball lands.</li>
- *   <li>Enter the RPS steps in {@code Slippage/CommandedRpsPoints} and the landing
- *       distances in {@code Slippage/ObservedDistanceMeters}.</li>
- *   <li>Enable with {@code Slippage/Enable = true}.</li>
- * </ol>
- *
- * <h3>Ballistics inversion — how hood angle is accounted for</h3>
- * With launch angle θ (hood) and height difference Δh = targetHeight - muzzleHeight:
+ * <h3>Ballistics inversion</h3>
+ * With launch angle θ and Δh = charTargetHeight − muzzleHeight:
  * <pre>
- *   D     = V * cosθ * t               (horizontal)
- *   Δh    = V * sinθ * t - ½g * t²    (vertical)
- *
- *   solving for V:
- *   V = sqrt( g * D² / (2 * cos²θ * (D*tanθ - Δh)) )
- * </pre>
- * A steeper θ increases tanθ, raising the denominator's bracket and yielding a
- * higher back-calculated V for the same observed distance — which is physically
- * correct, since a steeper ball must have been launched faster to reach the same spot.
- *
- * <h3>Correction applied at runtime</h3>
- * <pre>
+ *   V = sqrt( g * D² / (2 * cos²θ * (D*tanθ − Δh)) )
  *   efficiency   = V_actual / (commandedRps * 2π * wheelRadius)
  *   correctedRps = theoreticalRps / efficiency
  * </pre>
@@ -54,10 +33,34 @@ public class SlippageCorrectionMap {
                 SlippageCorrectionConstants.enableKey,
                 SlippageCorrectionConstants.defaultEnable);
         SmartDashboard.setDefaultNumber(
+                SlippageCorrectionConstants.efficiencyOffsetKey,
+                SlippageCorrectionConstants.defaultEfficiencyOffset);
+        SmartDashboard.setDefaultNumber(
+                SlippageCorrectionConstants.efficiencyScaleKey,
+                SlippageCorrectionConstants.defaultEfficiencyScale);
+        SmartDashboard.setDefaultNumber(
                 SlippageCorrectionConstants.charHoodDegKey,
                 SlippageCorrectionConstants.defaultCharHoodDeg);
-        SmartDashboard.setDefaultNumberArray(SlippageCorrectionConstants.commandedRpsPointsKey, new double[] {});
-        SmartDashboard.setDefaultNumberArray(SlippageCorrectionConstants.observedDistancePointsKey, new double[] {});
+        SmartDashboard.setDefaultNumber(
+                SlippageCorrectionConstants.charTargetHeightMetersKey,
+                SlippageCorrectionConstants.defaultCharTargetHeightMeters);
+        SmartDashboard.setDefaultNumberArray(
+                SlippageCorrectionConstants.commandedRpsPointsKey,
+                SlippageCorrectionConstants.defaultCommandedRpsPoints);
+        SmartDashboard.setDefaultNumberArray(
+                SlippageCorrectionConstants.observedDistancePointsKey,
+                SlippageCorrectionConstants.defaultObservedDistanceMeters);
+    }
+
+    /**
+     * Returns the actual ball exit speed (m/s) for a given commanded motor RPS,
+     * interpolated from the empirical characterization curve.
+     *
+     * <p>Formula: {@code actualVelocity = efficiency(rps) * rps * 2π * wheelRadius}
+     */
+    public double actualVelocityMps(double motorRps) {
+        double eff = efficiencyAt(motorRps);
+        return eff * motorRps * TWO_PI * TurretConstants.shooterWheelRadius;
     }
 
     /**
@@ -72,8 +75,14 @@ public class SlippageCorrectionMap {
         if (!enabled || !hasData) {
             return 1.0;
         }
+        double offset = SmartDashboard.getNumber(
+                SlippageCorrectionConstants.efficiencyOffsetKey,
+                SlippageCorrectionConstants.defaultEfficiencyOffset);
+        double scale = SmartDashboard.getNumber(
+                SlippageCorrectionConstants.efficiencyScaleKey,
+                SlippageCorrectionConstants.defaultEfficiencyScale);
         Double factor = efficiencyMap.get(motorRps);
-        return (factor != null && factor > 0.0) ? factor : 1.0;
+        return (factor != null && factor > 0.0) ? (factor + offset) * scale : 1.0;
     }
 
     /**
@@ -90,9 +99,11 @@ public class SlippageCorrectionMap {
 
     private void refresh() {
         double[] rpsPoints = SmartDashboard.getNumberArray(
-                SlippageCorrectionConstants.commandedRpsPointsKey, new double[] {});
+                SlippageCorrectionConstants.commandedRpsPointsKey,
+                SlippageCorrectionConstants.defaultCommandedRpsPoints);
         double[] distPoints = SmartDashboard.getNumberArray(
-                SlippageCorrectionConstants.observedDistancePointsKey, new double[] {});
+                SlippageCorrectionConstants.observedDistancePointsKey,
+                SlippageCorrectionConstants.defaultObservedDistanceMeters);
 
         if (rpsPoints.length == 0 && distPoints.length == 0) {
             efficiencyMap.clear();
@@ -106,8 +117,13 @@ public class SlippageCorrectionMap {
         double charHoodDeg = SmartDashboard.getNumber(
                 SlippageCorrectionConstants.charHoodDegKey,
                 SlippageCorrectionConstants.defaultCharHoodDeg);
+        double charTargetHeight = SmartDashboard.getNumber(
+                SlippageCorrectionConstants.charTargetHeightMetersKey,
+                SlippageCorrectionConstants.defaultCharTargetHeightMeters);
+
         double charHoodRad = Math.toRadians(charHoodDeg);
-        double deltaH = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
+        // Negative for floor shots (ball drops), positive for hub shots (ball rises)
+        double deltaH = charTargetHeight - TurretConstants.shooterMuzzleHeightMeters;
         double wheelCircumference = TWO_PI * TurretConstants.shooterWheelRadius;
 
         efficiencyMap.clear();
@@ -134,11 +150,10 @@ public class SlippageCorrectionMap {
     }
 
     /**
-     * Back-calculates ball exit speed from observed landing distance, launch angle,
-     * and height difference to the target.
+     * Back-calculates ball exit speed from observed landing distance, launch angle θ,
+     * and height difference Δh = charTargetHeight - muzzleHeight.
      *
-     * <p>Hood angle enters through cos²θ and tanθ — a steeper angle yields a
-     * higher back-calculated speed for the same observed distance.
+     * <pre>V = sqrt( g * D² / (2 * cos²θ * (D*tanθ − Δh)) )</pre>
      */
     private static double backCalcExitSpeed(double distanceMeters, double launchRad, double deltaHeightMeters) {
         double cosTheta = Math.cos(launchRad);
