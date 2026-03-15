@@ -170,7 +170,7 @@ public class RobotContainer {
             SmartDashboard.putBoolean(AutoAimConstants.useEntryAngleIKKey, !useEntryAngleIK);
         }));
 
-        joystick.leftBumper().and(() -> turret.turretOnTarget())
+        joystick.leftBumper()//.and(() -> turret.turretOnTarget())
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
 
@@ -196,9 +196,6 @@ public class RobotContainer {
         joystick2.a().or(intakeHome)
             .onTrue(new InstantCommand(() -> override = true))
             .onFalse(new InstantCommand(() -> override = false));
-        joystick2.y().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
-            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
-            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         Color allianceColor = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue ? Color.kBlue : Color.kRed;
         Color oppAllianceColor = allianceColor == Color.kBlue ? Color.kRed : Color.kBlue;

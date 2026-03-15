@@ -16,7 +16,7 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.util.ShooterParams;
 
 public final class Constants {
-    public static final double gyroP = 3; //7.4213
+    public static final double gyroP = 4.5; //7.4213
     public static final double gyroI = 0.0;
     public static final double gyroD = 0.8; //0.85752
 
@@ -126,7 +126,11 @@ public final class Constants {
             // Passing
             map.put(Double.MAX_VALUE, new ShooterParams(7.3, 40));
 
-            
+            map.put(3.422, new ShooterParams(0.0, 32));
+            map.put(5.084, new ShooterParams(1.25, 38));
+            map.put(4.34, new ShooterParams(1.0, 35));
+            map.put(3.678, new ShooterParams(0.0, 35));
+            map.put(2.323, new ShooterParams(0.0, 28));
         }
     }
 
