@@ -16,7 +16,7 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.util.ShooterParams;
 
 public final class Constants {
-    public static final double gyroP = 4; //7.4213
+    public static final double gyroP = 3; //7.4213
     public static final double gyroI = 0.0;
     public static final double gyroD = 0.8; //0.85752
 
@@ -108,7 +108,7 @@ public final class Constants {
         public static final double passTargetRadiusMeters = Units.inchesToMeters(5.91) / 2.0;
         public static final int passTargetCirclePoints = 24;
 
-        public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(4.699), 0);
+        public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(4.699), -Units.inchesToMeters(0.21));
 
         public static final double delay = 0.0011;
         public static final double maxDelay = 0.5;
@@ -125,18 +125,7 @@ public final class Constants {
             // Passing
             map.put(Double.MAX_VALUE, new ShooterParams(7.3, 40));
 
-            map.put(5.386, new ShooterParams(0.23, 46));
-            map.put(5.136, new ShooterParams(0.14, 44));
-            map.put(4.491, new ShooterParams(0.12, 41));
-            map.put(4.409, new ShooterParams(0.08, 41));
-            map.put(4.515, new ShooterParams(0.05, 38.5));
-            map.put(3.710, new ShooterParams(0.04, 36));
-            map.put(3.828, new ShooterParams(0.03, 36.5));
-            map.put(4.128, new ShooterParams(0.04, 38));
-            map.put(4.524, new ShooterParams(0.07, 39.5));
-            map.put(4.481, new ShooterParams(0.1, 39.8));
-            map.put(4.866, new ShooterParams(0.22, 42.5));
-            map.put(4.444, new ShooterParams(0.22, 41));
+            
         }
     }
 
@@ -158,17 +147,16 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        // TODO Tune kp, kd, ks, maybe ki
-        public static final double spinKp = 1.0;
+        public static final double spinKp = 10.0;
         public static final double spinKi = 0.0;
-        public static final double spinKd = 0.25;
-        public static final double spinKs = 1.1;
+        public static final double spinKd = 0.5;
+        public static final double spinKs = 0.5;
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
         public static final double spinStatorCurrentLimit = 80.0;
         public static final double spinSupplyCurrent = 35.0;
-        public static final double spinVelocity = 50;
-        public static final double spinAccel = spinVelocity / 0.25; // 0.25 seconds to max speed
+        public static final double spinVelocity = 40;
+        public static final double spinAccel = 100;
 
         public static final int spinCancoder1Id = 26;
         public static final double spinCancoder1Offset = -0.619873046875;
@@ -177,15 +165,14 @@ public final class Constants {
 
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
-        // TODO Tune kp, kd, ks, maybe ki
-        public static final double hoodKp1 = 16;
-        public static final double hoodKp2 = 16;
+        public static final double hoodKp1 = 9.0;
+        public static final double hoodKp2 = 9.0;
         public static final double hoodKi1 = 0.0;
         public static final double hoodKi2 = 0.0; 
-        public static final double hoodKd1 = 0.12;
-        public static final double hoodKd2 = 0.12;
-        public static final double hoodKs1 = 2.54;
-        public static final double hoodKs2 = 2.54;
+        public static final double hoodKd1 = 0.2;
+        public static final double hoodKd2 = 0.2;
+        public static final double hoodKs1 = 1.0;
+        public static final double hoodKs2 = 1.0;
         public static final double hoodKv1 = 0.0;
         public static final double hoodKv2 = 0.0;
         public static final double hoodKa1 = 0.0;
@@ -238,37 +225,16 @@ public final class Constants {
         public static final boolean defaultEnable = false;
     }
 
-    public static final class HoodTuneConstants {
-        public static final String enableKey = "HoodTune/Enable";
-        public static final String targetDegKey = "HoodTune/TargetDeg";
-        public static final String kPKey = "HoodTune/kP";
-        public static final String kIKey = "HoodTune/kI";
-        public static final String kDKey = "HoodTune/kD";
-        public static final String kSKey = "HoodTune/kS";
-        public static final String kVKey = "HoodTune/kV";
-        public static final String kAKey = "HoodTune/kA";
-        public static final String cruiseVelocityKey = "HoodTune/CruiseVelocity";
-        public static final String accelerationKey = "HoodTune/Acceleration";
-        public static final boolean defaultEnable = false;
-    }
-
-    public static final class SpinTuneConstants {
-        public static final String enableKey = "SpinTune/Enable";
-        public static final String targetDegKey = "SpinTune/TargetDeg";
-        public static final String kPKey = "SpinTune/kP";
-        public static final String kIKey = "SpinTune/kI";
-        public static final String kDKey = "SpinTune/kD";
-        public static final String kSKey = "SpinTune/kS";
-        public static final String kVKey = "SpinTune/kV";
-        public static final String kAKey = "SpinTune/kA";
-        public static final String cruiseVelocityKey = "SpinTune/CruiseVelocity";
-        public static final String accelerationKey = "SpinTune/Acceleration";
-        public static final boolean defaultEnable = false;
+    public static final class MapTuneConstants {
+        public static final String enableKey = "MapTune/Enable";
+        public static final String hoodKey = "MapTune/HoodTarget";
+        public static final String shooterKey = "MapTune/ShooterTarget";
+        public static final boolean defaultEnable = true;
     }
 
     public static final class AutoAimConstants {
         public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
-        public static final boolean defaultUseIKSolver = true;
+        public static final boolean defaultUseIKSolver = false;
         public static final String useEntryAngleIKKey = "TurretTarget/UseEntryAngleIK";
         public static final boolean defaultUseEntryAngleIK = true;
         public static final String useShootOnMoveCompKey = "TurretTarget/UseShootOnMoveComp";
@@ -297,7 +263,7 @@ public final class Constants {
         public static final double motionMagicAcceleration = 150.0;
         public static final double motionMagicJerk = 0;
         public static final double homePos = 0.0;
-        public static final double deployPos = 13.5;
+        public static final double deployPos = 14.0;
         public static final double shakePos = 5;
     }
 }

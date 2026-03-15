@@ -170,7 +170,7 @@ public class RobotContainer {
             SmartDashboard.putBoolean(AutoAimConstants.useEntryAngleIKKey, !useEntryAngleIK);
         }));
 
-        joystick.leftBumper().and(() -> !turret.pathLatched)
+        joystick.leftBumper().and(() -> turret.turretOnTarget())
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
 
@@ -218,10 +218,10 @@ public class RobotContainer {
                         () -> {
                             joystick.setRumble(RumbleType.kBothRumble, 0);
                             joystick2.setRumble(RumbleType.kBothRumble, 0);
-                            SmartDashboard.putString("Hub Active Alliance Color", new Color().toHexString());
+                            SmartDashboard.putString("Hub Active Alliance Color", Color.kWhite.toHexString());
                         }
                     ).withTimeout(0.25)
-                    .andThen(new InstantCommand(() -> SmartDashboard.putString("Hub Active Alliance Color", allianceColor.toHexString())))
+                    .andThen(Commands.runOnce(() -> SmartDashboard.putString("Hub Active Alliance Color", allianceColor.toHexString())))
                 );
         }
 
@@ -240,10 +240,10 @@ public class RobotContainer {
                         () -> {
                             joystick.setRumble(RumbleType.kBothRumble, 0);
                             joystick2.setRumble(RumbleType.kBothRumble, 0);
-                            SmartDashboard.putString("Hub Active Alliance Color", new Color().toHexString());
+                            SmartDashboard.putString("Hub Active Alliance Color", Color.kWhite.toHexString());
                         }
                     ).withTimeout(0.25)
-                    .andThen(new InstantCommand(() -> SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString())))
+                    .andThen(Commands.runOnce(() -> SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString())))
                 );
         }
 
