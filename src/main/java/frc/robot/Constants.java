@@ -29,25 +29,25 @@ public final class Constants {
         public static final String kCameraNameFrontRight = "FrontRightCamera";
         public static final Transform3d kRobotToCamFrontRight = new Transform3d(
             new Translation3d(Units.inchesToMeters(10.93), -Units.inchesToMeters(10.59), Units.inchesToMeters(7.74)),
-            new Rotation3d(Math.toRadians(0), Math.toRadians(-65), Math.toRadians(-50))
+            new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(-50))
         );
 
         public static final String kCameraNameFrontLeft = "FrontLeftCamera";
         public static final Transform3d kRobotToCamFrontLeft = new Transform3d(
             new Translation3d(Units.inchesToMeters(10.93), Units.inchesToMeters(10.59), Units.inchesToMeters(7.74)),
-            new Rotation3d(Math.toRadians(0), Math.toRadians(-65), Math.toRadians(50))
+            new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(50))
         );
 
         public static final String kCameraNameBackRight = "BackRightCamera";
         public static final Transform3d kRobotToCamBackRight = new Transform3d(
             new Translation3d(Units.inchesToMeters(8.12), -Units.inchesToMeters(11.06), Units.inchesToMeters(7.74)),
-            new Rotation3d(Math.toRadians(0), Math.toRadians(-65), Math.toRadians(-110))
+            new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(-110))
         );
 
         public static final String kCameraNameBackLeft = "BackLeftCamera";
         public static final Transform3d kRobotToCamBackLeft = new Transform3d(
             new Translation3d(Units.inchesToMeters(8.12), Units.inchesToMeters(11.06), Units.inchesToMeters(7.74)),
-            new Rotation3d(Math.toRadians(0), Math.toRadians(-65), Math.toRadians(110))
+            new Rotation3d(Math.toRadians(0), Math.toRadians(-25), Math.toRadians(110))
         );
 
         public static final AprilTagFieldLayout kTagLayout =
@@ -148,10 +148,10 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 10.0;
+        public static final double spinKp = 15.0;
         public static final double spinKi = 0.0;
         public static final double spinKd = 0.5;
-        public static final double spinKs = 0.5;
+        public static final double spinKs = 0.35;
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
         public static final double spinStatorCurrentLimit = 80.0;
