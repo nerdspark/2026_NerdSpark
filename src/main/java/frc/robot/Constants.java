@@ -16,9 +16,9 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.util.ShooterParams;
 
 public final class Constants {
-    public static final double gyroP = 7.7635;
+    public static final double gyroP = 3; //7.4213
     public static final double gyroI = 0.0;
-    public static final double gyroD = 0.75752;
+    public static final double gyroD = 0.8; //0.85752
 
     public static final String CANbus = "canivore1";
 
@@ -93,22 +93,25 @@ public final class Constants {
 
         public static final double hoodRatio = 50;
         public static final double shooterWheelRadius = Units.inchesToMeters(4);
-        public static final double shooterMaxMotorRps = 4000.0 / 60.0;
+        // Ball exit speed as a fraction of wheel surface speed.
+        public static final double shooterLaunchEfficiency = 0.46;
+        public static final double shooterMaxMotorRps = 6000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
-        public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(30);
+        public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
         public static final double targetHeightMeters = Units.inchesToMeters(72);
         public static final double hoodZeroDegrees = 21.0;
-        public static final double hoodMinDegrees = 21.0;
+        public static final double hoodMinDegrees = 18.0;
         public static final double hoodMaxDegrees = 65.0;
         public static final double ikEntryAngleTargetDeg = 7.5;
         public static final double ikEntryAngleToleranceDeg = 2.5;
+        public static final double lowHoodPreferredDegrees = hoodMinDegrees;
         public static final double passTargetRadiusMeters = Units.inchesToMeters(5.91) / 2.0;
         public static final int passTargetCirclePoints = 24;
 
-        public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(4.699), 0);
+        public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(4.699), -Units.inchesToMeters(0.21));
 
         public static final double delay = 0.0011;
-        public static final double maxDelay = 0.3;
+        public static final double maxDelay = 0.5;
         public static final double riseTime = 0.04;
         public static final double fallTime = 0.18;
         public static final double hoodRetractTime = 0.1; // TODO In Seconds
@@ -122,18 +125,7 @@ public final class Constants {
             // Passing
             map.put(Double.MAX_VALUE, new ShooterParams(7.3, 40));
 
-            map.put(5.386, new ShooterParams(0.23, 46));
-            map.put(5.136, new ShooterParams(0.14, 44));
-            map.put(4.491, new ShooterParams(0.12, 41));
-            map.put(4.409, new ShooterParams(0.08, 41));
-            map.put(4.515, new ShooterParams(0.05, 38.5));
-            map.put(3.710, new ShooterParams(0.04, 36));
-            map.put(3.828, new ShooterParams(0.03, 36.5));
-            map.put(4.128, new ShooterParams(0.04, 38));
-            map.put(4.524, new ShooterParams(0.07, 39.5));
-            map.put(4.481, new ShooterParams(0.1, 39.8));
-            map.put(4.866, new ShooterParams(0.22, 42.5));
-            map.put(4.444, new ShooterParams(0.22, 41));
+            
         }
     }
 
@@ -155,31 +147,32 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 6;
+        public static final double spinKp = 10.0;
         public static final double spinKi = 0.0;
-        public static final double spinKd = 1;
-        public static final double spinKs = 0.44674;
-        public static final double spinKv = 0.12958;
-        public static final double spinKa = 0.044218;
-        public static final double spinStatorCurrentLimit = 120.0;
-        public static final double spinVelocity = 75;
-        public static final double spinAccel = 250;
+        public static final double spinKd = 0.5;
+        public static final double spinKs = 0.5;
+        public static final double spinKv = 0.0;
+        public static final double spinKa = 0.0;
+        public static final double spinStatorCurrentLimit = 80.0;
+        public static final double spinSupplyCurrent = 35.0;
+        public static final double spinVelocity = 40;
+        public static final double spinAccel = 100;
 
         public static final int spinCancoder1Id = 26;
-        public static final double spinCancoder1Offset = -0.860595703125;
+        public static final double spinCancoder1Offset = -0.619873046875;
         public static final int spinCancoder2Id = 27;
-        public static final double spinCancoder2Offset = -0.15185546875;
+        public static final double spinCancoder2Offset = -0.890869140625;
 
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
-        public static final double hoodKp1 = 8.78;
-        public static final double hoodKp2 = 8.74;
-        public static final double hoodKi1 = 0.6;
-        public static final double hoodKi2 = 0.45;
-        public static final double hoodKd1 = 0.0;
-        public static final double hoodKd2 = 0.0;
-        public static final double hoodKs1 = 0.0;
-        public static final double hoodKs2 = 0.0;
+        public static final double hoodKp1 = 9.0;
+        public static final double hoodKp2 = 9.0;
+        public static final double hoodKi1 = 0.0;
+        public static final double hoodKi2 = 0.0; 
+        public static final double hoodKd1 = 0.2;
+        public static final double hoodKd2 = 0.2;
+        public static final double hoodKs1 = 1.0;
+        public static final double hoodKs2 = 1.0;
         public static final double hoodKv1 = 0.0;
         public static final double hoodKv2 = 0.0;
         public static final double hoodKa1 = 0.0;
@@ -187,14 +180,14 @@ public final class Constants {
         public static final double hoodStatorCurrentLimit = 40.0;
         public static final double hoodSupplyCurrentLimit = 20.0;
         public static final double hoodVelocity = 175;
-        public static final double hoodAccel = 400;
+        public static final double hoodAccel = hoodVelocity / 0.25; // 0.25 seconds to max speed
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;
         public static final double bangbangKp = 999999;
         public static final double peakDutyCycle = 1;
         public static final double peakTorque = 40;
-        public static final double shootStatorCurrentLimit = 140.0; // OG 60
+        public static final double shootStatorCurrentLimit = 140.0;
         public static final double shootSupplyCurrentLimit = 70.0;
     }
 
@@ -232,9 +225,22 @@ public final class Constants {
         public static final boolean defaultEnable = false;
     }
 
+    public static final class MapTuneConstants {
+        public static final String enableKey = "MapTune/Enable";
+        public static final String hoodKey = "MapTune/HoodTarget";
+        public static final String shooterKey = "MapTune/ShooterTarget";
+        public static final boolean defaultEnable = true;
+    }
+
     public static final class AutoAimConstants {
         public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
-        public static final boolean defaultUseIKSolver = true;
+        public static final boolean defaultUseIKSolver = false;
+        public static final String useEntryAngleIKKey = "TurretTarget/UseEntryAngleIK";
+        public static final boolean defaultUseEntryAngleIK = true;
+        public static final String useShootOnMoveCompKey = "TurretTarget/UseShootOnMoveComp";
+        public static final boolean defaultUseShootOnMoveComp = true;
+        public static final String modelMuzzleHeightMetersKey = "TurretTarget/ModelMuzzleHeightMeters";
+        public static final String modelTargetHeightMetersKey = "TurretTarget/ModelTargetHeightMeters";
     }
 
     public static final class IntakeConstants {
@@ -250,14 +256,14 @@ public final class Constants {
         public static final double kV = 0.0;
         public static final double rollerStatorCurrentLimit = 40.0;
         public static final double rollerSupplyCurrentLimit = 30.0;
-        public static final double deployStatorCurrentLimit = 60.0; // OG 40
+        public static final double deployStatorCurrentLimit = 60.0;
         public static final double deploySupplyCurrentLimit = 30.0;
         public static final double motionMagicCruiseVelocityFast = 50.0;
         public static final double motionMagicCruiseVelocitySlow = 15.0;
         public static final double motionMagicAcceleration = 150.0;
         public static final double motionMagicJerk = 0;
         public static final double homePos = 0.0;
-        public static final double deployPos = 13.0;
+        public static final double deployPos = 14.0;
         public static final double shakePos = 5;
     }
 }

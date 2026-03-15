@@ -4,8 +4,6 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import java.util.Optional;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -63,12 +61,14 @@ public class RobotContainer {
     private SendableChooser<Command> autoChooser;
     private final PoseEstimatorSubsystem poseEstimator;
     private final Turret turret;
-    private boolean override = false;
+    private boolean override = true;
     private final Indexer indexer;
     private final Intake intake;
     private final SimFuelSubsystem fuelSim;
     private final SimFuelIKSubsystem fuelSimIK;
     private final RealFuelSubsystem fuelReal;
+
+    private final Trigger intakeHome;
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
@@ -86,6 +86,38 @@ public class RobotContainer {
             AutoAimConstants.useIKSolverKey,
             AutoAimConstants.defaultUseIKSolver
         );
+        SmartDashboard.setDefaultBoolean(
+            AutoAimConstants.useEntryAngleIKKey,
+            AutoAimConstants.defaultUseEntryAngleIK
+        );
+        SmartDashboard.putBoolean(
+            AutoAimConstants.useEntryAngleIKKey,
+            AutoAimConstants.defaultUseEntryAngleIK
+        );
+        SmartDashboard.setDefaultBoolean(
+            AutoAimConstants.useShootOnMoveCompKey,
+            AutoAimConstants.defaultUseShootOnMoveComp
+        );
+        SmartDashboard.putBoolean(
+            AutoAimConstants.useShootOnMoveCompKey,
+            AutoAimConstants.defaultUseShootOnMoveComp
+        );
+        SmartDashboard.setDefaultNumber(
+            AutoAimConstants.modelMuzzleHeightMetersKey,
+            Constants.TurretConstants.shooterMuzzleHeightMeters
+        );
+        SmartDashboard.putNumber(
+            AutoAimConstants.modelMuzzleHeightMetersKey,
+            Constants.TurretConstants.shooterMuzzleHeightMeters
+        );
+        SmartDashboard.setDefaultNumber(
+            AutoAimConstants.modelTargetHeightMetersKey,
+            Constants.TurretConstants.targetHeightMeters
+        );
+        SmartDashboard.putNumber(
+            AutoAimConstants.modelTargetHeightMetersKey,
+            Constants.TurretConstants.targetHeightMeters
+        );
 
         poseEstimator = new PoseEstimatorSubsystem(drivetrain);
 
@@ -101,6 +133,8 @@ public class RobotContainer {
 
         indexer = new Indexer();
         intake = new Intake();
+        intakeHome = new Trigger(() -> intake.intakeIsIn());
+
         fuelSim = RobotBase.isSimulation()
             ? new SimFuelSubsystem(
                 () -> drivetrain.getState().Pose,
@@ -128,14 +162,14 @@ public class RobotContainer {
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         joystick.b().onTrue(new InstantCommand(() -> {
-            boolean useIK = SmartDashboard.getBoolean(
-                AutoAimConstants.useIKSolverKey,
-                AutoAimConstants.defaultUseIKSolver
+            boolean useEntryAngleIK = SmartDashboard.getBoolean(
+                AutoAimConstants.useEntryAngleIKKey,
+                AutoAimConstants.defaultUseEntryAngleIK
             );
-            SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
+            SmartDashboard.putBoolean(AutoAimConstants.useEntryAngleIKKey, !useEntryAngleIK);
         }));
 
-        joystick.leftBumper().and(() -> !turret.pathLatched)
+        joystick.leftBumper().and(() -> turret.turretOnTarget())
             .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
             .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
 
@@ -158,13 +192,14 @@ public class RobotContainer {
         joystick.povDown().onTrue(new InstantCommand(() -> target = 0));
         joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
 
-        joystick2.a().onTrue(new InstantCommand(() -> override = true));
-        joystick2.b().onTrue(new InstantCommand(() -> override = false));
+        joystick2.a().or(intakeHome)
+            .onTrue(new InstantCommand(() -> override = true))
+            .onFalse(new InstantCommand(() -> override = false));
         joystick2.y().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
-        Color allianceColor = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Color.kBlue : Color.kRed;
+        Color allianceColor = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue ? Color.kBlue : Color.kRed;
         Color oppAllianceColor = allianceColor == Color.kBlue ? Color.kRed : Color.kBlue;
         // Start-of-shift warning
         for (int i = 1; i <= 5; i++) {
@@ -182,10 +217,10 @@ public class RobotContainer {
                         () -> {
                             joystick.setRumble(RumbleType.kBothRumble, 0);
                             joystick2.setRumble(RumbleType.kBothRumble, 0);
-                            SmartDashboard.putString("Hub Active Alliance Color", new Color().toHexString());
+                            SmartDashboard.putString("Hub Active Alliance Color", Color.kWhite.toHexString());
                         }
                     ).withTimeout(0.25)
-                    .andThen(new InstantCommand(() -> SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString())))
+                    .andThen(Commands.runOnce(() -> SmartDashboard.putString("Hub Active Alliance Color", allianceColor.toHexString())))
                 );
         }
 
@@ -204,10 +239,10 @@ public class RobotContainer {
                         () -> {
                             joystick.setRumble(RumbleType.kBothRumble, 0);
                             joystick2.setRumble(RumbleType.kBothRumble, 0);
-                            SmartDashboard.putString("Hub Active Alliance Color", new Color().toHexString());
+                            SmartDashboard.putString("Hub Active Alliance Color", Color.kWhite.toHexString());
                         }
                     ).withTimeout(0.25)
-                    .andThen(new InstantCommand(() -> SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString())))
+                    .andThen(Commands.runOnce(() -> SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString())))
                 );
         }
 
@@ -237,6 +272,7 @@ public class RobotContainer {
     }
 
     public void updateDashboard() {
+        SmartDashboard.putBoolean("Intake is in", intakeHome.getAsBoolean());
         // Update from HubShiftUtil
         SmartDashboard.putString("Shifts/Remaining Shift Time", 
             String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))

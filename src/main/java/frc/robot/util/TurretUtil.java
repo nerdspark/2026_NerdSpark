@@ -48,8 +48,23 @@ public final class TurretUtil {
         return TurretConstants.hoodZeroDegrees + ((hoodRotations / TurretConstants.hoodRatio) * 360.0);
     }
 
+    public static double motorRpsToLaunchSpeedMps(double motorRps) {
+        return ((Math.PI * 2) * TurretConstants.shooterWheelRadius)
+            * motorRps
+            * TurretConstants.shooterLaunchEfficiency;
+    }
+
+    public static double launchSpeedMpsToMotorRps(double launchSpeedMps) {
+        double denominator = ((Math.PI * 2) * TurretConstants.shooterWheelRadius)
+            * TurretConstants.shooterLaunchEfficiency;
+        if (denominator <= 1e-9) {
+            return 0.0;
+        }
+        return launchSpeedMps / denominator;
+    }
+
     private static double timeOfFlight(double shooterRps, double hoodRadians, double distanceMeters) {
-        double shooterMps = ((Math.PI * 2) * TurretConstants.shooterWheelRadius) * shooterRps;
+        double shooterMps = motorRpsToLaunchSpeedMps(shooterRps);
         double horizontalMps = shooterMps * Math.cos(hoodRadians);
         if (horizontalMps <= 1e-6) {
             return 0.0;
