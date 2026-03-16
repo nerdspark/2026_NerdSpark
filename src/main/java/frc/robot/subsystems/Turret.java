@@ -381,25 +381,64 @@ public class Turret extends SubsystemBase {
      * @param robotFOS the current field centric speeds of the robot
      * @return the velocity to shoot at
     */
-    private double aimOnFly(double distance, double robotHeading, ChassisSpeeds robotFOS) {
+    /* OLD aimOnFly (pre-SOTM, 1D parallel-only correction):
+     *
+     * private double aimOnFly(double distance, double robotHeading, ChassisSpeeds robotFOS) {
+     *     ShooterParams map = TurretConstants.map.get(distance);
+     *     hoodPose.Position = map.hoodPose;
+     *
+     *     // Field heading of shooter (radians)
+     *     double shooterFOA = robotHeading + turretAngle;
+     *
+     *     // Compute velocity component parallel to shooter FOA using field-frame speeds
+     *     // v_parallel = vx * cos(shooterFOA) + vy * sin(shooterFOA)
+     *     double vParallel = robotFOS.vxMetersPerSecond * Math.cos(shooterFOA)
+     *                      + robotFOS.vyMetersPerSecond * Math.sin(shooterFOA);
+     *     double deltaMotorRPS = vParallel / (TWO_PI * TurretConstants.shooterWheelRadius);
+     *     SmartDashboard.putNumber("Turret/debug/vParallel", vParallel);
+     *     SmartDashboard.putNumber("Turret/debug/deltaMotorRps", deltaMotorRPS);
+     *
+     *     double velo = map.shooterSpeed - deltaMotorRPS;
+     *     return applyShooterControl(velo);
+     * }
+     *
+     * Old call sites:
+     *   aimOnFly(Double.MAX_VALUE, currPose.getRotation().getRadians(), speeds)
+     *   aimOnFly(shoot ? distance : Double.MAX_VALUE, currPose.getRotation().getRadians(), speeds)
+     */
+    private double aimOnFly(double distance, ChassisSpeeds robotFOS, double aimDirectionRad) {
         ShooterParams map = TurretConstants.map.get(distance);
 
         hoodPose.Position = map.hoodPose;
+        // TODO
 
-        // Field heading of shooter (radians)
-        double shooterFOA = robotHeading + turretAngle;
+        // Convert map RPS → physical exit speed for vector math
+        double exitSpeed = motorRpsToLaunchSpeedMps(map.shooterSpeed);
+        double launchAngleRad = Math.toRadians(hoodRotationsToDegrees(map.hoodPose));
+        double exitHorizSpeed = exitSpeed * Math.cos(launchAngleRad);
 
-        // Compute velocity component parallel to shooter FOA using field-frame speeds
-        // v_parallel = vx * cos(shooterFOA) + vy * sin(shooterFOA)
-        double vParallel = robotFOS.vxMetersPerSecond * Math.cos(shooterFOA) 
-                         + robotFOS.vyMetersPerSecond * Math.sin(shooterFOA);
-        double deltaMotorRPS =  vParallel / (TWO_PI * TurretConstants.shooterWheelRadius);
-        SmartDashboard.putNumber("Turret/debug/vParallel", vParallel);
-        SmartDashboard.putNumber("Turret/debug/deltaMotorRps", deltaMotorRPS);
+        // Desired ball velocity in field frame (pointing at lead target)
+        double desiredVx = exitHorizSpeed * Math.cos(aimDirectionRad);
+        double desiredVy = exitHorizSpeed * Math.sin(aimDirectionRad);
 
-        double velo =  map.shooterSpeed - deltaMotorRPS;
+        // Barrel must produce this vector (robot motion adds to ball velocity)
+        double sotmVelScale = SmartDashboard.getNumber(
+            SlippageCorrectionConstants.sotmVelocityScaleKey,
+            SlippageCorrectionConstants.defaultSotmVelocityScale
+        );
+        double barrelVx = desiredVx - robotFOS.vxMetersPerSecond * sotmVelScale;
+        double barrelVy = desiredVy - robotFOS.vyMetersPerSecond * sotmVelScale;
+        double barrelHorizSpeed = Math.hypot(barrelVx, barrelVy);
 
-        return applyShooterControl(velo);
+        // Scale map RPS proportionally — preserves all map calibration
+        double newRps = (exitHorizSpeed < 1e-6)
+            ? map.shooterSpeed
+            : map.shooterSpeed * (barrelHorizSpeed / exitHorizSpeed);
+
+        SmartDashboard.putNumber("Turret/debug/MapBarrelHorizSpeed", barrelHorizSpeed);
+        SmartDashboard.putNumber("Turret/debug/MapExitHorizSpeed", exitHorizSpeed);
+
+        return applyShooterControl(newRps);
     }
 
     /**
@@ -643,6 +682,32 @@ public class Turret extends SubsystemBase {
      * @param robotFOS        current field-relative robot velocity
      * @return SotmResult containing the corrected motor RPS and turret angle offset
      */
+    /* OLD applyChassisVelocityComp (pre-SOTM, 1D parallel-only, returned double):
+     *
+     * private double applyChassisVelocityComp(double motorRps, double robotHeading, ChassisSpeeds robotFOS) {
+     *     boolean useShootOnMoveComp = SmartDashboard.getBoolean(
+     *         AutoAimConstants.useShootOnMoveCompKey,
+     *         AutoAimConstants.defaultUseShootOnMoveComp
+     *     );
+     *
+     *     // Field heading of shooter (radians)
+     *     double shooterFOA = robotHeading + turretAngle;
+     *
+     *     // Compute velocity component parallel to shooter FOA using field-frame speeds
+     *     // v_parallel = vx * cos(shooterFOA) + vy * sin(shooterFOA)
+     *     double vParallel = robotFOS.vxMetersPerSecond * Math.cos(shooterFOA)
+     *                      + robotFOS.vyMetersPerSecond * Math.sin(shooterFOA);
+     *     double deltaMotorRPS = useShootOnMoveComp
+     *         ? vParallel / (TWO_PI * TurretConstants.shooterWheelRadius)
+     *         : 0.0;
+     *     SmartDashboard.putNumber("Turret/debug/vParallel", vParallel);
+     *     SmartDashboard.putNumber("Turret/debug/deltaMotorRps", deltaMotorRPS);
+     *     return motorRps - deltaMotorRPS;
+     * }
+     *
+     * Old call site:
+     *   ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps, currPose.getRotation().getRadians(), speeds);
+     */
     private SotmResult applyChassisVelocityComp(
         double exitSpeedMps,
         double launchAngleRad,
@@ -683,11 +748,12 @@ public class Turret extends SubsystemBase {
 
         // Step 3: magnitude and direction of the required barrel velocity vector
         double barrelHorizSpeed = Math.hypot(barrelVx, barrelVy);
-        double barrelDirectionRad = Math.atan2(barrelVy, barrelVx);
 
-        // Step 4: how far the turret must offset from the geometric aim direction
-        // so the barrel points along the corrected velocity vector
-        double turretAngleOffsetRad = normalizeRadians(barrelDirectionRad - aimDirectionRad);
+        // Step 4: turret angle offset is intentionally NOT applied here.
+        // The lookahead loop in periodic() already iteratively converges errorDegrees
+        // to account for robot motion during ball flight, so applying an additional
+        // angle offset would double-count the same correction.
+        double turretAngleOffsetRad = 0.0;
 
         // Step 5: scale total exit speed — the barrel horizontal speed must equal
         // barrelHorizSpeed, so divide back through by cos(launchAngle) to recover
@@ -700,7 +766,6 @@ public class Turret extends SubsystemBase {
 
         SmartDashboard.putNumber("Turret/SOTM/ExitHorizSpeed", exitHorizSpeed);
         SmartDashboard.putNumber("Turret/SOTM/BarrelHorizSpeed", barrelHorizSpeed);
-        SmartDashboard.putNumber("Turret/SOTM/TurretOffsetDeg", Math.toDegrees(turretAngleOffsetRad));
         SmartDashboard.putNumber("Turret/SOTM/DeltaTheoreticalRps", theoreticalRps - newTheoreticalRps);
         return new SotmResult(correctedRps, turretAngleOffsetRad);
     }
@@ -906,11 +971,11 @@ public class Turret extends SubsystemBase {
                         hoodWheelsZero();
                     }
                 } else {
-                    velocity = aimOnFly(Double.MAX_VALUE, currPose.getRotation().getRadians(), speeds);
+                    velocity = aimOnFly(Double.MAX_VALUE, speeds, errorDegrees);
                 }
             } else {
                 aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
-                velocity = aimOnFly(shoot ? distance : Double.MAX_VALUE, currPose.getRotation().getRadians(), speeds);
+                velocity = aimOnFly(shoot ? distance : Double.MAX_VALUE, speeds, errorDegrees);
             }
         } else {
             hoodWheelsZero();
