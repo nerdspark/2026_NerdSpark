@@ -414,7 +414,8 @@ public class Turret extends SubsystemBase {
 
         // Convert map RPS → physical exit speed for vector math
         double exitSpeed = motorRpsToLaunchSpeedMps(map.shooterSpeed);
-        double launchAngleRad = Math.toRadians(hoodRotationsToDegrees(map.hoodPose));
+        // hoodPose is the mechanical hood angle; physics launch angle = 90 - hoodDegrees
+        double launchAngleRad = Math.toRadians(90.0 - hoodRotationsToDegrees(map.hoodPose));
         double exitHorizSpeed = exitSpeed * Math.cos(launchAngleRad);
 
         // Desired ball velocity in field frame (pointing at lead target)
@@ -919,7 +920,9 @@ public class Turret extends SubsystemBase {
             double yError = targetPose.getY() - lookaheadTurretPos.getY();
             double errorDegrees = Math.atan2(yError, xError);
             SmartDashboard.putNumber("Turret/debug/neededDeg", Math.toDegrees(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians())));
-            distance = Math.hypot(yError, xError);
+            // Use current distance (turret → target) for IK/map — the ball launches from the
+            // current position, not the lookahead position. The lookahead is only for the aim angle.
+            distance = turretPose.getTranslation().getDistance(targetPose);
             SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
                         
             if (useIK) {
