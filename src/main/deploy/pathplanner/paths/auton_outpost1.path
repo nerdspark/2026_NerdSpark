@@ -32,31 +32,31 @@
     },
     {
       "anchor": {
-        "x": 7.28468005952381,
-        "y": 3.715260416666667
+        "x": 7.180275297619047,
+        "y": 3.9762723214285716
       },
       "prevControl": {
-        "x": 8.21779761904762,
-        "y": 3.715260416666667
+        "x": 8.11337020095969,
+        "y": 3.9697699179209716
       },
       "nextControl": {
-        "x": 6.292748965965258,
-        "y": 3.715260416666667
+        "x": 5.307514880952381,
+        "y": 3.9893229166666666
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.312410714285715,
+        "x": 5.836063988095237,
         "y": 0.6428
       },
       "prevControl": {
-        "x": 7.40866066966535,
+        "x": 6.932313943474872,
         "y": 0.5971218457904952
       },
       "nextControl": {
-        "x": 5.344994006096823,
+        "x": 4.868647279906345,
         "y": 0.6831099761734546
       },
       "isLocked": false,
@@ -106,23 +106,10 @@
     {
       "name": "Constraints Zone",
       "minWaypointRelativePos": 0.8493150684931541,
-      "maxWaypointRelativePos": 2.767123287671236,
+      "maxWaypointRelativePos": 2.575342465753431,
       "constraints": {
         "maxVelocity": 0.75,
         "maxAcceleration": 1.0,
-        "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
-    },
-    {
-      "name": "Constraints Zone",
-      "minWaypointRelativePos": 3.6383561643835636,
-      "maxWaypointRelativePos": 4.0,
-      "constraints": {
-        "maxVelocity": 0.5,
-        "maxAcceleration": 0.5,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
@@ -190,8 +177,52 @@
       }
     },
     {
+      "name": "intake_shake",
+      "waypointRelativePos": 2.2904109589041113,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_shake"
+        }
+      }
+    },
+    {
+      "name": "intake_deploy",
+      "waypointRelativePos": 2.3890410958904105,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_deploy"
+        }
+      }
+    },
+    {
+      "name": "intake_shake",
+      "waypointRelativePos": 2.493150684931505,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_shake"
+        }
+      }
+    },
+    {
+      "name": "intake_deploy",
+      "waypointRelativePos": 2.59,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_deploy"
+        }
+      }
+    },
+    {
       "name": "indexer_off",
-      "waypointRelativePos": 2.65205479452055,
+      "waypointRelativePos": 2.597260273972605,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -202,7 +233,7 @@
     },
     {
       "name": "turret_stop",
-      "waypointRelativePos": 2.7013698630136993,
+      "waypointRelativePos": 2.6520547945205526,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -213,7 +244,7 @@
     },
     {
       "name": "turret_automatic",
-      "waypointRelativePos": 3.5,
+      "waypointRelativePos": 3.4465753424657533,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -224,7 +255,7 @@
     },
     {
       "name": "indexer_on",
-      "waypointRelativePos": 3.55,
+      "waypointRelativePos": 3.5013698630136987,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
