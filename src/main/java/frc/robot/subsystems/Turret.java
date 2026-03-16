@@ -53,6 +53,7 @@ import frc.robot.FieldConstants;
 import frc.robot.Constants.ShootMode;
 import frc.robot.Constants.IkSolution;
 import frc.robot.Constants.MapTuneConstants;
+import frc.robot.Constants.SlippageCorrectionConstants;
 import frc.robot.util.ShooterOffsetMap;
 import frc.robot.util.SlippageCorrectionMap;
 
@@ -670,8 +671,15 @@ public class Turret extends SubsystemBase {
         // Step 2: subtract robot velocity to get what the barrel must actually produce.
         // Without this the robot's motion adds to or subtracts from the ball's speed
         // and deflects it sideways, causing misses.
-        double barrelVx = desiredVx - robotFOS.vxMetersPerSecond;
-        double barrelVy = desiredVy - robotFOS.vyMetersPerSecond;
+        // SotmVelocityScale trims the robot velocity contribution:
+        //   >1.0 = treats robot as moving faster → less RPS while moving (shots landing short → increase above 1)
+        //   <1.0 = treats robot as moving slower → more RPS while moving  (shots landing long  → decrease below 1)
+        double sotmVelScale = SmartDashboard.getNumber(
+            SlippageCorrectionConstants.sotmVelocityScaleKey,
+            SlippageCorrectionConstants.defaultSotmVelocityScale
+        );
+        double barrelVx = desiredVx - robotFOS.vxMetersPerSecond * sotmVelScale;
+        double barrelVy = desiredVy - robotFOS.vyMetersPerSecond * sotmVelScale;
 
         // Step 3: magnitude and direction of the required barrel velocity vector
         double barrelHorizSpeed = Math.hypot(barrelVx, barrelVy);

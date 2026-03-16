@@ -281,6 +281,13 @@ public final class Constants {
         // <1.0 = shrinks efficiency → more correction → higher commanded RPS
         public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
         public static final double defaultEfficiencyScale = 1.1;
+
+        // Scales the robot's field-oriented velocity before SOTM subtraction.
+        // 1.0 = use odometry as-is.
+        // >1.0 = treat robot as moving faster → reduces commanded RPS while moving (shots landing short → increase)
+        // <1.0 = treat robot as moving slower → increases commanded RPS while moving (shots landing long → decrease)
+        public static final String sotmVelocityScaleKey = "Slippage/SotmVelocityScale";
+        public static final double defaultSotmVelocityScale = 1.0;
     }
 
     public static final class IntakeConstants {
