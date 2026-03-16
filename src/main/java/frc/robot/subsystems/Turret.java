@@ -471,6 +471,22 @@ public class Turret extends SubsystemBase {
             TurretConstants.targetHeightMeters
         );
     }
+    // TODO
+    /**
+     * Return value of applyChassisVelocityComp.
+     * motorRps            – slippage-corrected wheel speed to command
+     * turretAngleOffsetRad – how far the turret must lead the geometric aim point
+     *                        so the ball's field-frame velocity points at the target
+     *                        (non-zero when the robot has a perpendicular velocity component)
+     */
+    private static final class SotmResult {
+        private final double motorRps;
+        private final double turretAngleOffsetRad;
+        private SotmResult(double motorRps, double turretAngleOffsetRad) {
+            this.motorRps = motorRps;
+            this.turretAngleOffsetRad = turretAngleOffsetRad;
+        }
+    }
 
     private static final class DirectIkSelection {
         private final double hoodDegrees;
@@ -603,24 +619,82 @@ public class Turret extends SubsystemBase {
         double verticalVelocityAtTarget = launchSpeedMps * Math.sin(launchAngleRad) - 9.80665 * time;
         return Math.toDegrees(Math.atan2(-verticalVelocityAtTarget, horizontalSpeed));
     }
-
-    private double applyChassisVelocityComp(double motorRps, double robotHeading, ChassisSpeeds robotFOS) {
+    // TODO
+    /**
+     * Vector-based shoot-on-the-move compensation.
+     *
+     * The IK solver finds the exit speed and hood angle needed to reach the lead
+     * target as if the robot were stationary.  When the robot is moving, the ball
+     * inherits the robot's velocity, so the wheel and turret must be adjusted so
+     * that (barrel velocity + robot velocity) equals the desired field velocity.
+     *
+     * Steps:
+     *  1. Project the desired field-frame exit velocity onto the horizontal plane.
+     *  2. Subtract the robot's velocity to get the required barrel velocity vector.
+     *  3. The magnitude of that vector determines the new wheel speed.
+     *  4. The angle difference between the barrel vector and the geometric aim
+     *     direction is the turret lead offset.
+     *  5. Apply slippage correction to the new theoretical RPS before returning.
+     *
+     * @param exitSpeedMps    theoretical exit speed from the IK solver (m/s)
+     * @param launchAngleRad  physics launch angle from horizontal (radians) — thetaSpeed
+     * @param aimDirectionRad field-frame direction from robot to lead target (radians)
+     * @param robotFOS        current field-relative robot velocity
+     * @return SotmResult containing the corrected motor RPS and turret angle offset
+     */
+    private SotmResult applyChassisVelocityComp(
+        double exitSpeedMps,
+        double launchAngleRad,
+        double aimDirectionRad,
+        ChassisSpeeds robotFOS
+    ) {
+        // Convert the IK exit speed to a theoretical motor RPS (before slippage)
+        double theoreticalRps = launchSpeedMpsToMotorRps(exitSpeedMps);
         boolean useShootOnMoveComp = SmartDashboard.getBoolean(
             AutoAimConstants.useShootOnMoveCompKey,
             AutoAimConstants.defaultUseShootOnMoveComp
         );
+        // TODO
+        // If SOTM is disabled, just apply slippage correction with no turret offset
+        if (!useShootOnMoveComp) {
+            return new SotmResult(slippageMap.correctedMotorRps(theoreticalRps), 0.0);
+        }
 
-        // Field heading of shooter (radians)
-        double shooterFOA = robotHeading + turretAngle;
+        // Step 1: horizontal component of the desired exit velocity in the field frame.
+        // cos(launchAngle) separates the total exit speed into its horizontal component.
+        double exitHorizSpeed = exitSpeedMps * Math.cos(launchAngleRad);
+        // Decompose into X/Y using the geometric aim direction (toward lead target)
+        double desiredVx = exitHorizSpeed * Math.cos(aimDirectionRad);
+        double desiredVy = exitHorizSpeed * Math.sin(aimDirectionRad);
 
-        // Compute velocity component parallel to shooter FOA using field-frame speeds
-        // v_parallel = vx * cos(shooterFOA) + vy * sin(shooterFOA)
-        double vParallel = robotFOS.vxMetersPerSecond * Math.cos(shooterFOA) 
-                         + robotFOS.vyMetersPerSecond * Math.sin(shooterFOA);
-        double deltaMotorRPS =  useShootOnMoveComp ? vParallel / (TWO_PI * TurretConstants.shooterWheelRadius) : 0.0;
-        SmartDashboard.putNumber("Turret/debug/vParallel", vParallel);
-        SmartDashboard.putNumber("Turret/debug/deltaMotorRps", deltaMotorRPS);
-        return motorRps - deltaMotorRPS;
+        // Step 2: subtract robot velocity to get what the barrel must actually produce.
+        // Without this the robot's motion adds to or subtracts from the ball's speed
+        // and deflects it sideways, causing misses.
+        double barrelVx = desiredVx - robotFOS.vxMetersPerSecond;
+        double barrelVy = desiredVy - robotFOS.vyMetersPerSecond;
+
+        // Step 3: magnitude and direction of the required barrel velocity vector
+        double barrelHorizSpeed = Math.hypot(barrelVx, barrelVy);
+        double barrelDirectionRad = Math.atan2(barrelVy, barrelVx);
+
+        // Step 4: how far the turret must offset from the geometric aim direction
+        // so the barrel points along the corrected velocity vector
+        double turretAngleOffsetRad = normalizeRadians(barrelDirectionRad - aimDirectionRad);
+
+        // Step 5: scale total exit speed — the barrel horizontal speed must equal
+        // barrelHorizSpeed, so divide back through by cos(launchAngle) to recover
+        // the required total (3-D) exit speed, then convert and apply slippage.
+        double cosLaunch = Math.cos(launchAngleRad);
+        double newExitSpeedMps = (Math.abs(cosLaunch) < 1e-6) ? exitSpeedMps : barrelHorizSpeed / cosLaunch;
+
+        double newTheoreticalRps = launchSpeedMpsToMotorRps(newExitSpeedMps);
+        double correctedRps = slippageMap.correctedMotorRps(newTheoreticalRps);
+
+        SmartDashboard.putNumber("Turret/SOTM/ExitHorizSpeed", exitHorizSpeed);
+        SmartDashboard.putNumber("Turret/SOTM/BarrelHorizSpeed", barrelHorizSpeed);
+        SmartDashboard.putNumber("Turret/SOTM/TurretOffsetDeg", Math.toDegrees(turretAngleOffsetRad));
+        SmartDashboard.putNumber("Turret/SOTM/DeltaTheoreticalRps", theoreticalRps - newTheoreticalRps);
+        return new SotmResult(correctedRps, turretAngleOffsetRad);
     }
 
     private void initMapTuneDashboard() {
@@ -775,13 +849,25 @@ public class Turret extends SubsystemBase {
             distance = Math.hypot(yError, xError);
             SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
                         
-            aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
-
             if (useIK) {
                 IkSolution ikSolution = solveIK(distance);
                 double ikCompensatedMotorRps = Double.NaN;
+                double turretAngleOffsetRad = 0.0;
                 if (ikSolution != null) {
-                    ikCompensatedMotorRps = applyChassisVelocityComp(ikSolution.motorRps, currPose.getRotation().getRadians(), speeds);
+                    // TODO
+                    // hoodDegrees is the mechanical hood angle (complement of launch angle),
+                    // so the physics launch angle = 90 - hoodDegrees
+                    double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);
+                    double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
+                    // Re-derive the theoretical exit speed from IK geometry (before slippage)
+                    // so SOTM math works in physical velocity space, not slippage-corrected RPS
+                    double exitSpeedMps = solveIKSpeed(distance, launchAngleRad, deltaHeight);
+                    // Compute the barrel velocity vector that, combined with robot motion,
+                    // produces the correct field-frame ball velocity toward the lead target.
+                    // Returns slippage-corrected RPS and the turret angle offset to apply.
+                    SotmResult sotm = applyChassisVelocityComp(exitSpeedMps, launchAngleRad, errorDegrees, speeds);
+                    ikCompensatedMotorRps = sotm.motorRps;
+                    turretAngleOffsetRad = sotm.turretAngleOffsetRad;
                     double predictedEntryDeg = computeEntryAngleDeg(
                         distance,
                         motorRpsToLaunchSpeedMps(ikSolution.motorRps),
@@ -800,6 +886,10 @@ public class Turret extends SubsystemBase {
                     SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
                     SmartDashboard.putNumber("Turret/IK/test", Double.NaN);
                 }
+                // TODO
+                // Aim the turret at the lead position offset by the SOTM angle correction.
+                // turretAngleOffsetRad is 0 when stationary or SOTM is disabled.
+                aimTurret(normalizeRadians(errorDegrees + turretAngleOffsetRad - turretPose.getRotation().getRadians()));
                 if (shoot) {
                     if (ikSolution != null) {
                         hoodPose.Position = hoodDegreesToRotations(ikSolution.hoodDegrees);
@@ -811,6 +901,7 @@ public class Turret extends SubsystemBase {
                     velocity = aimOnFly(Double.MAX_VALUE, currPose.getRotation().getRadians(), speeds);
                 }
             } else {
+                aimTurret(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
                 velocity = aimOnFly(shoot ? distance : Double.MAX_VALUE, currPose.getRotation().getRadians(), speeds);
             }
         } else {
