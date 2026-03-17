@@ -140,6 +140,24 @@ public final class Constants {
         TORQUE_CURRENT_BANG_BANG
     }
 
+    public static final class SOTM {
+        public final double turretAngle;
+        public final double launchAngle;
+        public final double launchMps;
+
+        /**
+         * SOTM compensated values
+         * @param turretAngle turret needed angle before chassis angle comp in radians
+         * @param launchAngle launch angle needed in radians
+         * @param launchMps launch speed needed in mps
+         */
+        public SOTM(double turretAngle, double launchAngle, double launchMps) {
+            this.turretAngle = turretAngle;
+            this.launchAngle = launchAngle;
+            this.launchMps = launchMps;
+        }
+    }
+
     public static final class IkSolution {
         public final double hoodDegrees;
         public final double motorRps;
@@ -280,7 +298,7 @@ public final class Constants {
         // >1.0 = magnifies efficiency → less correction → lower commanded RPS
         // <1.0 = shrinks efficiency → more correction → higher commanded RPS
         public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
-        public static final double defaultEfficiencyScale = 1.1;
+        public static final double defaultEfficiencyScale = 1.05;
 
         // Scales the robot's field-oriented velocity before SOTM subtraction.
         // 1.0 = use odometry as-is.
