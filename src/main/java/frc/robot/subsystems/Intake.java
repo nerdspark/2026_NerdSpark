@@ -1,4 +1,5 @@
 package frc.robot.subsystems;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
@@ -30,7 +31,8 @@ public class Intake extends SubsystemBase {
       private MotionMagicConfigs motionMagicfastConfigs = intakeDeployMotorConfig.MotionMagic;
       private MotionMagicConfigs motionMagicSlowConfigs = intakeDeployMotorConfig.MotionMagic;
 
-
+    private final Timer oscillateTimer = new Timer();
+    private  boolean oscillateUp = true;
     
     public Intake() {
         intakeMotorDeploy = new TalonFX(IntakeConstants.deployIntakeMotorId,  IntakeConstants.CANBus);
@@ -93,6 +95,17 @@ public class Intake extends SubsystemBase {
     public void useSlowConfig() {
         intakeMotorDeploy.getConfigurator().apply(motionMagicSlowConfigs);
     }
+    public void startOscillateTimer() {
+        oscillateTimer.start();
+    }
+    public void oscillate(double posUp,double posDown,double time) {
+        if(oscillateTimer.advanceIfElapsed(time)) { 
+            oscillateUp = !oscillateUp; //flipping directions
+        }
+        intakeMotorDeploy.setControl(m_mmRequest.withPosition(oscillateUp ? posUp : posDown));
+    }
+
+    
     public void simulationPeriodic() {
     // double dt = 0.02;
 
@@ -108,7 +121,12 @@ public class Intake extends SubsystemBase {
 
 
     }
-
+    public void stopOscillate() {
+        oscillateTimer.stop();
+        oscillateTimer.reset();
+        oscillateUp = true;
+        stopIntake();
+    }
     public void periodic() {
         SmartDashboard.putNumber("Intake Position", intakeMotorDeploy.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Intake Current",intakeMotorDeploy.getStatorCurrent().getValueAsDouble());

@@ -26,6 +26,7 @@ import frc.robot.Constants.IntakeConstants;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveToPose;
 import frc.robot.commands.IntakeCommand;
+import frc.robot.commands.IntakeJitterCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
@@ -136,6 +137,11 @@ public class RobotContainer {
         )
        );
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        //Intake wiggle
+         joystick2.rightBumper()
+            .whileTrue(new IntakeJitterCommand(indexer, () -> true, () -> 0.4))
+            .onFalse(new IntakeJitterCommand(indexer, () -> false, () -> 0.0));
 
     }
 
