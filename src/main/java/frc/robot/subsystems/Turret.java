@@ -575,14 +575,14 @@ public class Turret extends SubsystemBase {
     private SOTM applySOTMComp(double launchMps, double launchAngle, double turretRad, ChassisSpeeds speed) {
         double newLaunchMps = Math.sqrt(Math.pow(launchMps, 2) + Math.pow(speed.vxMetersPerSecond, 2) + Math.pow(speed.vyMetersPerSecond, 2) 
             - 2 * launchMps * Math.cos(launchAngle) * (Math.cos(turretRad) * speed.vxMetersPerSecond + Math.sin(turretRad) * speed.vyMetersPerSecond));
-        double newTurretaAngle = Math.atan2(launchMps * Math.cos(launchAngle) * Math.sin(turretRad) - speed.vyMetersPerSecond, 
+        double newTurretAngle = Math.atan2(launchMps * Math.cos(launchAngle) * Math.sin(turretRad) - speed.vyMetersPerSecond, 
             launchMps * Math.cos(launchAngle) * Math.cos(turretRad) - speed.vxMetersPerSecond);
         double newLaunchAngle = 0.0;
-        if (launchMps != 0) {
-            newLaunchMps = Math.asin((launchMps * Math.sin(launchAngle)) / launchMps);
+        if (newLaunchMps > 1e-6) {
+            newLaunchAngle = Math.asin((launchMps * Math.sin(launchAngle)) / newLaunchMps);
         }
 
-        return new SOTM(newTurretaAngle, newLaunchAngle, newLaunchMps);
+        return new SOTM(newTurretAngle, newLaunchAngle, newLaunchMps);
     }
 
     private void initMapTuneDashboard() {
