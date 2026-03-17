@@ -154,6 +154,9 @@ public static class Vision {
         public static final double homePos = 14;
         public static final double shakePos = 8;
         public static final double rollerPower = 1.0;
+        //TO-DO- Tune these values to liking
+        public static final double lowerShakePos = 0.0;
+        public static final double upperShakePos = 0.0;
 
     }
 
