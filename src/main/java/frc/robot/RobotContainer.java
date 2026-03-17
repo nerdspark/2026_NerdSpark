@@ -42,7 +42,8 @@ public class RobotContainer {
 
     public final CommandXboxController joystick = new CommandXboxController(0);
 
-    // public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    // public final CommandSwerveDrivetrain drivetrain =
+    // TunerConstants.createDrivetrain();
 
     // public final PoseEstimatorSubsystem poseEstimatorSubsystem;
 
@@ -57,6 +58,8 @@ public class RobotContainer {
         // SmartDashboard.putData("Auto Mode", autoChooser);
         configureBindings();
 
+        configureDefaultCommands();
+
         // Warmup PathPlanner to avoid Java pauses
         FollowPathCommand.warmupCommand().schedule();
     }
@@ -65,20 +68,23 @@ public class RobotContainer {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         // drivetrain.setDefaultCommand(
-        //         // Drivetrain will execute this command periodically
-        //         drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getRightY() * MaxSpeed) // Drive forward
-        //                                                                                             // with negative Y
-        //                                                                                             // (forward)
-        //                 .withVelocityY(-joystick.getRightX() * MaxSpeed) // Drive left with negative X (left)
-        //                 .withRotationalRate(joystick.getLeftX() * MaxAngularRate) // Drive counterclockwise with
-        //                                                                           // negative X (left)
-        //         ));
+        // // Drivetrain will execute this command periodically
+        // drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getRightY() *
+        // MaxSpeed) // Drive forward
+        // // with negative Y
+        // // (forward)
+        // .withVelocityY(-joystick.getRightX() * MaxSpeed) // Drive left with negative
+        // X (left)
+        // .withRotationalRate(joystick.getLeftX() * MaxAngularRate) // Drive
+        // counterclockwise with
+        // // negative X (left)
+        // ));
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
         // final var idle = new SwerveRequest.Idle();
         // RobotModeTriggers.disabled().whileTrue(
-        //         drivetrain.applyRequest(() -> idle).ignoringDisable(true));
+        // drivetrain.applyRequest(() -> idle).ignoringDisable(true));
 
         // joystick.x().whileTrue(new DriveToPose(drivetrain, () -> new Pose2d(2, 2,
         // Rotation2d.fromDegrees(90))));
@@ -92,55 +98,80 @@ public class RobotContainer {
 
         // Reset the field-centric heading on left bumper press.
         // joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-        // joystick.b().whileTrue(new BlinkRed(ledSubsystem, () -> joystick.b().getAsBoolean()));
-       // joystick.a().whileTrue//(new Red(ledSubsystem, () -> joystick.a().getAsBoolean()));
+        // joystick.b().whileTrue(new BlinkRed(ledSubsystem, () ->
+        // joystick.b().getAsBoolean()));
+        // joystick.a().whileTrue//(new Red(ledSubsystem, () ->
+        // joystick.a().getAsBoolean()));
         // (
-        //     new UpdateLED(ledSubsystem,
-        //         () -> joystick.a().getAsBoolean(),
-        //         () -> joystick.b().getAsBoolean(),
-        //         () -> joystick.x().getAsBoolean(),
-        //         () -> joystick.y().getAsBoolean(),
-        //         () -> joystick.povUp().getAsBoolean(),
-        //         () -> joystick.povDown().getAsBoolean(),
-        //         () -> joystick.povLeft().getAsBoolean(),
-        //         () -> joystick.povRight().getAsBoolean(),
-        //         () -> joystick.leftBumper().getAsBoolean(),
-        //         () -> joystick.getLeftY())
+        // new UpdateLED(ledSubsystem,
+        // () -> joystick.a().getAsBoolean(),
+        // () -> joystick.b().getAsBoolean(),
+        // () -> joystick.x().getAsBoolean(),
+        // () -> joystick.y().getAsBoolean(),
+        // () -> joystick.povUp().getAsBoolean(),
+        // () -> joystick.povDown().getAsBoolean(),
+        // () -> joystick.povLeft().getAsBoolean(),
+        // () -> joystick.povRight().getAsBoolean(),
+        // () -> joystick.leftBumper().getAsBoolean(),
+        // () -> joystick.getLeftY())
         // );
-        joystick.a().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.readyToShoot)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.b().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.shooting)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.x().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.intaking)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.y().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.aiming)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.leftBumper().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.noAprilTags)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.rightBumper().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.climbReady)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.povUp().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.idle)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.povDown().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.intakeDeployed)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.povLeft().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.safe)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.povRight().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.startup)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        
-        // joystick.leftTrigger(0.2).onTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.reset));
+        // joystick.a().whileTrue(new UpdateLED(ledSubsystem, () ->
+        // Constants.LED.readyToShoot)).whileFalse(new UpdateLED(ledSubsystem, () ->
+        // 99));
+        // joystick.b().whileTrue(new UpdateLED(ledSubsystem, () ->
+        // Constants.LED.shooting)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.x().whileTrue(new UpdateLED(ledSubsystem, () ->
+        // Constants.LED.intaking)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.y().whileTrue(new UpdateLED(ledSubsystem, () ->
+        // Constants.LED.aiming)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.leftBumper().whileTrue(new UpdateLED(ledSubsystem, () ->
+        // Constants.LED.noAprilTags)).whileFalse(new UpdateLED(ledSubsystem, () ->
+        // 99));
+        // joystick.rightBumper().whileTrue(new UpdateLED(ledSubsystem, () ->
+        // Constants.LED.climbReady)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.povUp().whileTrue(new UpdateLED(ledSubsystem, () ->
+        // Constants.LED.idle)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.povDown().whileTrue(new UpdateLED(ledSubsystem, () ->
+        // Constants.LED.intakeDeployed)).whileFalse(new UpdateLED(ledSubsystem, () ->
+        // 99));
+        // joystick.povLeft().whileTrue(new UpdateLED(ledSubsystem, () ->
+        // Constants.LED.safe)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.povRight().whileTrue(new UpdateLED(ledSubsystem, () ->
+        // Constants.LED.startup)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+
+        // joystick.leftTrigger(0.2).onTrue(new UpdateLED(ledSubsystem, () ->
+        // Constants.LED.reset));
 
         // drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    // public Command getAutonomousCommand() {
-        // Simple drive forward auton
-        // final var idle = new SwerveRequest.Idle();
-        // return Commands.sequence(
-        // // Reset our field centric heading to match the robot
-        // // facing away from our alliance station wall (0 deg).
-        // drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
-        // // Then slowly drive forward (away from us) for 5 seconds.
-        // drivetrain.applyRequest(() ->
-        // drive.withVelocityX(0.5)
-        // .withVelocityY(0)
-        // .withRotationalRate(0)
-        // )
-        // .withTimeout(5.0),
-        // // Finally idle for the rest of auton
-        // drivetrain.applyRequest(() -> idle)
-        // );
+    private void configureDefaultCommands() {
+        ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, () -> joystick.a().getAsBoolean(),
+                () -> joystick.b().getAsBoolean(), () -> joystick.x().getAsBoolean(), () -> joystick.y().getAsBoolean(),
+                () -> joystick.povUp().getAsBoolean(), () -> joystick.povDown().getAsBoolean(),
+                () -> joystick.povLeft().getAsBoolean(), () -> joystick.povRight().getAsBoolean(),
+                () -> joystick.rightBumper().getAsBoolean(), () -> joystick.leftBumper().getAsBoolean()));
 
-    //     return autoChooser.getSelected();
+    }
+
+    // public Command getAutonomousCommand() {
+    // Simple drive forward auton
+    // final var idle = new SwerveRequest.Idle();
+    // return Commands.sequence(
+    // // Reset our field centric heading to match the robot
+    // // facing away from our alliance station wall (0 deg).
+    // drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
+    // // Then slowly drive forward (away from us) for 5 seconds.
+    // drivetrain.applyRequest(() ->
+    // drive.withVelocityX(0.5)
+    // .withVelocityY(0)
+    // .withRotationalRate(0)
+    // )
+    // .withTimeout(5.0),
+    // // Finally idle for the rest of auton
+    // drivetrain.applyRequest(() -> idle)
+    // );
+
+    // return autoChooser.getSelected();
     // }
 }

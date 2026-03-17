@@ -309,6 +309,7 @@ public class LEDSubsystem extends SubsystemBase {
 
   public void setStatus(int status) {
     this.status = status;
+    updateLED();
   }
 
   public void updateLED() {   
@@ -389,7 +390,7 @@ public class LEDSubsystem extends SubsystemBase {
   public void periodic() {
 
     // This method will be called once per scheduler run
-    updateLED();
+    // updateLED();
 
     // climbing
 
