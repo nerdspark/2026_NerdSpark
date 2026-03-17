@@ -330,5 +330,7 @@ public final class Constants {
         public static final double homePos = 0.0;
         public static final double deployPos = 14.0;
         public static final double shakePos = 5;
+        public static final double lowerShakePos = 6;
+        public static final double upperShakePos = 11;
     }
 }
