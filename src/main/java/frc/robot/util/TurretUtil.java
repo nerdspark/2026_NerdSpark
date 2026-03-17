@@ -65,7 +65,7 @@ public final class TurretUtil {
 
     private static double timeOfFlight(double shooterRps, double hoodRadians, double distanceMeters) {
         double shooterMps = motorRpsToLaunchSpeedMps(shooterRps);
-        double horizontalMps = shooterMps * Math.cos(hoodRadians);
+        double horizontalMps = shooterMps * Math.sin(hoodRadians);
         if (horizontalMps <= 1e-6) {
             return 0.0;
         }
