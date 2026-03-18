@@ -5,10 +5,12 @@ import static edu.wpi.first.units.Units.Value;
 import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.Constants.IntakeConstants;
 import frc.robot.subsystems.Intake;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 
-public class IntakeJitterCommand extends InstantCommand {
+public class IntakeJitterCommand extends Command {
 
     Intake intake;
     Supplier<Boolean> isActive;
@@ -23,7 +25,7 @@ public class IntakeJitterCommand extends InstantCommand {
         this.isActive = isActive;
         this.lowerShakePos = lowerShakePos;
         this.upperShakePos = upperShakePos;
-
+        this.shakeTarget = () -> IntakeConstants.upperShakePos;
         this.timer = new Timer(); // redundant? idk the this keyword is for better readability
 
         addRequirements(intake);
@@ -36,7 +38,6 @@ public class IntakeJitterCommand extends InstantCommand {
     public void jitter() {
         if (timer.get() < 0.15) { // activate if the timer is a whole number
             changeShakePos(upperShakePos.get().doubleValue());
-            timer.reset();
         }
         else if(timer.get() > 0.15 && timer.get() < 0.3) { 
             changeShakePos(lowerShakePos.get().doubleValue());
@@ -64,7 +65,8 @@ public class IntakeJitterCommand extends InstantCommand {
 
     @Override
     public void end(boolean interrupted) {
-        
+        intake.setDeployPosition(() -> IntakeConstants.deployPos);
+
     }
 
     // Returns true when the command should end.
