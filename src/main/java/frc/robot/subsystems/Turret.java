@@ -349,7 +349,7 @@ public class Turret extends SubsystemBase {
 
     public boolean turretOnTarget() {
         return Math.abs(spinPose.Position - spinMotor.getPosition().getValueAsDouble()) < 0.4167 
-            && Math.abs(hoodPose.Position - hoodMotor1.getPosition().getValueAsDouble()) < 0.1389
+            && Math.abs(hoodPose.Position - hoodMotor1.getPosition().getValueAsDouble()) < 0.6944
             && (SmartDashboard.getBoolean("Shoot", false) 
                 || SmartDashboard.getBoolean("Pass", false));
     }
@@ -600,8 +600,8 @@ public class Turret extends SubsystemBase {
 
                     passPose = new Translation2d(targetX, targetY);
                 } else {
-                    passPose = closerPoint(turretPose, FieldConstants.LeftBump.farLeftCorner, FieldConstants.RightBump.nearLeftCorner) 
-                        ? FieldConstants.LeftBump.farLeftCorner : FieldConstants.RightBump.nearLeftCorner;
+                    passPose = closerPoint(turretPose, FieldConstants.BluePass.left, FieldConstants.BluePass.right) 
+                        ? FieldConstants.BluePass.left : FieldConstants.BluePass.right;
                 }
             } else {
                 goalPose = FieldConstants.Hub.oppTopCenterPoint.toTranslation2d();
@@ -617,8 +617,8 @@ public class Turret extends SubsystemBase {
 
                     passPose = new Translation2d(targetX, targetY);
                 } else {
-                    passPose = closerPoint(turretPose, FieldConstants.LeftBump.oppFarLeftCorner, FieldConstants.RightBump.oppNearLeftCorner) 
-                        ? FieldConstants.LeftBump.oppFarLeftCorner : FieldConstants.RightBump.oppNearLeftCorner;
+                    passPose = closerPoint(turretPose, FieldConstants.RedPass.left, FieldConstants.RedPass.right) 
+                        ? FieldConstants.RedPass.left : FieldConstants.RedPass.right;
                 }
             }
             
