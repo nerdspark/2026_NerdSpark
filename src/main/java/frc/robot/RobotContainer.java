@@ -304,11 +304,11 @@ public class RobotContainer {
             () -> joystick.x().getAsBoolean(), // intaking
             () -> joystick.y().getAsBoolean(),  // aiming
             () -> joystick.povUp().getAsBoolean(), // no april tags
-            () -> joystick.povDown().getAsBoolean(), // climb ready
+            () -> false, // climb ready
             () -> joystick.povLeft().getAsBoolean(), // idle
             () -> joystick.povRight().getAsBoolean(), // intake deployed
             () -> joystick.rightBumper().getAsBoolean(), // safe
-            () -> joystick.leftBumper().getAsBoolean())); // startup
+            () -> false)); // startup
     }
 
     public Command getAutonomousCommand() {
