@@ -115,7 +115,7 @@ public final class Constants {
         public static final double maxDelay = 0.5;
         public static final double riseTime = 0.04;
         public static final double fallTime = 0.18;
-        public static final double hoodRetractTime = 0.1; // TODO In Seconds
+        public static final double hoodRetractTime = 0.3; // TODO In Seconds
 
         public static InterpolatingTreeMap<Double, ShooterParams> map = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
@@ -298,7 +298,7 @@ public final class Constants {
         // >1.0 = magnifies efficiency → less correction → lower commanded RPS
         // <1.0 = shrinks efficiency → more correction → higher commanded RPS
         public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
-        public static final double defaultEfficiencyScale = 1.05;
+        public static final double defaultEfficiencyScale = 1.08;
 
         // Scales the robot's field-oriented velocity before SOTM subtraction.
         // 1.0 = use odometry as-is.
@@ -323,14 +323,14 @@ public final class Constants {
         public static final double rollerSupplyCurrentLimit = 30.0;
         public static final double deployStatorCurrentLimit = 60.0;
         public static final double deploySupplyCurrentLimit = 30.0;
-        public static final double motionMagicCruiseVelocityFast = 50.0;
-        public static final double motionMagicCruiseVelocitySlow = 15.0;
-        public static final double motionMagicAcceleration = 150.0;
+        public static final double motionMagicCruiseVelocityFast = 75.0;
+        public static final double motionMagicCruiseVelocitySlow = 25.0;
+        public static final double motionMagicAcceleration = 200.0;
         public static final double motionMagicJerk = 0;
         public static final double homePos = 0.0;
         public static final double deployPos = 14.0;
         public static final double shakePos = 5;
-        public static final double lowerShakePos = 6;
-        public static final double upperShakePos = 11;
+        public static final double lowerShakePos = 11;
+        public static final double upperShakePos = 6;
     }
 }
