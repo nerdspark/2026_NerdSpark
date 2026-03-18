@@ -20,16 +20,17 @@ import frc.robot.subsystems.LEDSubsystem;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class UpdateLED extends Command {
   /** Creates a new UpdateLED. */
-  // private boolean fuelFull  ;
-  // private boolean intakeOn  ;
-  // private boolean shooterSpinning  ;
-  // private boolean shooterReady  ;
-  // private boolean shooterOn ;
-  // // private boolean lidClosed = false;
-  // private boolean climbing ;
-  // private boolean climbDone;
-  // private boolean visionUpdate;
-  // private boolean turretLocked;
+  private boolean readyToShoot  ;
+  private boolean shooting  ;
+  private boolean intaking  ;
+  private boolean aiming  ;
+  private boolean noAprilTags ;
+  // private boolean lidClosed = false;
+  private boolean climbReady ;
+  private boolean idle;
+  private boolean intakeDeployed;
+  private boolean safe;
+  private boolean startup;
   // private double distance;
 
   private int pastStatus;
@@ -47,122 +48,112 @@ public class UpdateLED extends Command {
   LEDSubsystem led = new LEDSubsystem();
   // CommandXboxController joystick = RobotContainer.joystick;
 
-  // Supplier<Boolean> aSupplier;
-  // Supplier<Boolean> bSupplier;
-  // Supplier<Boolean> xSupplier;
-  // Supplier<Boolean> ySupplier;
-  // Supplier<Boolean> upSupplier;
-  // Supplier<Boolean> downSupplier;
-  // Supplier<Boolean> leftSupplier;
-  // Supplier<Boolean> rightSupplier;
-  // Supplier<Boolean> leftBSupplier;
-  // Supplier<Double> leftStickSupplier;
-  Supplier<Integer> statusSupplier;
+  Supplier<Boolean> aSupplier;
+  Supplier<Boolean> bSupplier;
+  Supplier<Boolean> xSupplier;
+  Supplier<Boolean> ySupplier;
+  Supplier<Boolean> upSupplier;
+  Supplier<Boolean> downSupplier;
+  Supplier<Boolean> leftSupplier;
+  Supplier<Boolean> rightSupplier;
+  Supplier<Boolean> leftBSupplier;
+  Supplier<Boolean> rightBSupplier;
+  // Supplier<Integer> statusSupplier;
+
 
   public UpdateLED(LEDSubsystem ledSubsystem,
-  Supplier<Integer> statusSupplier
-      // Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
-      // Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
-      // Supplier<Boolean> leftSupplier, Supplier<Boolean> rightSupplier, Supplier<Boolean> leftBSupplier, Supplier<Double> leftStickSupplier
+  // Supplier<Integer> statusSupplier
+      Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
+      Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
+      Supplier<Boolean> leftSupplier, Supplier<Boolean> rightSupplier, Supplier<Boolean> leftBSupplier, Supplier<Boolean> rightBSupplier//, Supplier<Double> leftStickSupplier
       ) {
+
+        addRequirements(ledSubsystem);
     // Use addRequirements() here to declare subsystem dependencies.
-    // this.aSupplier = aSupplier;
-    // this.bSupplier = bSupplier;
-    // this.xSupplier = xSupplier;
-    // this.ySupplier = ySupplier;
-    // this.upSupplier = upSupplier;
-    // this.downSupplier = downSupplier;
-    // this.leftSupplier = leftSupplier;
-    // this.rightSupplier = rightSupplier;
-    // this.leftBSupplier = leftBSupplier;
+    this.aSupplier = aSupplier;
+    this.bSupplier = bSupplier;
+    this.xSupplier = xSupplier;
+    this.ySupplier = ySupplier;
+    this.upSupplier = upSupplier;
+    this.downSupplier = downSupplier;
+    this.leftSupplier = leftSupplier;
+    this.rightSupplier = rightSupplier;
+    this.leftBSupplier = leftBSupplier;
+    this.rightBSupplier = rightBSupplier;
     // this.leftStickSupplier = leftStickSupplier;
-        this.statusSupplier = statusSupplier;
+        // this.statusSupplier = statusSupplier;
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
 
-    // fuelFull = leftSupplier.get();
-    // intakeOn = bSupplier.get();
-    // shooterSpinning = xSupplier.get();
-    // shooterReady = ySupplier.get();
-    // shooterOn = upSupplier.get();
+    // readyToShoot = leftSupplier.get();
+    // shooting = bSupplier.get();
+    // intaking = xSupplier.get();
+    // aiming = ySupplier.get();
+    // noAprilTags = upSupplier.get();
     // // private boolean lidClosed = false;
-    // climbing = downSupplier.get();
-    // climbDone = rightSupplier.get();
-    // visionUpdate = aSupplier.get();
-    // turretLocked = leftBSupplier.get();
-    // distance = leftStickSupplier.get();
-    status = statusSupplier.get();
+    // climbReady = downSupplier.get();
+    // idle = rightSupplier.get();
+    // intakeDeployed = aSupplier.get();
+    // // status = statusSupplier.get();
+    // safe = leftBSupplier.get();
+    // startup = rightBSupplier.get();
+    status = Constants.LED.startup;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
 
-    // fuelFull = leftBSupplier.get();
-    // intakeOn = bSupplier.get();
-    // shooterSpinning = xSupplier.get();
-    // shooterReady = ySupplier.get();
-    // shooterOn = upSupplier.get();
-    // // private boolean lidClosed = false;
-    // climbing = downSupplier.get();
-    // climbDone = rightSupplier.get();
-    // visionUpdate = leftSupplier.get();
-    // turretLocked = aSupplier.get();
-    // distance = leftStickSupplier.get();
+    readyToShoot = leftSupplier.get();
+    shooting = bSupplier.get();
+    intaking = xSupplier.get();
+    aiming = ySupplier.get();
+    noAprilTags = upSupplier.get();
+    // private boolean lidClosed = false;
+    climbReady = downSupplier.get();
+    idle = rightSupplier.get();
+    intakeDeployed = aSupplier.get();
+    // status = statusSupplier.get();
+    safe = leftBSupplier.get();
+    startup = rightBSupplier.get();
 
-    // led.setFuelFull(fuelFull);
-    // led.setClimbDone(climbDone);
-    // led.setClimbing(climbing);
-    // led.setIntakeOn(intakeOn);
-    // led.setShooterOn(shooterOn);
-    // led.setShooterReady(shooterReady);
-    // led.setShooterSpinning(shooterSpinning);
-    // led.setTurretLocked(turretLocked);
-    // led.setDistance(distance);
-    // led.setVisionUpdate(visionUpdate);
     
-    
-    // if (climbing) { // climbing
-    //   led.blinkColor(kMagenta);
 
-    // } else if (climbDone) {
-    //   led.solidColor(kMagenta);
-    // } else if (visionUpdate) { // vision updating
-    //   led.pulseColor(kWhite);
-    // } else if (intakeOn) { // intaking
-
-    //   if (fuelFull) {
-    //     led.solidColor(kBlue);
-    //   } else {
-    //     led.blinkColor(kYellow);
-    //   }
-
-    // } else if (shooterOn) { // shooting
-    //   led.blinkColor(kCyan);
-
-    // } else if (shooterReady && turretLocked) { // shooter ready
-    //   led.solidColor(kGreen, Math.abs(distance));
-
-    //   // led.solidColor(kGreen, Math.min(distance / Constants.optimalShootingDistance, 1.0));
-
-    // } else if (shooterReady || shooterSpinning) { // shooter spinning
-    //   led.blinkColor(kGreen);
-
-    // } else if (!fuelFull && !intakeOn && !shooterOn && !shooterSpinning) {
-    //   led.solidColor(kRed);
-
-    // } else { // rainbow = error
-    //   led.rainbow();
-    // }
-
-    pastStatus = led.getStatus();
-    if(!(pastStatus == Constants.LED.reset && status == Constants.LED.reset)
-    && status < pastStatus) {
-      led.setStatus(status);
+    if(readyToShoot) {
+      status = Constants.LED.readyToShoot;
+    } else if(shooting) {
+      status = Constants.LED.shooting;
+    } else if(intaking) {
+      status = Constants.LED.intaking;
+    } else if(aiming) {
+      status = Constants.LED.aiming;
+    } else if(noAprilTags) {
+      status = Constants.LED.noAprilTags;
+    } else if(climbReady) {
+      status = Constants.LED.climbReady;
+    } else if(idle) {
+      status = Constants.LED.idle;
+    } else if(intakeDeployed) {
+      status = Constants.LED.intakeDeployed;
+    } else if(safe) {
+      status = Constants.LED.safe;
+    } else if(startup) {
+      status = Constants.LED.startup;
+    } else {
+      status = 99;
     }
+    // // led.setStatus(status);
+    // pastStatus = led.getStatus();
+    // if(!(pastStatus == Constants.LED.reset && status == Constants.LED.reset)
+    // && status < pastStatus) {
+    //   led.setStatus(status);
+    // }
+    led.setStatus(status);
+
+    System.out.println(status);
   }
 
   // Called once the command ends or is interrupted.

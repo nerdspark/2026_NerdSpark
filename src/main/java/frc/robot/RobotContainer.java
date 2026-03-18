@@ -164,17 +164,17 @@ public class RobotContainer {
         joystick2.a().onTrue(new InstantCommand(() -> override = true));
         joystick2.b().onTrue(new InstantCommand(() -> override = false));
 
-        //TODO CALL THESE COMMANDS AT DIFFERENT TIMES
-        joystick.a().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.readyToShoot)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.b().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.shooting)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.x().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.intaking)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.y().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.aiming)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.leftBumper().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.noAprilTags)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.rightBumper().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.climbReady)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.povUp().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.idle)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.povDown().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.intakeDeployed)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.povLeft().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.safe)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        joystick.povRight().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.startup)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // //TODO CALL THESE COMMANDS AT DIFFERENT TIMES
+        // joystick.a().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.readyToShoot)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.b().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.shooting)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.x().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.intaking)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.y().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.aiming)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.leftBumper().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.noAprilTags)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.rightBumper().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.climbReady)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.povUp().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.idle)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.povDown().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.intakeDeployed)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.povLeft().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.safe)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
+        // joystick.povRight().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.startup)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
         
 
         // Start-of-shift warning
@@ -297,6 +297,18 @@ public class RobotContainer {
         );
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, 
+            () -> joystick.a().getAsBoolean(), // ready to shoot
+            () -> joystick.b().getAsBoolean(), // shooting
+            () -> joystick.x().getAsBoolean(), // intaking
+            () -> joystick.y().getAsBoolean(),  // aiming
+            () -> joystick.povUp().getAsBoolean(), // no april tags
+            () -> joystick.povDown().getAsBoolean(), // climb ready
+            () -> joystick.povLeft().getAsBoolean(), // idle
+            () -> joystick.povRight().getAsBoolean(), // intake deployed
+            () -> joystick.rightBumper().getAsBoolean(), // safe
+            () -> joystick.leftBumper().getAsBoolean())); // startup
     }
 
     public Command getAutonomousCommand() {
