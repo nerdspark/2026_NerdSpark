@@ -1,11 +1,16 @@
 package frc.robot.subsystems;
 
+import static frc.robot.util.TurretUtil.motorRpsToLaunchSpeedMps;
+import static frc.robot.util.TurretUtil.launchMpsToMotorRps;
+
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.util.ShooterOffsetMap;
 
@@ -28,7 +33,7 @@ public class SimFuelIKSubsystem {
         return new Translation3d(
             turretTranslation.getX(),
             turretTranslation.getY(),
-            TurretConstants.shooterMuzzleHeightMeters
+            getConfiguredMuzzleHeightMeters()
         );
     }
 
@@ -58,7 +63,7 @@ public class SimFuelIKSubsystem {
         }
 
         double hoodRad = Math.toRadians(solution.hoodDegrees);
-        double muzzleSpeed = solution.motorRps * 2.0 * Math.PI * TurretConstants.shooterWheelRadius;
+        double muzzleSpeed = motorRpsToLaunchSpeedMps(solution.motorRps);
         double horizontalSpeed = muzzleSpeed * Math.cos(hoodRad);
         double verticalSpeed = muzzleSpeed * Math.sin(hoodRad);
 
@@ -83,58 +88,114 @@ public class SimFuelIKSubsystem {
             return null;
         }
 
-        double deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
-        double alpha = Math.atan2(deltaHeight, distanceMeters);
-        double thetaOptimal = 0.5 * (alpha + (Math.PI / 2.0));
+        boolean useEntryAngleIK = SmartDashboard.getBoolean(
+            AutoAimConstants.useEntryAngleIKKey,
+            AutoAimConstants.defaultUseEntryAngleIK
+        );
+        double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
 
-        double minAngle = Math.toRadians(TurretConstants.hoodMinDegrees);
-        double maxAngle = Math.toRadians(TurretConstants.hoodMaxDegrees);
-        double thetaClamped = clamp(thetaOptimal, minAngle, maxAngle);
-
-        double bestTheta = Double.NaN;
-        double bestMotorRps = Double.POSITIVE_INFINITY;
-
-        double[] candidates = {thetaClamped, minAngle, maxAngle};
-        for (double theta : candidates) {
-            double speedMps = solveSpeedFromEquation(distanceMeters, alpha, theta);
-            if (!Double.isFinite(speedMps) || speedMps <= 0.0) {
-                continue;
-            }
-            double wheelRps = speedMps / (2.0 * Math.PI * TurretConstants.shooterWheelRadius);
-            if (wheelRps <= TurretConstants.shooterMaxMotorRps && wheelRps < bestMotorRps) {
-                bestMotorRps = wheelRps;
-                bestTheta = theta;
-            }
-        }
-
-        if (!Double.isFinite(bestTheta)) {
+        DirectShotSelection selection = useEntryAngleIK
+            ? solveEntryAngleIKDirect(distanceMeters, deltaHeight)
+            : solveMinimumSpeedIKDirect(distanceMeters, deltaHeight);
+        if (selection == null) {
             return null;
         }
 
         ShooterOffsetMap.Offsets offsets = offsetMap.sample(distanceMeters);
         double hoodDeg = clamp(
-            Math.toDegrees(bestTheta) + offsets.hoodOffsetDeg,
+            selection.hoodDegrees + offsets.hoodOffsetDeg,
             TurretConstants.hoodMinDegrees,
             TurretConstants.hoodMaxDegrees
         );
         double motorRps = clamp(
-            bestMotorRps + offsets.motorRpsOffset,
+            selection.motorRps + offsets.motorRpsOffset,
             0.0,
-            TurretConstants.shooterMaxMotorRps
+            useEntryAngleIK ? TurretConstants.shooterMaxMotorRps : Double.POSITIVE_INFINITY
         );
         return new ShotSolution(hoodDeg, motorRps);
     }
 
-    private static double solveSpeedFromEquation(double distanceMeters, double alpha, double theta) {
-        double denominator = 2.0 * Math.cos(theta) * Math.sin(theta - alpha);
-        if (denominator <= 1e-9) {
+    private DirectShotSelection solveEntryAngleIKDirect(
+        double distanceMeters,
+        double deltaHeightMeters
+    ) {
+        double targetEntryRad = Math.toRadians(TurretConstants.ikEntryAngleTargetDeg);
+        double desiredThetaRad = Math.atan(Math.tan(targetEntryRad) + (2.0 * deltaHeightMeters / distanceMeters));
+        double desiredThetaDeg = Math.toDegrees(desiredThetaRad);
+        if (!Double.isFinite(desiredThetaDeg)) {
+            return solveMinimumSpeedIKDirect(distanceMeters, deltaHeightMeters);
+        }
+        if (desiredThetaDeg < TurretConstants.hoodMinDegrees || desiredThetaDeg > TurretConstants.hoodMaxDegrees) {
+            return solveMinimumSpeedIKDirect(distanceMeters, deltaHeightMeters);
+        }
+        double speedMps = solveSpeedFromEquation(distanceMeters, Math.toRadians(desiredThetaDeg), deltaHeightMeters);
+        double motorRps = launchMpsToMotorRps(speedMps);
+        if (Double.isFinite(motorRps) && motorRps > 0.0 && motorRps <= TurretConstants.shooterMaxMotorRps) {
+            return new DirectShotSelection(desiredThetaDeg, motorRps, true);
+        }
+
+        return solveMinimumSpeedIKDirect(distanceMeters, deltaHeightMeters);
+    }
+
+    private DirectShotSelection solveMinimumSpeedIKDirect(
+        double distanceMeters,
+        double deltaHeightMeters
+    ) {
+        double alphaRad = Math.atan2(deltaHeightMeters, distanceMeters);
+        double thetaDeg = Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
+        if (thetaDeg < TurretConstants.hoodMinDegrees || thetaDeg > TurretConstants.hoodMaxDegrees) {
+            return null;
+        }
+        double speedMps = solveSpeedFromEquation(distanceMeters, Math.toRadians(thetaDeg), deltaHeightMeters);
+        double motorRps = launchMpsToMotorRps(speedMps);
+        if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
+            return null;
+        }
+        return new DirectShotSelection(thetaDeg, motorRps, false);
+    }
+
+    private double getConfiguredMuzzleHeightMeters() {
+        return SmartDashboard.getNumber(
+            AutoAimConstants.modelMuzzleHeightMetersKey,
+            TurretConstants.shooterMuzzleHeightMeters
+        );
+    }
+
+    private double getConfiguredTargetHeightMeters() {
+        return SmartDashboard.getNumber(
+            AutoAimConstants.modelTargetHeightMetersKey,
+            TurretConstants.targetHeightMeters
+        );
+    }
+
+    private static double solveSpeedFromEquation(double distanceMeters, double thetaRad, double deltaHeightMeters) {
+        double cos = Math.cos(thetaRad);
+        if (Math.abs(cos) < 1e-6) {
             return Double.NaN;
         }
-        double vSquared = (GRAVITY * distanceMeters * Math.cos(alpha)) / denominator;
+        double tan = Math.tan(thetaRad);
+        double denominator = 2.0 * cos * cos * (distanceMeters * tan - deltaHeightMeters);
+        if (denominator <= 0.0) {
+            return Double.NaN;
+        }
+        double vSquared = (GRAVITY * distanceMeters * distanceMeters) / denominator;
         if (vSquared <= 0.0) {
             return Double.NaN;
         }
         return Math.sqrt(vSquared);
+    }
+
+    private static double computeEntryAngleDeg(double distanceMeters, double launchSpeedMps, double launchAngleRad) {
+        double horizontalSpeed = launchSpeedMps * Math.cos(launchAngleRad);
+        if (horizontalSpeed <= 1e-6) {
+            return Double.NaN;
+        }
+        double time = distanceMeters / horizontalSpeed;
+        if (!Double.isFinite(time) || time <= 0.0) {
+            return Double.NaN;
+        }
+        double verticalVelocityAtTarget = launchSpeedMps * Math.sin(launchAngleRad) - GRAVITY * time;
+        return Math.toDegrees(Math.atan2(-verticalVelocityAtTarget, horizontalSpeed));
     }
 
     private static double clamp(double value, double min, double max) {
@@ -148,6 +209,19 @@ public class SimFuelIKSubsystem {
         private ShotSolution(double hoodDegrees, double motorRps) {
             this.hoodDegrees = hoodDegrees;
             this.motorRps = motorRps;
+        }
+    }
+
+    private static final class DirectShotSelection {
+        private final double hoodDegrees;
+        private final double motorRps;
+        @SuppressWarnings("unused")
+        private final boolean usedPrimaryObjective;
+
+        private DirectShotSelection(double hoodDegrees, double motorRps, boolean usedPrimaryObjective) {
+            this.hoodDegrees = hoodDegrees;
+            this.motorRps = motorRps;
+            this.usedPrimaryObjective = usedPrimaryObjective;
         }
     }
 }

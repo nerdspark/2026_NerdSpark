@@ -4,9 +4,6 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import java.util.Optional;
-import java.util.function.Supplier;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -24,6 +21,7 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -38,6 +36,7 @@ import frc.robot.Constants.turretTargetConstants;
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
 import frc.robot.commands.UpdateLED;
+import frc.robot.commands.IntakeJitterCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
@@ -66,13 +65,15 @@ public class RobotContainer {
 
     private final PoseEstimatorSubsystem poseEstimator;
     private final Turret turret;
-    private boolean override = false;
+    private boolean override = true;
     private final Indexer indexer;
     private final Intake intake;
     private final SimFuelSubsystem fuelSim;
     private final SimFuelIKSubsystem fuelSimIK;
     private final RealFuelSubsystem fuelReal;
     public final LEDSubsystem ledSubsystem = new LEDSubsystem();
+
+    private final Trigger intakeHome;
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
@@ -90,6 +91,38 @@ public class RobotContainer {
             AutoAimConstants.useIKSolverKey,
             AutoAimConstants.defaultUseIKSolver
         );
+        SmartDashboard.setDefaultBoolean(
+            AutoAimConstants.useEntryAngleIKKey,
+            AutoAimConstants.defaultUseEntryAngleIK
+        );
+        SmartDashboard.putBoolean(
+            AutoAimConstants.useEntryAngleIKKey,
+            AutoAimConstants.defaultUseEntryAngleIK
+        );
+        SmartDashboard.setDefaultBoolean(
+            AutoAimConstants.useShootOnMoveCompKey,
+            AutoAimConstants.defaultUseShootOnMoveComp
+        );
+        SmartDashboard.putBoolean(
+            AutoAimConstants.useShootOnMoveCompKey,
+            AutoAimConstants.defaultUseShootOnMoveComp
+        );
+        SmartDashboard.setDefaultNumber(
+            AutoAimConstants.modelMuzzleHeightMetersKey,
+            Constants.TurretConstants.shooterMuzzleHeightMeters
+        );
+        SmartDashboard.putNumber(
+            AutoAimConstants.modelMuzzleHeightMetersKey,
+            Constants.TurretConstants.shooterMuzzleHeightMeters
+        );
+        SmartDashboard.setDefaultNumber(
+            AutoAimConstants.modelTargetHeightMetersKey,
+            Constants.TurretConstants.targetHeightMeters
+        );
+        SmartDashboard.putNumber(
+            AutoAimConstants.modelTargetHeightMetersKey,
+            Constants.TurretConstants.targetHeightMeters
+        );
 
         poseEstimator = new PoseEstimatorSubsystem(drivetrain);
 
@@ -101,10 +134,12 @@ public class RobotContainer {
             ),
             () -> override
         );
-        HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
+        // HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
         indexer = new Indexer();
         intake = new Intake();
+        intakeHome = new Trigger(() -> intake.intakeIsIn());
+
         fuelSim = RobotBase.isSimulation()
             ? new SimFuelSubsystem(
                 () -> drivetrain.getState().Pose,
@@ -139,80 +174,91 @@ public class RobotContainer {
             SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
         }));
 
-        joystick.leftBumper()
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 0.6))
-            .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
-
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake)));
 
-        joystick.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
-
-        joystick.rightTrigger().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
+        joystick.leftBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
+        
+        joystick.y().and(() -> turret.turretOnTarget())
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
+            .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+        
+        joystick.x().whileTrue(new IntakeJitterCommand(intake));
+
+        joystick.leftTrigger()
+            .whileTrue(new IndexerCommand(indexer, () -> true, () -> -0.5))
+            .onFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+        
+        joystick.rightTrigger().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
+            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
         joystick.povDown().onTrue(new InstantCommand(() -> target = 0));
         joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
 
-        joystick2.x().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
-            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
-            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
-        joystick2.a().onTrue(new InstantCommand(() -> override = true));
-        joystick2.b().onTrue(new InstantCommand(() -> override = false));
+        joystick2.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
+        joystick2.rightTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(-1.0), intake));
+        joystick2.b().or(intakeHome)
+            .onTrue(new InstantCommand(() -> override = true))
+            .onFalse(new InstantCommand(() -> override = false));
 
-        // //TODO CALL THESE COMMANDS AT DIFFERENT TIMES
-        // joystick.a().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.readyToShoot)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        // joystick.b().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.shooting)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        // joystick.x().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.intaking)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        // joystick.y().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.aiming)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        // joystick.leftBumper().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.noAprilTags)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        // joystick.rightBumper().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.climbReady)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        // joystick.povUp().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.idle)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        // joystick.povDown().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.intakeDeployed)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        // joystick.povLeft().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.safe)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        // joystick.povRight().whileTrue(new UpdateLED(ledSubsystem, () -> Constants.LED.startup)).whileFalse(new UpdateLED(ledSubsystem, () -> 99));
-        
-
+        Color allianceColor = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue ? Color.kBlue : Color.kRed;
+        Color oppAllianceColor = allianceColor == Color.kBlue ? Color.kRed : Color.kBlue;
         // Start-of-shift warning
-        // for (int i = 0; i < 5; i++) {
-        //     double start = i * 0.75; // 0.25 on + 0.5 break
-        //     double end = start + 0.25; // rumble duration
-
-        //     Trigger shiftJustStarted = new Trigger(() ->
-        //         HubShiftUtil.getShiftedShiftInfo().active()
-        //         && HubShiftUtil.getShiftedShiftInfo().elapsedTime() > start
-        //         && HubShiftUtil.getShiftedShiftInfo().elapsedTime() < end
-        //     );
-
-        //     shiftJustStarted.and(RobotModeTriggers.teleop())
-        //         .onTrue(
-        //             Commands.runEnd(
-        //                 () -> joystick.setRumble(RumbleType.kRightRumble, 1.0),
-        //                 () -> joystick.setRumble(RumbleType.kBothRumble, 0.0)
-        //             ).withTimeout(0.25)
-        //         );
-        // }
+        for (int i = 1; i <= 5; i++) {
+            double time = i; 
+            Trigger shiftAboutToStart = new Trigger(() -> ((HubShiftUtil.getShiftedShiftInfo().remainingTime() < time) 
+                && !HubShiftUtil.getShiftedShiftInfo().active()));
+            shiftAboutToStart.and(RobotModeTriggers.teleop())
+                .onTrue(
+                    Commands.runEnd(
+                        () -> {
+                            joystick.setRumble(RumbleType.kBothRumble, 1.0);
+                            joystick2.setRumble(RumbleType.kBothRumble, 1.0);
+                            SmartDashboard.putString("Hub Active Alliance Color", allianceColor.toHexString());
+                        },
+                        () -> {
+                            joystick.setRumble(RumbleType.kBothRumble, 0);
+                            joystick2.setRumble(RumbleType.kBothRumble, 0);
+                            SmartDashboard.putString("Hub Active Alliance Color", Color.kWhite.toHexString());
+                        }
+                    ).withTimeout(0.25)
+                    .andThen(Commands.runOnce(() -> SmartDashboard.putString("Hub Active Alliance Color", allianceColor.toHexString())))
+                );
+        }
 
         // End-of-shift warning
-        // for (int i = 1; i <= 5; i++) {
-        //     double time = i;
-        //     Trigger shiftAboutToEnd = new Trigger(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time));
-        //     shiftAboutToEnd.and(RobotModeTriggers.teleop())
-        //         .onTrue(
-        //             Commands.runEnd(
-        //                 () -> joystick.setRumble(RumbleType.kRightRumble, 1.0),
-        //                 () -> joystick.setRumble(RumbleType.kBothRumble, 0.0)
-        //             ).withTimeout(0.25)
-        //         );
-        // }
+        for (int i = 1; i <= 5; i++) {
+            double time = i;
+            Trigger shiftAboutToEnd = new Trigger(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time));
+            shiftAboutToEnd.and(RobotModeTriggers.teleop())
+                .onTrue(
+                    Commands.runEnd(
+                        () -> {
+                            joystick.setRumble(RumbleType.kBothRumble, 1.0);
+                            joystick2.setRumble(RumbleType.kBothRumble, 1.0);
+                            SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString());
+                        },
+                        () -> {
+                            joystick.setRumble(RumbleType.kBothRumble, 0);
+                            joystick2.setRumble(RumbleType.kBothRumble, 0);
+                            SmartDashboard.putString("Hub Active Alliance Color", Color.kWhite.toHexString());
+                        }
+                    ).withTimeout(0.25)
+                    .andThen(Commands.runOnce(() -> SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString())))
+                );
+        }
 
         // Reset hub shift timer when enabling
         RobotModeTriggers.teleop().onTrue(Commands.runOnce(HubShiftUtil::initialize));
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(HubShiftUtil::initialize));
+        RobotModeTriggers.disabled().onTrue(Commands.runOnce(HubShiftUtil::initialize).ignoringDisable(true));
+        RobotModeTriggers.disabled().onTrue(Commands.runOnce(this::stopTargeting).ignoringDisable(true));
 
         // Auto-enable targeting in enabled modes; no button hold needed for spin-up.
         RobotModeTriggers.teleop().onTrue(Commands.runOnce(() ->
@@ -231,14 +277,10 @@ public class RobotContainer {
                 )
             )
         ));
-        RobotModeTriggers.disabled().onTrue(Commands.runOnce(HubShiftUtil::initialize).ignoringDisable(true));
-        RobotModeTriggers.disabled().onTrue(Commands.runOnce(this::stopTargeting).ignoringDisable(true));
     }
 
     public void updateDashboard() {
-        // Publish match time
-        SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
-
+        SmartDashboard.putBoolean("Intake is in", intakeHome.getAsBoolean());
         // Update from HubShiftUtil
         SmartDashboard.putString("Shifts/Remaining Shift Time", 
             String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))
@@ -278,8 +320,8 @@ public class RobotContainer {
         NamedCommands.registerCommand("shoot_map", new InstantCommand(() -> startTargeting(false)));
         NamedCommands.registerCommand("shoot_ik", new InstantCommand(() -> startTargeting(true)));
         NamedCommands.registerCommand("shoot_stop", new InstantCommand(this::stopTargeting));
-        NamedCommands.registerCommand("hood_manual", new InstantCommand(() -> override = true));
-        NamedCommands.registerCommand("hood_automatic", new InstantCommand(() -> override = false));
+        NamedCommands.registerCommand("turret_stop", new InstantCommand(() -> override = true));
+        NamedCommands.registerCommand("turret_automatic", new InstantCommand(() -> override = false));
     }
 
     private void configureDefaultCommands() {

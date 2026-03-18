@@ -16,23 +16,28 @@ import frc.robot.Constants.IndexConfig;
 
 public class Indexer implements Subsystem {
     private final CANBus canivore;
-    private final TalonFX passThroughMotor;
-    private final TalonFX spindexerMotor;
+    private final TalonFX passThroughMotor, spindexerMotor;
 
     public Indexer() {
-
         canivore = new CANBus(Constants.CANbus);
         passThroughMotor = new TalonFX(IndexConfig.passThroughId, canivore);
         spindexerMotor = new TalonFX(IndexConfig.indexId, canivore);
 
         TalonFXConfiguration passThroughConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(IndexConfig.passThroughStatorCurrentLimit)
-                .withStatorCurrentLimitEnable(true));
+                .withStatorCurrentLimit(IndexConfig.statorCurretLimit)
+                .withStatorCurrentLimitEnable(true)
+                .withSupplyCurrentLimit(IndexConfig.supplyCurretLimit)
+                .withSupplyCurrentLimitEnable(true))
+            .withMotorOutput(new MotorOutputConfigs()
+                .withInverted(InvertedValue.CounterClockwise_Positive)
+                .withNeutralMode(NeutralModeValue.Coast));
         TalonFXConfiguration indexConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(IndexConfig.indexCurretLimit)
-                .withStatorCurrentLimitEnable(true))
+                .withStatorCurrentLimit(IndexConfig.statorCurretLimit)
+                .withStatorCurrentLimitEnable(true)
+                .withSupplyCurrentLimit(IndexConfig.supplyCurretLimit)
+                .withSupplyCurrentLimitEnable(true))
             .withMotorOutput(new MotorOutputConfigs()
                 .withInverted(InvertedValue.Clockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Coast));
@@ -41,21 +46,13 @@ public class Indexer implements Subsystem {
         spindexerMotor.getConfigurator().apply(indexConfig);
     }
 
-    public void spinDex( Supplier<Double> rollerSpeed) {
-        double speed = rollerSpeed.get();
-        passThroughMotor.set(speed);
-        spindexerMotor.set(speed);
+    public void spinDex(Supplier<Double> rollerSpeed) {
+        passThroughMotor.set(rollerSpeed.get());
+        spindexerMotor.set(rollerSpeed.get());
     }
 
     public void stopPassThrough() {
         passThroughMotor.set(0.0);
         spindexerMotor.set(0.0);
-    }
-
-    public edu.wpi.first.wpilibj2.command.Command incrementSpeed(
-        Supplier<Boolean> isActive,
-        Supplier<Double> increment
-    ) {
-        return edu.wpi.first.wpilibj2.command.Commands.none();
     }
 }
