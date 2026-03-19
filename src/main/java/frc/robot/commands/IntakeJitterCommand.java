@@ -29,7 +29,6 @@ public class IntakeJitterCommand extends InstantCommand {
     public void jitter() {
         if (timer.get() < 0.5) { // activate if the timer is a whole number
             changeShakePos(IntakeConstants.upperShakePos);
-            timer.reset();
         } else if(timer.get() > 0.5 && timer.get() < 1) { 
             changeShakePos(IntakeConstants.lowerShakePos);
         } else { 

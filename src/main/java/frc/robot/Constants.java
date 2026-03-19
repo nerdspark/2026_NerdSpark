@@ -111,11 +111,7 @@ public final class Constants {
 
         public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(4.699), -Units.inchesToMeters(0.21));
 
-        public static final double delay = 0.0011;
-        public static final double maxDelay = 0.5;
-        public static final double riseTime = 0.04;
-        public static final double fallTime = 0.18;
-        public static final double hoodRetractTime = 0.35; // TODO In Seconds
+        public static final double hoodRetractTime = 0.28; // TODO In Seconds
 
         public static InterpolatingTreeMap<Double, ShooterParams> map = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
@@ -124,7 +120,7 @@ public final class Constants {
 
         static {
             // Passing
-            map.put(Double.MAX_VALUE, new ShooterParams(7.2, 42));
+            map.put(Double.MAX_VALUE, new ShooterParams(4.8, 40));
 
             map.put(3.422, new ShooterParams(0.0, 32));
             map.put(5.084, new ShooterParams(1.25, 38));

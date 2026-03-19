@@ -322,8 +322,9 @@ public class Turret extends SubsystemBase {
      * When we are out of shooting range stop wheels and send hood to stow
      */
     private void hoodWheelsZero() {
-        hoodPose.Position = 0;
+        hoodPose.Position = -0.002;
         mode = ShootMode.COAST;
+        brake = true;
     }
 
     /**
@@ -561,14 +562,14 @@ public class Turret extends SubsystemBase {
             isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
             turretPose.getX(), 
             speeds.vxMetersPerSecond, 
-            Units.inchesToMeters(25), 
+            Units.inchesToMeters(40), 
             isBlue ? true : false
         );
         double passLine = calcTriggerLine(
             isBlue ? FieldConstants.LinesVertical.bluePassLine : FieldConstants.LinesVertical.redPassLine, 
             turretPose.getX(), 
             speeds.vxMetersPerSecond, 
-            Units.inchesToMeters(25), 
+            Units.inchesToMeters(40), 
             isBlue ? false : true
         );
 
