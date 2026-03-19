@@ -317,13 +317,30 @@ public class RobotContainer {
             new InstantCommand( () -> intake.useSlowConfig(), intake)
                 .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos),intake))
                 .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
-        NamedCommands.registerCommand("indexer_on", new IndexerCommand(indexer, () -> true, () -> 1.0));
-        NamedCommands.registerCommand("indexer_off", new IndexerCommand(indexer, () -> false, () -> 0.0));
-        NamedCommands.registerCommand("shoot_map", new InstantCommand(() -> startTargeting(false)));
-        NamedCommands.registerCommand("shoot_ik", new InstantCommand(() -> startTargeting(true)));
-        NamedCommands.registerCommand("shoot_stop", new InstantCommand(this::stopTargeting));
-        NamedCommands.registerCommand("turret_stop", new InstantCommand(() -> override = true));
-        NamedCommands.registerCommand("turret_automatic", new InstantCommand(() -> override = false));
+        NamedCommands.registerCommand(
+            "intake_wiggle", 
+            new IntakeJitterCommand(intake));
+        NamedCommands.registerCommand(
+            "indexer_on", 
+            new IndexerCommand(indexer, () -> true, () -> 1.0));
+        NamedCommands.registerCommand(
+            "indexer_off", 
+            new IndexerCommand(indexer, () -> false, () -> 0.0));
+        NamedCommands.registerCommand(
+            "shoot_map", 
+            new InstantCommand(() -> startTargeting(false)));
+        NamedCommands.registerCommand(
+            "shoot_ik", 
+            new InstantCommand(() -> startTargeting(true)));
+        NamedCommands.registerCommand(
+            "shoot_stop", 
+            new InstantCommand(this::stopTargeting));
+        NamedCommands.registerCommand(
+            "turret_stop", 
+            new InstantCommand(() -> override = true));
+        NamedCommands.registerCommand(
+            "turret_automatic", 
+            new InstantCommand(() -> override = false));
     }
 
     private void configureDefaultCommands() {
