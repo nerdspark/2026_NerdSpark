@@ -155,19 +155,8 @@
       }
     },
     {
-      "name": "indexer_on",
-      "waypointRelativePos": 0.4246575342465754,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "indexer_on"
-        }
-      }
-    },
-    {
       "name": "turret_automatic",
-      "waypointRelativePos": 0.47260273972602806,
+      "waypointRelativePos": 0.37,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -177,46 +166,13 @@
       }
     },
     {
-      "name": "intake_shake",
-      "waypointRelativePos": 2.2904109589041113,
+      "name": "indexer_on",
+      "waypointRelativePos": 0.42,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
         "data": {
-          "name": "intake_shake"
-        }
-      }
-    },
-    {
-      "name": "intake_deploy",
-      "waypointRelativePos": 2.3890410958904105,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "intake_deploy"
-        }
-      }
-    },
-    {
-      "name": "intake_shake",
-      "waypointRelativePos": 2.493150684931505,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "intake_shake"
-        }
-      }
-    },
-    {
-      "name": "intake_deploy",
-      "waypointRelativePos": 2.59,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "intake_deploy"
+          "name": "indexer_on"
         }
       }
     },
@@ -263,11 +219,22 @@
           "name": "indexer_on"
         }
       }
+    },
+    {
+      "name": "intake_wiggle",
+      "waypointRelativePos": 4.0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_wiggle"
+        }
+      }
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 0.5,
+    "maxAcceleration": 0.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -283,5 +250,5 @@
     "velocity": 0,
     "rotation": 0.0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
