@@ -54,7 +54,7 @@ public final class TurretUtil {
             * TurretConstants.shooterLaunchEfficiency;
     }
 
-    public static double launchSpeedMpsToMotorRps(double launchSpeedMps) {
+    public static double launchMpsToMotorRps(double launchSpeedMps) {
         double denominator = ((Math.PI * 2) * TurretConstants.shooterWheelRadius)
             * TurretConstants.shooterLaunchEfficiency;
         if (denominator <= 1e-9) {
@@ -65,7 +65,7 @@ public final class TurretUtil {
 
     private static double timeOfFlight(double shooterRps, double hoodRadians, double distanceMeters) {
         double shooterMps = motorRpsToLaunchSpeedMps(shooterRps);
-        double horizontalMps = shooterMps * Math.cos(hoodRadians);
+        double horizontalMps = shooterMps * Math.sin(hoodRadians);
         if (horizontalMps <= 1e-6) {
             return 0.0;
         }
@@ -77,12 +77,12 @@ public final class TurretUtil {
     }
 
     public static double tofFromMap(ShooterParams params, double distanceMeters) {
-        double hoodRadians = Math.toRadians(hoodRotationsToDegrees(params.hoodPose));
+        double hoodRadians = Math.toRadians(90.0 - hoodRotationsToDegrees(params.hoodPose));
         return timeOfFlight(params.shooterSpeed, hoodRadians, distanceMeters);
     }
 
     public static double tofFromIK(double motorRps, double hoodDeg, double distanceMeters) {
-        double hoodRadians = Math.toRadians(hoodDeg);
+        double hoodRadians = Math.toRadians(90.0 - hoodDeg);
         return timeOfFlight(motorRps, hoodRadians, distanceMeters);
     }
 }

@@ -1,7 +1,7 @@
 package frc.robot.subsystems;
 
-import static frc.robot.util.TurretUtil.launchSpeedMpsToMotorRps;
 import static frc.robot.util.TurretUtil.motorRpsToLaunchSpeedMps;
+import static frc.robot.util.TurretUtil.launchMpsToMotorRps;
 
 import java.util.function.Supplier;
 
@@ -129,7 +129,7 @@ public class SimFuelIKSubsystem {
             return solveMinimumSpeedIKDirect(distanceMeters, deltaHeightMeters);
         }
         double speedMps = solveSpeedFromEquation(distanceMeters, Math.toRadians(desiredThetaDeg), deltaHeightMeters);
-        double motorRps = launchSpeedMpsToMotorRps(speedMps);
+        double motorRps = launchMpsToMotorRps(speedMps);
         if (Double.isFinite(motorRps) && motorRps > 0.0 && motorRps <= TurretConstants.shooterMaxMotorRps) {
             return new DirectShotSelection(desiredThetaDeg, motorRps, true);
         }
@@ -147,7 +147,7 @@ public class SimFuelIKSubsystem {
             return null;
         }
         double speedMps = solveSpeedFromEquation(distanceMeters, Math.toRadians(thetaDeg), deltaHeightMeters);
-        double motorRps = launchSpeedMpsToMotorRps(speedMps);
+        double motorRps = launchMpsToMotorRps(speedMps);
         if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
             return null;
         }

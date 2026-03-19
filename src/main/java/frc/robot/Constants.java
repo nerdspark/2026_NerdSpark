@@ -115,7 +115,7 @@ public final class Constants {
         public static final double maxDelay = 0.5;
         public static final double riseTime = 0.04;
         public static final double fallTime = 0.18;
-        public static final double hoodRetractTime = 0.1; // TODO In Seconds
+        public static final double hoodRetractTime = 0.35; // TODO In Seconds
 
         public static InterpolatingTreeMap<Double, ShooterParams> map = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
@@ -124,7 +124,7 @@ public final class Constants {
 
         static {
             // Passing
-            map.put(Double.MAX_VALUE, new ShooterParams(7.3, 40));
+            map.put(Double.MAX_VALUE, new ShooterParams(7.2, 42));
 
             map.put(3.422, new ShooterParams(0.0, 32));
             map.put(5.084, new ShooterParams(1.25, 38));
@@ -138,6 +138,24 @@ public final class Constants {
         COAST,
         DUTY_CYCLE_BANG_BANG,
         TORQUE_CURRENT_BANG_BANG
+    }
+
+    public static final class SOTM {
+        public final double turretAngle;
+        public final double launchAngle;
+        public final double launchMps;
+
+        /**
+         * SOTM compensated values
+         * @param turretAngle turret needed angle before chassis angle comp in radians
+         * @param launchAngle launch angle needed in radians
+         * @param launchMps launch speed needed in mps
+         */
+        public SOTM(double turretAngle, double launchAngle, double launchMps) {
+            this.turretAngle = turretAngle;
+            this.launchAngle = launchAngle;
+            this.launchMps = launchMps;
+        }
     }
 
     public static final class IkSolution {
@@ -159,9 +177,9 @@ public final class Constants {
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
         public static final double spinStatorCurrentLimit = 80.0;
-        public static final double spinSupplyCurrent = 35.0;
-        public static final double spinVelocity = 40;
-        public static final double spinAccel = 100;
+        public static final double spinSupplyCurrent = 30.0; // 35
+        public static final double spinVelocity = 50;
+        public static final double spinAccel = 120;
 
         public static final int spinCancoder1Id = 26;
         public static final double spinCancoder1Offset = -0.619873046875;
@@ -185,7 +203,7 @@ public final class Constants {
         public static final double hoodStatorCurrentLimit = 40.0;
         public static final double hoodSupplyCurrentLimit = 20.0;
         public static final double hoodVelocity = 175;
-        public static final double hoodAccel = hoodVelocity / 0.25; // 0.25 seconds to max speed
+        public static final double hoodAccel = hoodVelocity / 0.25;
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;
@@ -193,14 +211,14 @@ public final class Constants {
         public static final double peakDutyCycle = 1;
         public static final double peakTorque = 40;
         public static final double shootStatorCurrentLimit = 140.0;
-        public static final double shootSupplyCurrentLimit = 70.0;
+        public static final double shootSupplyCurrentLimit = 60.0; // 70
     }
 
     public static final class IndexConfig {
         public static final int passThroughId = 32;
         public static final int indexId = 33;
-        public static final double statorCurretLimit = 50; // OG 40
-        public static final double supplyCurretLimit = 30;
+        public static final double statorCurretLimit = 50;
+        public static final double supplyCurretLimit = 20; // 30
     }
 
     public static final class turretTargetConstants {
@@ -280,7 +298,14 @@ public final class Constants {
         // >1.0 = magnifies efficiency → less correction → lower commanded RPS
         // <1.0 = shrinks efficiency → more correction → higher commanded RPS
         public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
-        public static final double defaultEfficiencyScale = 1.1;
+        public static final double defaultEfficiencyScale = 1.08;
+
+        // Scales the robot's field-oriented velocity before SOTM subtraction.
+        // 1.0 = use odometry as-is.
+        // >1.0 = treat robot as moving faster → reduces commanded RPS while moving (shots landing short → increase)
+        // <1.0 = treat robot as moving slower → increases commanded RPS while moving (shots landing long → decrease)
+        public static final String sotmVelocityScaleKey = "Slippage/SotmVelocityScale";
+        public static final double defaultSotmVelocityScale = 1.0;
     }
 
     public static final class IntakeConstants {
@@ -295,15 +320,17 @@ public final class Constants {
         public static final double kA = 0.0;
         public static final double kV = 0.0;
         public static final double rollerStatorCurrentLimit = 40.0;
-        public static final double rollerSupplyCurrentLimit = 30.0;
+        public static final double rollerSupplyCurrentLimit = 25.0; // 30
         public static final double deployStatorCurrentLimit = 60.0;
-        public static final double deploySupplyCurrentLimit = 30.0;
-        public static final double motionMagicCruiseVelocityFast = 50.0;
-        public static final double motionMagicCruiseVelocitySlow = 15.0;
-        public static final double motionMagicAcceleration = 150.0;
+        public static final double deploySupplyCurrentLimit = 25.0; // 30
+        public static final double motionMagicCruiseVelocityFast = 75.0;
+        public static final double motionMagicCruiseVelocitySlow = 25.0;
+        public static final double motionMagicAcceleration = 200.0;
         public static final double motionMagicJerk = 0;
         public static final double homePos = 0.0;
         public static final double deployPos = 14.0;
         public static final double shakePos = 5;
+        public static final double lowerShakePos = 11;
+        public static final double upperShakePos = 6;
     }
 }
