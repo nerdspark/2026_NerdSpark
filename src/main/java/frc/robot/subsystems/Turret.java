@@ -418,6 +418,12 @@ public class Turret extends SubsystemBase {
         return motorRps;
     }
 
+    public boolean shooterAtSpeed() {
+        velocity = SmartDashboard.getNumber(MapTuneConstants.shooterKey, 0);
+        boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - velocity) <= 3;
+        return inTolerance;
+    }
+
     private double getConfiguredMuzzleHeightMeters() {
         return SmartDashboard.getNumber(
             AutoAimConstants.modelMuzzleHeightMetersKey,

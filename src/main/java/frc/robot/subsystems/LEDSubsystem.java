@@ -346,11 +346,12 @@ public class LEDSubsystem extends SubsystemBase {
 
     switch(status) { // TODO implement override logic
       // maybe do that with ints and status variables in Constants and comparing if they are greater
-      case Constants.LED.readyToShoot:
-        blinkColor(kGreen);
-        break;
+      
       case Constants.LED.shooting:
         solidColor(kGreen);
+        break;
+      case Constants.LED.readyToShoot:
+        blinkColor(kGreen);
         break;
       case Constants.LED.intaking:
         solidColor(kBlue);

@@ -61,6 +61,7 @@ public class UpdateLED extends Command {
   // Supplier<Integer> statusSupplier;
 
 
+  
   public UpdateLED(LEDSubsystem ledSubsystem,
   // Supplier<Integer> statusSupplier
       Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
@@ -107,25 +108,25 @@ public class UpdateLED extends Command {
   @Override
   public void execute() {
 
-    readyToShoot = leftSupplier.get();
-    shooting = bSupplier.get();
+    shooting = leftSupplier.get();
+    readyToShoot = bSupplier.get();
     intaking = xSupplier.get();
     aiming = ySupplier.get();
     noAprilTags = upSupplier.get();
     // private boolean lidClosed = false;
     climbReady = downSupplier.get();
-    idle = rightSupplier.get();
-    intakeDeployed = aSupplier.get();
+    intakeDeployed = rightSupplier.get();
+    safe = aSupplier.get();
     // status = statusSupplier.get();
-    safe = leftBSupplier.get();
+    idle = leftBSupplier.get();
     startup = rightBSupplier.get();
 
     
 
-    if(readyToShoot) {
-      status = Constants.LED.readyToShoot;
-    } else if(shooting) {
+    if(shooting) {
       status = Constants.LED.shooting;
+    } else if(readyToShoot) {
+      status = Constants.LED.readyToShoot;
     } else if(intaking) {
       status = Constants.LED.intaking;
     } else if(aiming) {
@@ -134,12 +135,12 @@ public class UpdateLED extends Command {
       status = Constants.LED.noAprilTags;
     } else if(climbReady) {
       status = Constants.LED.climbReady;
-    } else if(idle) {
-      status = Constants.LED.idle;
     } else if(intakeDeployed) {
       status = Constants.LED.intakeDeployed;
     } else if(safe) {
       status = Constants.LED.safe;
+    } else if(idle) {
+      status = Constants.LED.idle;
     } else if(startup) {
       status = Constants.LED.startup;
     } else {
