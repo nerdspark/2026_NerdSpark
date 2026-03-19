@@ -9,6 +9,12 @@
           "data": {
             "pathName": "auton_outpost1"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intake_wiggle"
+          }
         }
       ]
     }

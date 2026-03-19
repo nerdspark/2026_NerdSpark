@@ -343,13 +343,13 @@ public class Turret extends SubsystemBase {
 
         double motorRots = (neededAngle * TurretConstants.spinRatio) / TWO_PI;
 
-        brake = Math.abs(motorRots - spinMotor.getPosition().getValueAsDouble()) <= 0.01389;
+        brake = Math.abs(motorRots - spinMotor.getPosition().getValueAsDouble()) <= 0.006944;
 
         spinPose.Position = motorRots;
     }
 
     public boolean turretOnTarget() {
-        return Math.abs(spinPose.Position - spinMotor.getPosition().getValueAsDouble()) < 0.4167 
+        return Math.abs(spinPose.Position - spinMotor.getPosition().getValueAsDouble()) < 0.1389 
             && Math.abs(hoodPose.Position - hoodMotor1.getPosition().getValueAsDouble()) < 0.6944
             && (SmartDashboard.getBoolean("Shoot", false) 
                 || SmartDashboard.getBoolean("Pass", false));

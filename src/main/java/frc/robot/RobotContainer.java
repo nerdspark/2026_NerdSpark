@@ -175,12 +175,12 @@ public class RobotContainer {
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         joystick.leftTrigger()
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> -0.5))
-            .onFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+            .whileTrue(new IndexerCommand(indexer, () -> -0.5, () -> turret.turretOnTarget()))
+            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
 
-        joystick.y().and(() -> turret.turretOnTarget())
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
-            .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
+        joystick.y()
+            .whileTrue(new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()))
+            .whileFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
         
         joystick.b().whileTrue(new IntakeJitterCommand(intake));
 
@@ -322,10 +322,10 @@ public class RobotContainer {
             new IntakeJitterCommand(intake));
         NamedCommands.registerCommand(
             "indexer_on", 
-            new IndexerCommand(indexer, () -> true, () -> 1.0));
+            new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()));
         NamedCommands.registerCommand(
             "indexer_off", 
-            new IndexerCommand(indexer, () -> false, () -> 0.0));
+            new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
         NamedCommands.registerCommand(
             "shoot_map", 
             new InstantCommand(() -> startTargeting(false)));
