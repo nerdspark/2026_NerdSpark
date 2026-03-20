@@ -360,7 +360,7 @@ public class LEDSubsystem extends SubsystemBase {
         solidColor(kCyan);
         break;
       case Constants.LED.noAprilTags:
-        blinkColor(kRed);
+        solidColor(kRed); // make it blink red when implementing everything else
         break;
       case Constants.LED.climbReady: //lined up for climb
         solidColor(kMagenta); 
