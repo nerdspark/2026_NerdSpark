@@ -3,41 +3,41 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.338,
-        "y": 0.6428
+        "x": 2.012,
+        "y": 6.797
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.3379999999999965,
-        "y": 0.6428000000000003
+        "x": 3.304436557231588,
+        "y": 7.564010647737355
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.506540178571427,
-        "y": 0.9615848214285723
+        "x": 5.742954747116238,
+        "y": 7.2467999999999995
       },
       "prevControl": {
-        "x": 7.121547619047619,
-        "y": 0.4787127976190481
+        "x": 4.990426418776302,
+        "y": 7.597443786931091
       },
       "nextControl": {
-        "x": 8.116943192290284,
-        "y": 1.727175042025108
+        "x": 6.668464951197871,
+        "y": 6.815554569653948
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.957,
-        "y": 2.997
+        "x": 6.587985803016859,
+        "y": 4.8357675244010645
       },
       "prevControl": {
-        "x": 7.957,
-        "y": 1.9917440686551582
+        "x": 6.579937888198758,
+        "y": 5.447409050576752
       },
       "nextControl": null,
       "isLocked": false,
@@ -46,18 +46,22 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.4481981981981978,
-      "rotationDegrees": 0.0
+      "waypointRelativePos": 0.35,
+      "rotationDegrees": 180.0
     },
     {
-      "waypointRelativePos": 1.1283783783783785,
-      "rotationDegrees": -119.99999999999999
+      "waypointRelativePos": 0.7957559681697626,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 1.4164456233421738,
+      "rotationDegrees": 119.99999999999999
     }
   ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 1.2219178082191815,
+      "minWaypointRelativePos": 1.268456375838928,
       "maxWaypointRelativePos": 2.0,
       "constraints": {
         "maxVelocity": 1.0,
@@ -84,7 +88,7 @@
     },
     {
       "name": "turret_stop",
-      "waypointRelativePos": 0.0,
+      "waypointRelativePos": 0,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -92,25 +96,36 @@
           "name": "turret_stop"
         }
       }
+    },
+    {
+      "name": "indexer_off",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "indexer_off"
+        }
+      }
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 5.0,
-    "maxAcceleration": 7.0,
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
-    "rotation": -119.99999999999999
+    "velocity": 0,
+    "rotation": 119.99999999999999
   },
   "reversed": false,
-  "folder": null,
+  "folder": "left_auton_jab",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 0.0
+    "velocity": 0.0,
+    "rotation": -124.114
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }

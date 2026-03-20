@@ -1,0 +1,118 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 7.957,
+        "y": 5.0548
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.925791772438944,
+        "y": 6.653022226649784
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.849114583333333,
+        "y": 7.4098
+      },
+      "prevControl": {
+        "x": 6.6080929593476405,
+        "y": 7.324412071827345
+      },
+      "nextControl": {
+        "x": 5.327090992412802,
+        "y": 7.46852962167912
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.056287202380952,
+        "y": 7.4098
+      },
+      "prevControl": {
+        "x": 3.4545207736191457,
+        "y": 7.547288322156002
+      },
+      "nextControl": {
+        "x": 2.508163443243688,
+        "y": 7.2205627748627235
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.012,
+        "y": 6.7968
+      },
+      "prevControl": {
+        "x": 2.69716022160093,
+        "y": 7.39059750068591
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.8783783783783787,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 1.8716216216216264,
+      "rotationDegrees": 180.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "turret_automatic",
+      "waypointRelativePos": 1.5863013698630082,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "turret_automatic"
+        }
+      }
+    },
+    {
+      "name": "indexer_on",
+      "waypointRelativePos": 2.2,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "indexer_on"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0.0,
+    "rotation": -124.114
+  },
+  "reversed": false,
+  "folder": "left_auton_jab",
+  "idealStartingState": {
+    "velocity": 1.0,
+    "rotation": 119.99999999999999
+  },
+  "useDefaultConstraints": true
+}

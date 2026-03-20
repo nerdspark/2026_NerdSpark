@@ -109,7 +109,7 @@
     "rotation": 124.114
   },
   "reversed": false,
-  "folder": null,
+  "folder": "right_auton_jab",
   "idealStartingState": {
     "velocity": 1.0,
     "rotation": -119.99999999999999

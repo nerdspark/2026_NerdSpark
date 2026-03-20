@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "auton_jab1"
+            "pathName": "right_auton_jab1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "auton_jab2"
+            "pathName": "right_auton_jab2"
           }
         },
         {
@@ -38,19 +38,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "auton_jab3"
+            "pathName": "right_auton_jab3"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "intake_wiggle"
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": []
           }
         }
       ]
