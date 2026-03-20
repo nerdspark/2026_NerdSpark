@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 // import frc.robot.RobotContainer;
 import frc.robot.subsystems.LEDSubsystem;
+import frc.robot.subsystems.PoseEstimatorSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class UpdateLED extends Command {
@@ -36,6 +37,7 @@ public class UpdateLED extends Command {
   private int pastStatus;
   private int status;
 
+  private int numTags = -1;
   // private static final RGBWColor kGreen = new RGBWColor(0, 255, 0, 0);
   // private static final RGBWColor kYellow = new RGBWColor(255, 255, 0, 0);
   // private static final RGBWColor kRed = new RGBWColor(255, 0, 0, 0);
@@ -46,41 +48,48 @@ public class UpdateLED extends Command {
   // private static final RGBWColor kWhite = new RGBWColor(0, 0, 0, 255);
 
   LEDSubsystem led = new LEDSubsystem();
+  PoseEstimatorSubsystem poseEstimator;
   // CommandXboxController joystick = RobotContainer.joystick;
 
-  Supplier<Boolean> aSupplier;
-  Supplier<Boolean> bSupplier;
-  Supplier<Boolean> xSupplier;
-  Supplier<Boolean> ySupplier;
-  Supplier<Boolean> upSupplier;
-  Supplier<Boolean> downSupplier;
-  Supplier<Boolean> leftSupplier;
-  Supplier<Boolean> rightSupplier;
-  Supplier<Boolean> leftBSupplier;
-  Supplier<Boolean> rightBSupplier;
-  // Supplier<Integer> statusSupplier;
+  // Supplier<Boolean> aSupplier;
+  // Supplier<Boolean> bSupplier;
+  // Supplier<Boolean> xSupplier;
+  // Supplier<Boolean> ySupplier;
+  // Supplier<Boolean> upSupplier;
+  // Supplier<Boolean> downSupplier;
+  // Supplier<Boolean> leftSupplier;
+  // Supplier<Boolean> rightSupplier;
+  // Supplier<Boolean> leftBSupplier;
+  // Supplier<Boolean> rightBSupplier;
+  // // Supplier<Integer> statusSupplier;
 
 
   
   public UpdateLED(LEDSubsystem ledSubsystem,
+  PoseEstimatorSubsystem poseEstimator
   // Supplier<Integer> statusSupplier
-      Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
-      Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
-      Supplier<Boolean> leftSupplier, Supplier<Boolean> rightSupplier, Supplier<Boolean> leftBSupplier, Supplier<Boolean> rightBSupplier//, Supplier<Double> leftStickSupplier
+      // Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
+      // Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
+      // Supplier<Boolean> leftSupplier, Supplier<Boolean> rightSupplier, Supplier<Boolean> leftBSupplier, Supplier<Boolean> rightBSupplier//, Supplier<Double> leftStickSupplier
       ) {
 
         addRequirements(ledSubsystem);
     // Use addRequirements() here to declare subsystem dependencies.
-    this.aSupplier = aSupplier;
-    this.bSupplier = bSupplier;
-    this.xSupplier = xSupplier;
-    this.ySupplier = ySupplier;
-    this.upSupplier = upSupplier;
-    this.downSupplier = downSupplier;
-    this.leftSupplier = leftSupplier;
-    this.rightSupplier = rightSupplier;
-    this.leftBSupplier = leftBSupplier;
-    this.rightBSupplier = rightBSupplier;
+
+    this.poseEstimator = poseEstimator;
+
+    // this.aSupplier = aSupplier;
+    // this.bSupplier = bSupplier;
+    // this.xSupplier = xSupplier;
+    // this.ySupplier = ySupplier;
+    // this.upSupplier = upSupplier;
+    // this.downSupplier = downSupplier;
+    // this.leftSupplier = leftSupplier;
+    // this.rightSupplier = rightSupplier;
+    // this.leftBSupplier = leftBSupplier;
+    // this.rightBSupplier = rightBSupplier;
+
+
     // this.leftStickSupplier = leftStickSupplier;
         // this.statusSupplier = statusSupplier;
   }
@@ -108,50 +117,57 @@ public class UpdateLED extends Command {
   @Override
   public void execute() {
 
-    shooting = leftSupplier.get();
-    readyToShoot = bSupplier.get();
-    intaking = xSupplier.get();
-    aiming = ySupplier.get();
-    noAprilTags = upSupplier.get();
-    // private boolean lidClosed = false;
-    climbReady = downSupplier.get();
-    intakeDeployed = rightSupplier.get();
-    safe = aSupplier.get();
-    // status = statusSupplier.get();
-    idle = leftBSupplier.get();
-    startup = rightBSupplier.get();
+    // shooting = leftSupplier.get();
+    // readyToShoot = bSupplier.get();
+    // intaking = xSupplier.get();
+    // aiming = ySupplier.get();
+    // noAprilTags = upSupplier.get();
+    // // private boolean lidClosed = false;
+    // climbReady = downSupplier.get();
+    // intakeDeployed = rightSupplier.get();
+    // safe = aSupplier.get();
+    // // status = statusSupplier.get();
+    // idle = leftBSupplier.get();
+    // startup = rightBSupplier.get();
 
     
 
-    if(noAprilTags) {
-      status = Constants.LED.noAprilTags;
-    } else if(safe) {
-      status = Constants.LED.safe;
-    } else if(shooting) {
-      status = Constants.LED.shooting;
-    } else if(aiming) {
-      status = Constants.LED.aiming;
-    } else if(readyToShoot) {
-      status = Constants.LED.readyToShoot;
-    } else if(climbReady) {
-      status = Constants.LED.climbReady;
-    } else if(intakeDeployed) {
-      status = Constants.LED.intakeDeployed;
-    } else if(intaking) {
-      status = Constants.LED.intaking;
-    } else if(idle) {
-      status = Constants.LED.idle;
-    } else if(startup) {
-      status = Constants.LED.startup;
-    } else {
-      status = 99;
-    }
-    // // led.setStatus(status);
-    // pastStatus = led.getStatus();
-    // if(!(pastStatus == Constants.LED.reset && status == Constants.LED.reset)
-    // && status < pastStatus) {
-    //   led.setStatus(status);
+    // if(noAprilTags) {
+    //   status = Constants.LED.noAprilTags;
+    // } else if(safe) {
+    //   status = Constants.LED.safe;
+    // } else if(shooting) {
+    //   status = Constants.LED.shooting;
+    // } else if(aiming) {
+    //   status = Constants.LED.aiming;
+    // } else if(readyToShoot) {
+    //   status = Constants.LED.readyToShoot;
+    // } else if(climbReady) {
+    //   status = Constants.LED.climbReady;
+    // } else if(intakeDeployed) {
+    //   status = Constants.LED.intakeDeployed;
+    // } else if(intaking) {
+    //   status = Constants.LED.intaking;
+    // } else if(idle) {
+    //   status = Constants.LED.idle;
+    // } else if(startup) {
+    //   status = Constants.LED.startup;
+    // } else {
+    //   status = 99;
     // }
+
+    numTags = poseEstimator.getNumTags();
+
+    if(numTags >= 2) {
+      status = Constants.LED.shooting;
+    } else if (numTags == 1) {
+      status = Constants.LED.safe;
+    } else if (numTags == 0) {
+      status = Constants.LED.noAprilTags;
+    } else {
+      status = Constants.LED.startup;
+    }
+
     led.setStatus(status);
 
     System.out.println(status);
@@ -161,20 +177,12 @@ public class UpdateLED extends Command {
   @Override
   public void end(boolean interrupted) {
     led.setStatus(99);
-    // led.solidColor(kBlack);
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    // if (pastStatus != "reset" && status == "reset") {
-    //   return true;//!aSupplier.get();
-    // } else {
-    //   return pastStatus == status;
-    // }
-    return false;//pastStatus == status;
-    
 
-    // return false;
+    return false;
   }
 }
