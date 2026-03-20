@@ -319,12 +319,13 @@ public class Turret extends SubsystemBase {
     }
 
     /**
-     * When we are out of shooting range stop wheels and send hood to stow
+     * When we are under trench stow hood, idle shooter, and continue turret control
+     * 
+     * @param normalizedError the normalized error of the turret to spin to
      */
-    private void hoodWheelsZero() {
+    private void turretIdle(double normalizedError) {
         hoodPose.Position = -0.002;
-        mode = ShootMode.COAST;
-        brake = true;
+        velocity = applyShooterControl(30);
     }
 
     /**
@@ -655,7 +656,7 @@ public class Turret extends SubsystemBase {
                     SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", ikSolution.motorRps);
                     SmartDashboard.putNumber("Turret/IK/PredictedEntryDeg", predictedEntryDeg);
                 } else {
-                    hoodWheelsZero();
+                    turretIdle(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
                     SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
                     SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
                     SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
@@ -681,10 +682,10 @@ public class Turret extends SubsystemBase {
                     velocity = applyShooterControl(launchMpsToMotorRps(sotm.launchMps));
                 }
             } else {
-                hoodWheelsZero();
+                turretIdle(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
             }
         } else {
-            hoodWheelsZero();
+            turretIdle(normalizeRadians(turretPose.getRotation().getRadians()));
             SmartDashboard.putNumber("Turret/DistanceToTarget", 0.0);
             SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
             SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
