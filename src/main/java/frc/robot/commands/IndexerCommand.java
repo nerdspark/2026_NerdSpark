@@ -35,7 +35,7 @@ public class IndexerCommand extends InstantCommand {
 
     @Override
     public void execute() {
-        indexer.setIsActive(isActive.get().booleanValue());
+        // indexer.setIsActive(isActive.get().booleanValue());
         if (index.get()) {
             indexer.spinDex(rollerSpeed);
         } else {

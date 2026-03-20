@@ -331,7 +331,7 @@ public final class Constants {
     }
     
 public static class LED {
-        public static final int id = 0;
+        public static final int id = 40;
         public static final int solidID = 0;
         public static final int blinkID = 1;
         public static final int pulseID = 2;

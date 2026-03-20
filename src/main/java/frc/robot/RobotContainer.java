@@ -364,7 +364,7 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
 
         ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, 
-            () -> poseEstimator.getNumTags() >= 2, // turret.turretOnTarget() && turret.shooterAtSpeed() && indexer.getIsActive(), // shooting TODO rest of these + reorder idle ig
+            () -> poseEstimator.getNumTags() >= 2, // turret.turretOnTarget() && turret.shooterAtSpeed() && indexer.getIsActive(), // shooting TODO indexer.isActive dont exist anymore
             () -> false, // turret.turretOnTarget() && turret.shooterAtSpeed() && !indexer.getIsActive(), // ready to shoot
             () -> false, // intake.rollerOn() && !intake.intakeIsIn(), // intaking
             () -> false,  // aiming // prolly not needed ?

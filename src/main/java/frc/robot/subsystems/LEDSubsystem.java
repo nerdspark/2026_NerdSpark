@@ -35,7 +35,7 @@ import frc.robot.RobotContainer;
 import java.lang.Math;
 
 public class LEDSubsystem extends SubsystemBase {
-  private final CANdle m_candle = new CANdle(Constants.LED.id, "rio");
+  private final CANdle m_candle = new CANdle(Constants.LED.id, Constants.CANbus);
   private XboxController joystick;
 
   // addressable LED
@@ -360,7 +360,7 @@ public class LEDSubsystem extends SubsystemBase {
         solidColor(kCyan);
         break;
       case Constants.LED.noAprilTags:
-        blinkColor(kRed);
+        solidColor(kRed); // make it blink red when implementing everything else
         break;
       case Constants.LED.climbReady: //lined up for climb
         solidColor(kMagenta); 
