@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.146019345238095,
-        "y": 1.8555505952380955
+        "x": 6.925788690476191,
+        "y": 1.3987797619047628
       },
       "isLocked": false,
       "linkedName": null
@@ -20,24 +20,40 @@
         "y": 0.6418452380952386
       },
       "prevControl": {
-        "x": 8.555642723619902,
-        "y": 0.8500397104249744
+        "x": 6.608093277178412,
+        "y": 0.7272303411528107
       },
       "nextControl": {
-        "x": 5.170483630952381,
-        "y": 0.5896428571428577
+        "x": 5.327090773809524,
+        "y": 0.5831175595238096
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.926,
-        "y": 0.642
+        "x": 3.056287202380952,
+        "y": 0.6418452380952386
       },
       "prevControl": {
-        "x": 3.924370535714287,
-        "y": 0.5702217261904757
+        "x": 3.4545216751549583,
+        "y": 0.5043595272565939
+      },
+      "nextControl": {
+        "x": 2.5081622023809524,
+        "y": 0.8310788690476192
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.0122395833333333,
+        "y": 1.2552232142857145
+      },
+      "prevControl": {
+        "x": 2.697395833333333,
+        "y": 0.6614211309523819
       },
       "nextControl": null,
       "isLocked": false,
@@ -46,11 +62,11 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.5506756756756772,
-      "rotationDegrees": -119.99999999999999
+      "waypointRelativePos": 0.8783783783783787,
+      "rotationDegrees": 180.0
     },
     {
-      "waypointRelativePos": 0.8783783783783787,
+      "waypointRelativePos": 1.8716216216216264,
       "rotationDegrees": 180.0
     }
   ],
@@ -59,7 +75,7 @@
   "eventMarkers": [
     {
       "name": "turret_automatic",
-      "waypointRelativePos": 1.6,
+      "waypointRelativePos": 1.5863013698630082,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -70,7 +86,7 @@
     },
     {
       "name": "indexer_on",
-      "waypointRelativePos": 1.6,
+      "waypointRelativePos": 2.2,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -90,7 +106,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 124.11447294534135
   },
   "reversed": false,
   "folder": null,
