@@ -16,32 +16,32 @@
     },
     {
       "anchor": {
-        "x": 6.87358630952381,
-        "y": 7.499933035714285
-      },
-      "prevControl": {
-        "x": 8.035089285714285,
+        "x": 6.846747503566333,
         "y": 7.3629017857142856
       },
+      "prevControl": {
+        "x": 8.016141168504703,
+        "y": 7.343275691403337
+      },
       "nextControl": {
-        "x": 5.417361815109482,
-        "y": 7.671734801909234
+        "x": 5.42639100770712,
+        "y": 7.386739823646851
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.4494345238095234,
-        "y": 7.3629017857142856
+        "x": 2.4476034236804565,
+        "y": 7.35
       },
       "prevControl": {
-        "x": 2.847477678571428,
-        "y": 7.715267857142856
+        "x": 2.8197305680164515,
+        "y": 7.62354009538598
       },
       "nextControl": {
-        "x": 1.9820634107588404,
-        "y": 6.94916342334155
+        "x": 1.9446693998963505,
+        "y": 6.980307482448675
       },
       "isLocked": false,
       "linkedName": null
@@ -64,12 +64,12 @@
     },
     {
       "anchor": {
-        "x": 1.445,
-        "y": 3.8287999999999998
+        "x": 1.4184375,
+        "y": 3.865342261904762
       },
       "prevControl": {
-        "x": 2.045327380952381,
-        "y": 3.8092241071428563
+        "x": 2.0187648809523813,
+        "y": 3.8457663690476185
       },
       "nextControl": null,
       "isLocked": false,
@@ -115,14 +115,36 @@
       }
     },
     {
+      "name": "intake_shake",
+      "waypointRelativePos": 1.8327759197324414,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_shake"
+        }
+      }
+    },
+    {
       "name": "indexer_off",
       "waypointRelativePos": 4.0,
       "endWaypointRelativePos": null,
       "command": null
+    },
+    {
+      "name": "intake_home",
+      "waypointRelativePos": 4.0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_home"
+        }
+      }
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 2.0,
+    "maxVelocity": 1.5,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

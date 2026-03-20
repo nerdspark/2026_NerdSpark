@@ -3,18 +3,19 @@ package frc.robot.commands;
 import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Indexer;
 
 public class IndexerCommand extends InstantCommand {
 
     Indexer indexer;
-    Supplier<Boolean> isActive;
     Supplier<Double> rollerSpeed;
+    Supplier<Boolean> index;
 
-    public IndexerCommand(Indexer indexer, Supplier<Boolean> isActive, Supplier<Double> rollerSpeed) {
+    public IndexerCommand(Indexer indexer, Supplier<Double> rollerSpeed, Supplier<Boolean> index) {
         this.indexer = indexer;
-        this.isActive = isActive;
         this.rollerSpeed = rollerSpeed;
+        this.index = index;
 
         addRequirements(indexer);
     }
@@ -35,13 +36,15 @@ public class IndexerCommand extends InstantCommand {
     @Override
     public void execute() {
         indexer.setIsActive(isActive.get().booleanValue());
-        indexer.spinDex(rollerSpeed);
+        if (index.get()) {
+            indexer.spinDex(rollerSpeed);
+        } else {
+            indexer.spinDex(() -> 0.0);
+        }
     }
 
     @Override
-    public void end(boolean interrupted) {
-        
-    }
+    public void end(boolean interrupted) {}
 
     // Returns true when the command should end.
     @Override

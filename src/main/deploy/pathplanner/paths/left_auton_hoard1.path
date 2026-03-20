@@ -160,7 +160,11 @@
     "rotation": -45.0
   },
   "reversed": false,
+<<<<<<< HEAD:src/main/deploy/pathplanner/paths/left_auton_horde1.path
+  "folder": null,
+=======
   "folder": "left_auton_hoard",
+>>>>>>> e94020901789cfc1930178de987f31a1ffee4892:src/main/deploy/pathplanner/paths/left_auton_hoard1.path
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0

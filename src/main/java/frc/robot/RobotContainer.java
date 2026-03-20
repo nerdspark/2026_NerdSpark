@@ -62,7 +62,6 @@ public class RobotContainer {
     private final CommandXboxController joystick2 = new CommandXboxController(1);
     private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     private SendableChooser<Command> autoChooser;
-
     private final PoseEstimatorSubsystem poseEstimator;
     private final Turret turret;
     private boolean override = true;
@@ -166,14 +165,6 @@ public class RobotContainer {
     private void configureBindings() {
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        joystick.b().onTrue(new InstantCommand(() -> {
-            boolean useIK = SmartDashboard.getBoolean(
-                AutoAimConstants.useIKSolverKey,
-                AutoAimConstants.defaultUseIKSolver
-            );
-            SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
-        }));
-
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake)));
@@ -182,19 +173,19 @@ public class RobotContainer {
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
         
-        joystick.y().and(() -> turret.turretOnTarget())
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> 1.0))
-            .whileFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
-        
-        joystick.x().whileTrue(new IntakeJitterCommand(intake));
-
-        joystick.leftTrigger()
-            .whileTrue(new IndexerCommand(indexer, () -> true, () -> -0.5))
-            .onFalse(new IndexerCommand(indexer, () -> false, () -> 0.0));
-        
         joystick.rightTrigger().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
+
+        joystick.leftTrigger()
+            .whileTrue(new IndexerCommand(indexer, () -> -0.5, () -> turret.turretOnTarget()))
+            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+
+        joystick.y()
+            .whileTrue(new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()))
+            .whileFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+        
+        joystick.b().whileTrue(new IntakeJitterCommand(intake));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
@@ -206,6 +197,15 @@ public class RobotContainer {
         joystick2.b().or(intakeHome)
             .onTrue(new InstantCommand(() -> override = true))
             .onFalse(new InstantCommand(() -> override = false));
+
+        joystick2.y().onTrue(new InstantCommand(() -> {
+            boolean useIK = SmartDashboard.getBoolean(
+                AutoAimConstants.useIKSolverKey,
+                AutoAimConstants.defaultUseIKSolver
+            );
+            SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
+        }));
+
 
         Color allianceColor = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue ? Color.kBlue : Color.kRed;
         Color oppAllianceColor = allianceColor == Color.kBlue ? Color.kRed : Color.kBlue;
@@ -292,12 +292,12 @@ public class RobotContainer {
         );
     }
 
-    private void configureSysid() {
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        joystick.start().and(joystick.a()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        joystick.start().and(joystick.b()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    }
+    // private void configureSysid() {
+    //     joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    //     joystick.start().and(joystick.a()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    //     joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    //     joystick.start().and(joystick.b()).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // }
 
     private void configureAutoChooser() {
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
@@ -315,13 +315,35 @@ public class RobotContainer {
             new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake)
                 .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake))
         );
-        NamedCommands.registerCommand("indexer_on", new IndexerCommand(indexer, () -> true, () -> 1.0));
-        NamedCommands.registerCommand("indexer_off", new IndexerCommand(indexer, () -> false, () -> 0.0));
-        NamedCommands.registerCommand("shoot_map", new InstantCommand(() -> startTargeting(false)));
-        NamedCommands.registerCommand("shoot_ik", new InstantCommand(() -> startTargeting(true)));
-        NamedCommands.registerCommand("shoot_stop", new InstantCommand(this::stopTargeting));
-        NamedCommands.registerCommand("turret_stop", new InstantCommand(() -> override = true));
-        NamedCommands.registerCommand("turret_automatic", new InstantCommand(() -> override = false));
+        NamedCommands.registerCommand(
+            "intake_shake",  
+            new InstantCommand( () -> intake.useSlowConfig(), intake)
+                .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos),intake))
+                .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
+        NamedCommands.registerCommand(
+            "intake_wiggle", 
+            new IntakeJitterCommand(intake));
+        NamedCommands.registerCommand(
+            "indexer_on", 
+            new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()));
+        NamedCommands.registerCommand(
+            "indexer_off", 
+            new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+        NamedCommands.registerCommand(
+            "shoot_map", 
+            new InstantCommand(() -> startTargeting(false)));
+        NamedCommands.registerCommand(
+            "shoot_ik", 
+            new InstantCommand(() -> startTargeting(true)));
+        NamedCommands.registerCommand(
+            "shoot_stop", 
+            new InstantCommand(this::stopTargeting));
+        NamedCommands.registerCommand(
+            "turret_stop", 
+            new InstantCommand(() -> override = true));
+        NamedCommands.registerCommand(
+            "turret_automatic", 
+            new InstantCommand(() -> override = false));
     }
 
     private void configureDefaultCommands() {
@@ -338,6 +360,7 @@ public class RobotContainer {
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
 
+        // joystick.x().whileTrue(new DriveToPose(drivetrain, () -> new Pose2d(2, 2, Rotation2d.fromDegrees(90))));
         drivetrain.registerTelemetry(logger::telemeterize);
 
         ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, 
@@ -352,6 +375,8 @@ public class RobotContainer {
             () -> false, // true, // idle
             () -> false)); // startup
     }
+
+    
 
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();

@@ -107,7 +107,6 @@ public class Intake extends SubsystemBase {
     public void useSlowConfig() {
         deployMotor.getConfigurator().apply(motionMagicSlowConfigs);
     }
-
     public void simulationPeriodic() {
         // double dt = 0.02;
         // Read the applied motor voltage

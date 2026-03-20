@@ -310,6 +310,28 @@ public class FieldConstants {
         new Translation2d(0, AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
   }
 
+    public static class BluePass {
+        public static final Translation2d left = new Translation2d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(32).get().getX(), 
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(23).get().getY() - Units.inchesToMeters(24)
+        );
+        public static final Translation2d right = new Translation2d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(32).get().getX(), 
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(28).get().getY() + Units.inchesToMeters(24)
+        );
+    }
+
+    public static class RedPass {
+        public static final Translation2d left = new Translation2d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(16).get().getX(), 
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(7).get().getY() + Units.inchesToMeters(24)
+        );
+        public static final Translation2d right = new Translation2d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(16).get().getX(), 
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(12).get().getY() - Units.inchesToMeters(24)
+        );
+    }
+
   @RequiredArgsConstructor
   public enum FieldType {
     ANDYMARK("andymark"),

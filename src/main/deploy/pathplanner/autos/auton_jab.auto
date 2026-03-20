@@ -7,50 +7,56 @@
         {
           "type": "path",
           "data": {
-            "pathName": "left_auton_bump1"
+            "pathName": "auton_jab1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "left_auton_bump2"
+            "pathName": "auton_jab2"
           }
         },
         {
-          "type": "deadline",
+          "type": "race",
           "data": {
             "commands": [
               {
-                "type": "wait",
+                "type": "named",
                 "data": {
-                  "waitTime": 6.5
+                  "name": "intake_wiggle"
                 }
               },
               {
-                "type": "named",
+                "type": "wait",
                 "data": {
-                  "name": "indexer_on"
+                  "waitTime": 6.0
                 }
               }
             ]
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "indexer_off"
+            "pathName": "auton_jab3"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "left_auton_bump3"
+            "name": "intake_wiggle"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": []
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "left_autos",
+  "folder": null,
   "choreoAuto": false
 }

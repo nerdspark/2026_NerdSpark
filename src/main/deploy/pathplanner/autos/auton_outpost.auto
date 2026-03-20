@@ -7,13 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "test_wave"
+            "pathName": "auton_outpost1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intake_wiggle"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "test_autos",
+  "folder": null,
   "choreoAuto": false
 }
