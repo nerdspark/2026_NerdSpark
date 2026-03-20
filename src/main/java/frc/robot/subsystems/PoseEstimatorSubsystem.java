@@ -141,4 +141,11 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
             }
         }
     }
+
+    public int getNumTags() {
+        return visionBackLeft.getNumTags() + 
+         visionBackRight.getNumTags() + 
+         visionFrontLeft.getNumTags() + 
+         visionFrontRight.getNumTags() ; 
+    }
 }

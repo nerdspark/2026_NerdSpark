@@ -83,6 +83,10 @@ public class Intake extends SubsystemBase {
     public Boolean intakeIsIn() {
         return deployMotor.getPosition().getValueAsDouble() < 3;
     }
+
+    public double getDeployPosition() {
+        return deployMotor.getPosition().getValueAsDouble();
+    }
     
     public void setDeployPosition(Supplier<Double> rotations) {
         deployMotor.setControl(m_mmRequest.withPosition(rotations.get().doubleValue()));
@@ -91,6 +95,10 @@ public class Intake extends SubsystemBase {
     public void setRollerPower(double power) {
         roller1.set(-power);
         roller2.set(power);
+    }
+
+    public boolean rollerOn() {
+        return Math.abs(roller1.get()) + Math.abs(roller2.get()) > 0.1;
     }
 
     public void useFastConfig() {

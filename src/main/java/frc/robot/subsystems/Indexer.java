@@ -17,6 +17,7 @@ import frc.robot.Constants.IndexConfig;
 public class Indexer implements Subsystem {
     private final CANBus canivore;
     private final TalonFX passThroughMotor, spindexerMotor;
+    private static boolean isActive;
 
     public Indexer() {
         canivore = new CANBus(Constants.CANbus);
@@ -54,5 +55,12 @@ public class Indexer implements Subsystem {
     public void stopPassThrough() {
         passThroughMotor.set(0.0);
         spindexerMotor.set(0.0);
+    }
+
+    public boolean getIsActive() {
+        return isActive;
+    }
+    public void setIsActive(boolean active) {
+        isActive = active;
     }
 }

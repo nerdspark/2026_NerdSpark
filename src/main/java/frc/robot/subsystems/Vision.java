@@ -55,6 +55,7 @@ public class Vision {
     private final PhotonPoseEstimator photonEstimator;
     private Matrix<N3, N1> curStdDevs;
     private final EstimateConsumer estConsumer;
+    private int visibleTags;
 
     // Simulation
     private PhotonCameraSim cameraSim;
@@ -154,6 +155,8 @@ public class Vision {
                                 .getDistance(estimatedPose.get().estimatedPose.toPose2d().getTranslation());
             }
 
+            visibleTags = numTags;
+
             if (numTags == 0) {
                 // No tags visible. Default to single-tag std devs
                 curStdDevs = kSingleTagStdDevs;
@@ -223,5 +226,9 @@ public class Vision {
     @FunctionalInterface
     public static interface EstimateConsumer {
         public void accept(Pose2d pose, double timestamp, Matrix<N3, N1> estimationStdDevs);
+    }
+
+    public int getNumTags() {
+        return visibleTags;
     }
 }

@@ -35,11 +35,13 @@ import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.turretTargetConstants;
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
+import frc.robot.commands.UpdateLED;
 import frc.robot.commands.IntakeJitterCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
 import frc.robot.subsystems.RealFuelSubsystem;
 import frc.robot.subsystems.SimFuelIKSubsystem;
@@ -68,6 +70,7 @@ public class RobotContainer {
     private final SimFuelSubsystem fuelSim;
     private final SimFuelIKSubsystem fuelSimIK;
     private final RealFuelSubsystem fuelReal;
+    public final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
     private final Trigger intakeHome;
 
@@ -359,6 +362,18 @@ public class RobotContainer {
 
         // joystick.x().whileTrue(new DriveToPose(drivetrain, () -> new Pose2d(2, 2, Rotation2d.fromDegrees(90))));
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, 
+            () -> poseEstimator.getNumTags() >= 2, // turret.turretOnTarget() && turret.shooterAtSpeed() && indexer.getIsActive(), // shooting TODO rest of these + reorder idle ig
+            () -> false, // turret.turretOnTarget() && turret.shooterAtSpeed() && !indexer.getIsActive(), // ready to shoot
+            () -> false, // intake.rollerOn() && !intake.intakeIsIn(), // intaking
+            () -> false,  // aiming // prolly not needed ?
+            () -> poseEstimator.getNumTags() == 0, // no april tags
+            () -> false, // climb ready
+            () -> false, // intake.getDeployPosition() > 10.0, // intake deployed TODO 10.0 placeholder
+            () -> poseEstimator.getNumTags() == 1, //intake.intakeIsIn(), // safe
+            () -> false, // true, // idle
+            () -> false)); // startup
     }
 
     
