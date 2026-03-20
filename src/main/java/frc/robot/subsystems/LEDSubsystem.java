@@ -68,7 +68,7 @@ public class LEDSubsystem extends SubsystemBase {
   private static final RGBWColor kWhite = new RGBWColor(255, 255, 255, 255);
 
   private int ledStartIndex = 8;
-  private int ledEndIndex = 21;
+  private int ledEndIndex = 400;
 
   // private SmartDashboard smartDashboard = new SmartDashboard();
 
@@ -83,7 +83,7 @@ public class LEDSubsystem extends SubsystemBase {
     /* Configure CANdle */
     var cfg = new CANdleConfiguration();
     /* set the LED strip type and brightness */
-    cfg.LED.StripType = StripTypeValue.GRB;
+    cfg.LED.StripType = StripTypeValue.RGB;
     cfg.LED.BrightnessScalar = 1.0;
     /* disable status LED when being controlled */
     cfg.CANdleFeatures.StatusLedWhenActive = StatusLedWhenActiveValue.Disabled;

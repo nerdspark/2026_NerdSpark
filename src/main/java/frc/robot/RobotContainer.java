@@ -341,15 +341,15 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
 
         ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, 
-            () -> turret.turretOnTarget() && turret.shooterAtSpeed() && indexer.getIsActive(), // shooting TODO rest of these + reorder idle ig
-            () -> turret.turretOnTarget() && turret.shooterAtSpeed() && !indexer.getIsActive(), // ready to shoot
-            () -> intake.rollerOn() && !intake.intakeIsIn(), // intaking
+            () -> poseEstimator.getNumTags() >= 2, // turret.turretOnTarget() && turret.shooterAtSpeed() && indexer.getIsActive(), // shooting TODO rest of these + reorder idle ig
+            () -> false, // turret.turretOnTarget() && turret.shooterAtSpeed() && !indexer.getIsActive(), // ready to shoot
+            () -> false, // intake.rollerOn() && !intake.intakeIsIn(), // intaking
             () -> false,  // aiming // prolly not needed ?
             () -> poseEstimator.getNumTags() == 0, // no april tags
             () -> false, // climb ready
-            () -> intake.getDeployPosition() > 10.0, // intake deployed TODO 10.0 placeholder
-            () -> intake.intakeIsIn(), // safe
-            () -> true, // idle
+            () -> false, // intake.getDeployPosition() > 10.0, // intake deployed TODO 10.0 placeholder
+            () -> poseEstimator.getNumTags() == 1, //intake.intakeIsIn(), // safe
+            () -> false, // true, // idle
             () -> false)); // startup
     }
 

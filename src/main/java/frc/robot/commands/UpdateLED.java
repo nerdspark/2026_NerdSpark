@@ -123,22 +123,22 @@ public class UpdateLED extends Command {
 
     
 
-    if(shooting) {
+    if(noAprilTags) {
+      status = Constants.LED.noAprilTags;
+    } else if(safe) {
+      status = Constants.LED.safe;
+    } else if(shooting) {
       status = Constants.LED.shooting;
-    } else if(readyToShoot) {
-      status = Constants.LED.readyToShoot;
-    } else if(intaking) {
-      status = Constants.LED.intaking;
     } else if(aiming) {
       status = Constants.LED.aiming;
-    } else if(noAprilTags) {
-      status = Constants.LED.noAprilTags;
+    } else if(readyToShoot) {
+      status = Constants.LED.readyToShoot;
     } else if(climbReady) {
       status = Constants.LED.climbReady;
     } else if(intakeDeployed) {
       status = Constants.LED.intakeDeployed;
-    } else if(safe) {
-      status = Constants.LED.safe;
+    } else if(intaking) {
+      status = Constants.LED.intaking;
     } else if(idle) {
       status = Constants.LED.idle;
     } else if(startup) {
