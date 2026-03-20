@@ -35,7 +35,7 @@ import frc.robot.RobotContainer;
 import java.lang.Math;
 
 public class LEDSubsystem extends SubsystemBase {
-  private final CANdle m_candle = new CANdle(Constants.LED.id, "rio");
+  private final CANdle m_candle = new CANdle(Constants.LED.id, Constants.CANbus);
   private XboxController joystick;
 
   // addressable LED
