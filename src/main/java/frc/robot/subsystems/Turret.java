@@ -6,6 +6,7 @@ import static frc.robot.util.TurretUtil.*;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -122,6 +123,8 @@ public class Turret extends SubsystemBase {
                 .withMotionMagicCruiseVelocity(TurretConfig.spinVelocity)
                 .withMotionMagicAcceleration(TurretConfig.spinAccel)
             )
+            .withClosedLoopRamps(new ClosedLoopRampsConfigs()
+                .withVoltageClosedLoopRampPeriod(0.05))
         ;
         TalonFXConfiguration hoodConfig1 = new TalonFXConfiguration()
             .withMotorOutput(new MotorOutputConfigs()
@@ -267,12 +270,12 @@ public class Turret extends SubsystemBase {
         motorPositon = (normalizeRadians(turretAngle) * TurretConstants.spinRatio) / TWO_PI;
         spinMotor.setPosition(motorPositon, 2.5);
 
-        initMapTuneDashboard();
+        // initMapTuneDashboard();
 
-        SmartDashboard.setDefaultNumber(
-            SlippageCorrectionConstants.sotmVelocityScaleKey,
-            SlippageCorrectionConstants.defaultSotmVelocityScale
-        );
+        // SmartDashboard.setDefaultNumber(
+        //     SlippageCorrectionConstants.sotmVelocityScaleKey,
+        //     SlippageCorrectionConstants.defaultSotmVelocityScale
+        // );
     }
 
     /**
@@ -326,6 +329,7 @@ public class Turret extends SubsystemBase {
     private void turretIdle(double normalizedError) {
         hoodPose.Position = -0.002;
         velocity = applyShooterControl(30);
+        aimTurret(normalizedError);
     }
 
     /**
@@ -336,11 +340,11 @@ public class Turret extends SubsystemBase {
     private void aimTurret(double neededAngle) {
         motorPositon = spinMotor.getPosition().getValueAsDouble();
         turretAngle = (motorPositon * TWO_PI) / TurretConstants.spinRatio;
-        SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
+        // SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
 
         neededAngle = normalizeRadians(neededAngle - Math.toRadians(145));
         neededAngle = Math.round(neededAngle * 100.0) / 100.0;
-        SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
+        // SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
 
         double motorRots = (neededAngle * TurretConstants.spinRatio) / TWO_PI;
 
@@ -365,7 +369,7 @@ public class Turret extends SubsystemBase {
         boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - motorRps) <= 3;
         boolean torqueCurrentControl = torqueCurrentDebouncer.calculate(inTolerance);
         mode = torqueCurrentControl ? ShootMode.TORQUE_CURRENT_BANG_BANG : ShootMode.DUTY_CYCLE_BANG_BANG;
-        SmartDashboard.putString("Shoot Mode", mode.toString());
+        // SmartDashboard.putString("Shoot Mode", mode.toString());
 
         return motorRps;
     }
@@ -440,12 +444,12 @@ public class Turret extends SubsystemBase {
         if (motorRps > TurretConstants.shooterMaxMotorRps) {
             return null;
         }
-        SmartDashboard.putBoolean("Turret/IK/UseEntryAngleMode", useEntryAngleIK);
-        SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", selection.usedPrimaryObjective);
-        SmartDashboard.putString(
-            "Turret/IK/SolverMode",
-            useEntryAngleIK ? "EntryAngle" : "MinimumSpeed"
-        );
+        // SmartDashboard.putBoolean("Turret/IK/UseEntryAngleMode", useEntryAngleIK);
+        // SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", selection.usedPrimaryObjective);
+        // SmartDashboard.putString(
+        //     "Turret/IK/SolverMode",
+        //     useEntryAngleIK ? "EntryAngle" : "MinimumSpeed"
+        // );
         SmartDashboard.putNumber("Turret/Slippage/TheoreticalMotorRps", theoreticalMotorRps);
         SmartDashboard.putNumber("Turret/Slippage/CorrectedMotorRps", motorRps);
         SmartDashboard.putNumber("Turret/Slippage/EfficiencyFactor", slippageFactor);
@@ -543,11 +547,11 @@ public class Turret extends SubsystemBase {
         return new SOTM(newTurretAngle, newLaunchAngle, newLaunchMps);
     }
 
-    private void initMapTuneDashboard() {
-        SmartDashboard.setDefaultBoolean(MapTuneConstants.enableKey, MapTuneConstants.defaultEnable);
-        SmartDashboard.setDefaultNumber(MapTuneConstants.hoodKey, 0);
-        SmartDashboard.setDefaultNumber(MapTuneConstants.shooterKey, 0);
-    }
+    // private void initMapTuneDashboard() {
+    //     SmartDashboard.setDefaultBoolean(MapTuneConstants.enableKey, MapTuneConstants.defaultEnable);
+    //     SmartDashboard.setDefaultNumber(MapTuneConstants.hoodKey, 0);
+    //     SmartDashboard.setDefaultNumber(MapTuneConstants.shooterKey, 0);
+    // }
 
     private void applyLiveMap() {
         hoodPose.Position = SmartDashboard.getNumber(MapTuneConstants.hoodKey, 0);
@@ -660,14 +664,14 @@ public class Turret extends SubsystemBase {
                     SmartDashboard.putBoolean("Turret/IK/HasSolution", true);
                     SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", ikSolution.hoodDegrees);
                     SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", ikSolution.motorRps);
-                    SmartDashboard.putNumber("Turret/IK/PredictedEntryDeg", predictedEntryDeg);
+                    // SmartDashboard.putNumber("Turret/IK/PredictedEntryDeg", predictedEntryDeg);
                 } else {
                     turretIdle(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
                     SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
                     SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
                     SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
-                    SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
-                    SmartDashboard.putNumber("Turret/IK/test", Double.NaN);
+                    // SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
+                    // SmartDashboard.putNumber("Turret/IK/test", Double.NaN);
                 }
             } else {
                 ShooterParams params = aimOnFly(shoot ? distance : Double.MAX_VALUE);
@@ -696,9 +700,9 @@ public class Turret extends SubsystemBase {
             SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
             SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
             SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
-            SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
-            SmartDashboard.putNumber("Turret/IK/PredictedEntryDeg", Double.NaN);
-            SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", false);
+            // SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
+            // SmartDashboard.putNumber("Turret/IK/PredictedEntryDeg", Double.NaN);
+            // SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", false);
         }
 
         boolean mapTuneEnabled = SmartDashboard.getBoolean(
@@ -722,11 +726,11 @@ public class Turret extends SubsystemBase {
             spinMotor.setControl(spinPose);
         }
 
-        SmartDashboard.putNumber("Turret/SpinAmps", spinMotor.getStatorCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Turret/SpinSupply", spinMotor.getSupplyCurrent().getValueAsDouble());
+        // SmartDashboard.putNumber("Turret/SpinAmps", spinMotor.getStatorCurrent().getValueAsDouble());
+        // SmartDashboard.putNumber("Turret/SpinSupply", spinMotor.getSupplyCurrent().getValueAsDouble());
         hoodMotor1.setControl(hoodPose);
-        SmartDashboard.putNumber("Turret/HoodCurrentDeg", hoodRotationsToDegrees(hoodMotor1.getPosition().getValueAsDouble()));
-        SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
+        // SmartDashboard.putNumber("Turret/HoodCurrentDeg", hoodRotationsToDegrees(hoodMotor1.getPosition().getValueAsDouble()));
+        // SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
         switch (mode) {
             case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
             case TORQUE_CURRENT_BANG_BANG -> shootMotor1.setControl(shootTorqueBang.withVelocity(velocity));

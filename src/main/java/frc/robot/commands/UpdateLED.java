@@ -64,25 +64,25 @@ public class UpdateLED extends Command {
   
   public UpdateLED(LEDSubsystem ledSubsystem,
   // Supplier<Integer> statusSupplier
-      Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
-      Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
-      Supplier<Boolean> leftSupplier, Supplier<Boolean> rightSupplier, Supplier<Boolean> leftBSupplier, Supplier<Boolean> rightBSupplier//, Supplier<Double> leftStickSupplier
-      ) {
+    Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
+    Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
+    Supplier<Boolean> leftSupplier, Supplier<Boolean> rightSupplier, Supplier<Boolean> leftBSupplier, Supplier<Boolean> rightBSupplier//, Supplier<Double> leftStickSupplier
+    ) {
 
-        addRequirements(ledSubsystem);
-    // Use addRequirements() here to declare subsystem dependencies.
-    this.aSupplier = aSupplier;
-    this.bSupplier = bSupplier;
-    this.xSupplier = xSupplier;
-    this.ySupplier = ySupplier;
-    this.upSupplier = upSupplier;
-    this.downSupplier = downSupplier;
-    this.leftSupplier = leftSupplier;
-    this.rightSupplier = rightSupplier;
-    this.leftBSupplier = leftBSupplier;
-    this.rightBSupplier = rightBSupplier;
-    // this.leftStickSupplier = leftStickSupplier;
-        // this.statusSupplier = statusSupplier;
+      addRequirements(ledSubsystem);
+      // Use addRequirements() here to declare subsystem dependencies.
+      this.aSupplier = aSupplier;
+      this.bSupplier = bSupplier;
+      this.xSupplier = xSupplier;
+      this.ySupplier = ySupplier;
+      this.upSupplier = upSupplier;
+      this.downSupplier = downSupplier;
+      this.leftSupplier = leftSupplier;
+      this.rightSupplier = rightSupplier;
+      this.leftBSupplier = leftBSupplier;
+      this.rightBSupplier = rightBSupplier;
+      // this.leftStickSupplier = leftStickSupplier;
+      // this.statusSupplier = statusSupplier;
   }
 
   // Called when the command is initially scheduled.

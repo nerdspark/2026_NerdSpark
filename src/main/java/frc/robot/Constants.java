@@ -81,6 +81,8 @@ public final class Constants {
 
         public static final double kPoseAmbiguityThreshold = 0.2;
         public static final double kSingleTagDistanceThreshold = 2.0;
+
+        public static final double visionCorrectedRecentlyThreshold = 2; 
     }
 
     public static final class TurretConstants {
@@ -111,7 +113,7 @@ public final class Constants {
 
         public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(4.699), -Units.inchesToMeters(0.21));
 
-        public static final double hoodRetractTime = 0.28; // TODO In Seconds
+        public static final double hoodRetractTime = 0.28;
 
         public static InterpolatingTreeMap<Double, ShooterParams> map = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
@@ -175,7 +177,7 @@ public final class Constants {
         public static final double spinStatorCurrentLimit = 80.0;
         public static final double spinSupplyCurrent = 30.0; // 35
         public static final double spinVelocity = 50;
-        public static final double spinAccel = 120;
+        public static final double spinAccel = 160;
 
         public static final int spinCancoder1Id = 26;
         public static final double spinCancoder1Offset = -0.619873046875;
@@ -207,14 +209,14 @@ public final class Constants {
         public static final double peakDutyCycle = 1;
         public static final double peakTorque = 40;
         public static final double shootStatorCurrentLimit = 140.0;
-        public static final double shootSupplyCurrentLimit = 60.0; // 70
+        public static final double shootSupplyCurrentLimit = 60.0;
     }
 
     public static final class IndexConfig {
         public static final int passThroughId = 32;
         public static final int indexId = 33;
         public static final double statorCurretLimit = 50;
-        public static final double supplyCurretLimit = 20; // 30
+        public static final double supplyCurretLimit = 20;
     }
 
     public static final class turretTargetConstants {
@@ -316,21 +318,21 @@ public final class Constants {
         public static final double kA = 0.0;
         public static final double kV = 0.0;
         public static final double rollerStatorCurrentLimit = 40.0;
-        public static final double rollerSupplyCurrentLimit = 25.0; // 30
+        public static final double rollerSupplyCurrentLimit = 25.0;
         public static final double deployStatorCurrentLimit = 60.0;
-        public static final double deploySupplyCurrentLimit = 25.0; // 30
-        public static final double motionMagicCruiseVelocityFast = 75.0;
+        public static final double deploySupplyCurrentLimit = 30.0;
+        public static final double motionMagicCruiseVelocityFast = 60.0;
         public static final double motionMagicCruiseVelocitySlow = 25.0;
-        public static final double motionMagicAcceleration = 200.0;
+        public static final double motionMagicAcceleration = 150.0;
         public static final double motionMagicJerk = 0;
-        public static final double homePos = 0.0;
-        public static final double deployPos = 14.0;
+        public static final double homePos = -1.0;
+        public static final double deployPos = 15.0;
         public static final double shakePos = 5;
-        public static final double lowerShakePos = 11;
+        public static final double lowerShakePos = 10;
         public static final double upperShakePos = 6;
     }
     
-public static class LED {
+    public static class LED {
         public static final int id = 40;
         public static final int solidID = 0;
         public static final int blinkID = 1;
@@ -351,6 +353,6 @@ public static class LED {
         public static final int idle = 9;
         public static final int startup = 10;
         public static final int reset = 11;
-}
+    }
 
 }

@@ -372,7 +372,7 @@ public class LEDSubsystem extends SubsystemBase {
         blinkColor(kBlue);
         break;
       case Constants.LED.safe:
-        solidColor(kYellow);
+        solidColor(kMagenta); // kYellow
         break;
       case Constants.LED.startup:
         rainbow();

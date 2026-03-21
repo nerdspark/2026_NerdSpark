@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.15,
-        "y": 1.894
+        "x": 3.663837375178317,
+        "y": 4.026
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.697121807201503,
-        "y": 1.5566886524246173
+        "x": 2.7152209878910982,
+        "y": 4.026
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.381,
-        "y": 0.953
+        "x": 1.904179743223965,
+        "y": 4.026
       },
       "prevControl": {
-        "x": 0.5946041786846112,
-        "y": 1.0828970933026318
+        "x": 2.904179743223965,
+        "y": 4.026
       },
       "nextControl": null,
       "isLocked": false,
@@ -57,10 +57,10 @@
     "rotation": 90.0
   },
   "reversed": false,
-  "folder": "right_auton_jab",
+  "folder": null,
   "idealStartingState": {
-    "velocity": 0.0,
-    "rotation": 124.114
+    "velocity": 0,
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

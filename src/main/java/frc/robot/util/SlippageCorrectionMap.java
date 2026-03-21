@@ -28,29 +28,29 @@ public class SlippageCorrectionMap {
             new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), SlippageCorrectionMap::lerp);
     private boolean hasData = false;
 
-    public SlippageCorrectionMap() {
-        SmartDashboard.setDefaultBoolean(
-                SlippageCorrectionConstants.enableKey,
-                SlippageCorrectionConstants.defaultEnable);
-        SmartDashboard.setDefaultNumber(
-                SlippageCorrectionConstants.efficiencyOffsetKey,
-                SlippageCorrectionConstants.defaultEfficiencyOffset);
-        SmartDashboard.setDefaultNumber(
-                SlippageCorrectionConstants.efficiencyScaleKey,
-                SlippageCorrectionConstants.defaultEfficiencyScale);
-        SmartDashboard.setDefaultNumber(
-                SlippageCorrectionConstants.charHoodDegKey,
-                SlippageCorrectionConstants.defaultCharHoodDeg);
-        SmartDashboard.setDefaultNumber(
-                SlippageCorrectionConstants.charTargetHeightMetersKey,
-                SlippageCorrectionConstants.defaultCharTargetHeightMeters);
-        SmartDashboard.setDefaultNumberArray(
-                SlippageCorrectionConstants.commandedRpsPointsKey,
-                SlippageCorrectionConstants.defaultCommandedRpsPoints);
-        SmartDashboard.setDefaultNumberArray(
-                SlippageCorrectionConstants.observedDistancePointsKey,
-                SlippageCorrectionConstants.defaultObservedDistanceMeters);
-    }
+    // public SlippageCorrectionMap() {
+    //     SmartDashboard.setDefaultBoolean(
+    //             SlippageCorrectionConstants.enableKey,
+    //             SlippageCorrectionConstants.defaultEnable);
+    //     SmartDashboard.setDefaultNumber(
+    //             SlippageCorrectionConstants.efficiencyOffsetKey,
+    //             SlippageCorrectionConstants.defaultEfficiencyOffset);
+    //     SmartDashboard.setDefaultNumber(
+    //             SlippageCorrectionConstants.efficiencyScaleKey,
+    //             SlippageCorrectionConstants.defaultEfficiencyScale);
+    //     SmartDashboard.setDefaultNumber(
+    //             SlippageCorrectionConstants.charHoodDegKey,
+    //             SlippageCorrectionConstants.defaultCharHoodDeg);
+    //     SmartDashboard.setDefaultNumber(
+    //             SlippageCorrectionConstants.charTargetHeightMetersKey,
+    //             SlippageCorrectionConstants.defaultCharTargetHeightMeters);
+    //     SmartDashboard.setDefaultNumberArray(
+    //             SlippageCorrectionConstants.commandedRpsPointsKey,
+    //             SlippageCorrectionConstants.defaultCommandedRpsPoints);
+    //     SmartDashboard.setDefaultNumberArray(
+    //             SlippageCorrectionConstants.observedDistancePointsKey,
+    //             SlippageCorrectionConstants.defaultObservedDistanceMeters);
+    // }
 
     /**
      * Returns the actual ball exit speed (m/s) for a given commanded motor RPS,
@@ -69,18 +69,15 @@ public class SlippageCorrectionMap {
      */
     public double efficiencyAt(double motorRps) {
         refresh();
-        boolean enabled = SmartDashboard.getBoolean(
-                SlippageCorrectionConstants.enableKey,
-                SlippageCorrectionConstants.defaultEnable);
+        boolean enabled = 
+                SlippageCorrectionConstants.defaultEnable;
         if (!enabled || !hasData) {
             return 1.0;
         }
-        double offset = SmartDashboard.getNumber(
-                SlippageCorrectionConstants.efficiencyOffsetKey,
-                SlippageCorrectionConstants.defaultEfficiencyOffset);
-        double scale = SmartDashboard.getNumber(
-                SlippageCorrectionConstants.efficiencyScaleKey,
-                SlippageCorrectionConstants.defaultEfficiencyScale);
+        double offset =
+                SlippageCorrectionConstants.defaultEfficiencyOffset;
+        double scale =
+                SlippageCorrectionConstants.defaultEfficiencyScale;
         Double factor = efficiencyMap.get(motorRps);
         return (factor != null && factor > 0.0) ? (factor + offset) * scale : 1.0;
     }
@@ -98,12 +95,10 @@ public class SlippageCorrectionMap {
     }
 
     private void refresh() {
-        double[] rpsPoints = SmartDashboard.getNumberArray(
-                SlippageCorrectionConstants.commandedRpsPointsKey,
-                SlippageCorrectionConstants.defaultCommandedRpsPoints);
-        double[] distPoints = SmartDashboard.getNumberArray(
-                SlippageCorrectionConstants.observedDistancePointsKey,
-                SlippageCorrectionConstants.defaultObservedDistanceMeters);
+        double[] rpsPoints =
+                SlippageCorrectionConstants.defaultCommandedRpsPoints;
+        double[] distPoints =
+                SlippageCorrectionConstants.defaultObservedDistanceMeters;
 
         if (rpsPoints.length == 0 && distPoints.length == 0) {
             efficiencyMap.clear();
@@ -114,12 +109,10 @@ public class SlippageCorrectionMap {
             return;
         }
 
-        double charHoodDeg = SmartDashboard.getNumber(
-                SlippageCorrectionConstants.charHoodDegKey,
-                SlippageCorrectionConstants.defaultCharHoodDeg);
-        double charTargetHeight = SmartDashboard.getNumber(
-                SlippageCorrectionConstants.charTargetHeightMetersKey,
-                SlippageCorrectionConstants.defaultCharTargetHeightMeters);
+        double charHoodDeg =
+                SlippageCorrectionConstants.defaultCharHoodDeg;
+        double charTargetHeight =
+                SlippageCorrectionConstants.defaultCharTargetHeightMeters;
 
         double charHoodRad = Math.toRadians(charHoodDeg);
         // Negative for floor shots (ball drops), positive for hub shots (ball rises)

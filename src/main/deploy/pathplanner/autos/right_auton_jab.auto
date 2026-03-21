@@ -42,6 +42,18 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.75
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "right_auton_jab4"
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "intake_wiggle"

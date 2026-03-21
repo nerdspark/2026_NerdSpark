@@ -92,6 +92,12 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
             // DogLog.log("PoseEstimator/Formatted Pose", getFomattedPose());            
 
         }
+
+        SmartDashboard.putBoolean("BL Updated Recently", visionBackLeft.poseCorrectedRecently());
+        SmartDashboard.putBoolean("BR Updated Recently", visionBackRight.poseCorrectedRecently());
+        SmartDashboard.putBoolean("FL Updated Recently", visionFrontLeft.poseCorrectedRecently());
+        SmartDashboard.putBoolean("FR Updated Recently", visionFrontRight.poseCorrectedRecently());
+
     }
     
 
@@ -146,6 +152,6 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
         return visionBackLeft.getNumTags() + 
          visionBackRight.getNumTags() + 
          visionFrontLeft.getNumTags() + 
-         visionFrontRight.getNumTags() ; 
+         visionFrontRight.getNumTags(); 
     }
 }

@@ -33,6 +33,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Constants;
 import frc.robot.Robot;
@@ -56,6 +57,8 @@ public class Vision {
     private Matrix<N3, N1> curStdDevs;
     private final EstimateConsumer estConsumer;
     private int visibleTags;
+    private boolean poseCorrected = false;
+    private double lastUpdatedTimestamp = 0;
 
     // Simulation
     private PhotonCameraSim cameraSim;
@@ -119,7 +122,15 @@ public class Vision {
                         var estStdDevs = getEstimationStdDevs();
 
                         estConsumer.accept(est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
+                        lastUpdatedTimestamp = est.timestampSeconds;
                     });
+            
+            if(Timer.getFPGATimestamp() - lastUpdatedTimestamp < Constants.Vision.visionCorrectedRecentlyThreshold) {
+                poseCorrected = true;
+            }
+            else {
+                poseCorrected = false;
+            }
         }
     }
 
@@ -230,5 +241,9 @@ public class Vision {
 
     public int getNumTags() {
         return visibleTags;
+    }
+
+    public boolean poseCorrectedRecently() {
+        return poseCorrected;
     }
 }

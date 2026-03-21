@@ -5,10 +5,14 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -70,13 +74,13 @@ public class RobotContainer {
     private final SimFuelSubsystem fuelSim;
     private final SimFuelIKSubsystem fuelSimIK;
     private final RealFuelSubsystem fuelReal;
-    public final LEDSubsystem ledSubsystem = new LEDSubsystem();
+    // public final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
     private final Trigger intakeHome;
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
-    private double target = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue ? 0 : Math.PI;
+    private double target = drivetrain.getState().Pose.getRotation().getRadians();
 
     public RobotContainer() {
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
@@ -220,12 +224,12 @@ public class RobotContainer {
                         () -> {
                             joystick.setRumble(RumbleType.kBothRumble, 1.0);
                             joystick2.setRumble(RumbleType.kBothRumble, 1.0);
-                            SmartDashboard.putString("Hub Active Alliance Color", allianceColor.toHexString());
+                            // SmartDashboard.putString("Hub Active Alliance Color", allianceColor.toHexString());
                         },
                         () -> {
                             joystick.setRumble(RumbleType.kBothRumble, 0);
                             joystick2.setRumble(RumbleType.kBothRumble, 0);
-                            SmartDashboard.putString("Hub Active Alliance Color", Color.kWhite.toHexString());
+                            // SmartDashboard.putString("Hub Active Alliance Color", Color.kWhite.toHexString());
                         }
                     ).withTimeout(0.25)
                     .andThen(Commands.runOnce(() -> SmartDashboard.putString("Hub Active Alliance Color", allianceColor.toHexString())))
@@ -242,15 +246,15 @@ public class RobotContainer {
                         () -> {
                             joystick.setRumble(RumbleType.kBothRumble, 1.0);
                             joystick2.setRumble(RumbleType.kBothRumble, 1.0);
-                            SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString());
+                            // SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString());
                         },
                         () -> {
                             joystick.setRumble(RumbleType.kBothRumble, 0);
                             joystick2.setRumble(RumbleType.kBothRumble, 0);
-                            SmartDashboard.putString("Hub Active Alliance Color", Color.kWhite.toHexString());
+                            // SmartDashboard.putString("Hub Active Alliance Color", Color.kWhite.toHexString());
                         }
                     ).withTimeout(0.25)
-                    .andThen(Commands.runOnce(() -> SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString())))
+                    // .andThen(Commands.runOnce(() -> SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString())))
                 );
         }
 
@@ -263,34 +267,34 @@ public class RobotContainer {
         // Auto-enable targeting in enabled modes; no button hold needed for spin-up.
         RobotModeTriggers.teleop().onTrue(Commands.runOnce(() ->
             enableTargeting(
-                SmartDashboard.getBoolean(
-                    AutoAimConstants.useIKSolverKey,
+                // SmartDashboard.getBoolean(
+                    // AutoAimConstants.useIKSolverKey,
                     AutoAimConstants.defaultUseIKSolver
-                )
+                // )
             )
         ));
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() ->
             enableTargeting(
-                SmartDashboard.getBoolean(
-                    AutoAimConstants.useIKSolverKey,
+                // SmartDashboard.getBoolean(
+                    // AutoAimConstants.useIKSolverKey,
                     AutoAimConstants.defaultUseIKSolver
-                )
+                // )
             )
         ));
     }
 
-    public void updateDashboard() {
-        SmartDashboard.putBoolean("Intake is in", intakeHome.getAsBoolean());
-        // Update from HubShiftUtil
-        SmartDashboard.putString("Shifts/Remaining Shift Time", 
-            String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))
-        );
-        SmartDashboard.putBoolean("Shifts/Shift Active", HubShiftUtil.getShiftedShiftInfo().active());
-        SmartDashboard.putString("Shifts/Game State", HubShiftUtil.getShiftedShiftInfo().currentShift().toString());
-        SmartDashboard.putBoolean("Shifts/Active First?",
-            DriverStation.getAlliance().orElse(Alliance.Red) == HubShiftUtil.getFirstActiveAlliance()
-        );
-    }
+    // public void updateDashboard() {
+    //     SmartDashboard.putBoolean("Intake is in", intakeHome.getAsBoolean());
+    //     // Update from HubShiftUtil
+    //     SmartDashboard.putString("Shifts/Remaining Shift Time", 
+    //         String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))
+    //     );
+    //     SmartDashboard.putBoolean("Shifts/Shift Active", HubShiftUtil.getShiftedShiftInfo().active());
+    //     SmartDashboard.putString("Shifts/Game State", HubShiftUtil.getShiftedShiftInfo().currentShift().toString());
+    //     SmartDashboard.putBoolean("Shifts/Active First?",
+    //         DriverStation.getAlliance().orElse(Alliance.Red) == HubShiftUtil.getFirstActiveAlliance()
+    //     );
+    // }
 
     // private void configureSysid() {
     //     joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
@@ -363,17 +367,17 @@ public class RobotContainer {
         // joystick.x().whileTrue(new DriveToPose(drivetrain, () -> new Pose2d(2, 2, Rotation2d.fromDegrees(90))));
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, 
-            () -> poseEstimator.getNumTags() >= 2, // turret.turretOnTarget() && turret.shooterAtSpeed() && indexer.getIsActive(), // shooting TODO indexer.isActive dont exist anymore
-            () -> false, // turret.turretOnTarget() && turret.shooterAtSpeed() && !indexer.getIsActive(), // ready to shoot
-            () -> false, // intake.rollerOn() && !intake.intakeIsIn(), // intaking
-            () -> false,  // aiming // prolly not needed ?
-            () -> poseEstimator.getNumTags() == 0, // no april tags
-            () -> false, // climb ready
-            () -> false, // intake.getDeployPosition() > 10.0, // intake deployed TODO 10.0 placeholder
-            () -> poseEstimator.getNumTags() == 1, //intake.intakeIsIn(), // safe
-            () -> false, // true, // idle
-            () -> false)); // startup
+        // ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, 
+        //     () -> poseEstimator.getNumTags() >= 2, // turret.turretOnTarget() && turret.shooterAtSpeed() && indexer.getIsActive(), // shooting TODO indexer.isActive dont exist anymore
+        //     () -> false, // turret.turretOnTarget() && turret.shooterAtSpeed() && !indexer.getIsActive(), // ready to shoot
+        //     () -> false, // intake.rollerOn() && !intake.intakeIsIn(), // intaking
+        //     () -> false,  // aiming // prolly not needed ?
+        //     () -> poseEstimator.getNumTags() == 0, // no april tags
+        //     () -> false, // climb ready
+        //     () -> false, // intake.getDeployPosition() > 10.0, // intake deployed TODO 10.0 placeholder
+        //     () -> poseEstimator.getNumTags() == 1, //intake.intakeIsIn(), // safe
+        //     () -> false, // true, // idle
+        //     () -> false)); // startup
     }
 
     
@@ -417,15 +421,17 @@ public class RobotContainer {
     private void startTargeting(boolean useIK) {
         enableTargeting(useIK);
         Translation2d target = new Translation2d(
-            SmartDashboard.getNumber(
-                turretTargetConstants.targetXKey,
-                turretTargetConstants.defaultTargetX
-            ),
-            SmartDashboard.getNumber(
-                turretTargetConstants.targetYKey,
-                turretTargetConstants.defaultTargetY
-            )
-        );
+            turretTargetConstants.defaultTargetX
+            // SmartDashboard.getNumber(
+            //     turretTargetConstants.targetXKey,
+            //     turretTargetConstants.defaultTargetX
+            // ),
+            , turretTargetConstants.defaultTargetY)
+            // SmartDashboard.getNumber(
+            //     turretTargetConstants.targetYKey,
+            //     turretTargetConstants.defaultTargetY
+            // )
+        ;
         if (fuelSimIK != null && useIK) {
             Translation3d launchPosition = fuelSimIK.getRobotLaunchPosition();
             Translation3d baseVelocity = fuelSimIK.computeLaunchVelocityToTarget(target);
