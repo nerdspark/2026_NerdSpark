@@ -6,6 +6,8 @@ package frc.robot.commands;
 
 import java.util.function.Supplier;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 // import com.ctre.phoenix6.controls.RainbowAnimation;
 // import com.ctre.phoenix6.controls.SolidColor;
 // import com.ctre.phoenix6.controls.StrobeAnimation;
@@ -21,18 +23,20 @@ import frc.robot.subsystems.PoseEstimatorSubsystem;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class UpdateLED extends Command {
   /** Creates a new UpdateLED. */
-  private boolean readyToShoot  ;
-  private boolean shooting  ;
-  private boolean intaking  ;
-  private boolean aiming  ;
-  private boolean noAprilTags ;
+  private boolean readyToShoot;
+  private boolean shooting;
+  private boolean intaking;
+  private boolean aiming;
+  private boolean noAprilTags;
   // private boolean lidClosed = false;
-  private boolean climbReady ;
+  private boolean climbReady;
   private boolean idle;
   private boolean intakeDeployed;
   private boolean safe;
   private boolean startup;
   // private double distance;
+
+  private boolean visionUpdate;
 
   private int pastStatus;
   private int status;
@@ -63,17 +67,19 @@ public class UpdateLED extends Command {
   // Supplier<Boolean> rightBSupplier;
   // // Supplier<Integer> statusSupplier;
 
-
-  
   public UpdateLED(LEDSubsystem ledSubsystem,
-  PoseEstimatorSubsystem poseEstimator
+      PoseEstimatorSubsystem poseEstimator
   // Supplier<Integer> statusSupplier
-      // Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
-      // Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
-      // Supplier<Boolean> leftSupplier, Supplier<Boolean> rightSupplier, Supplier<Boolean> leftBSupplier, Supplier<Boolean> rightBSupplier//, Supplier<Double> leftStickSupplier
-      ) {
+  // Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean>
+  // xSupplier,
+  // Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean>
+  // downSupplier,
+  // Supplier<Boolean> leftSupplier, Supplier<Boolean> rightSupplier,
+  // Supplier<Boolean> leftBSupplier, Supplier<Boolean> rightBSupplier//,
+  // Supplier<Double> leftStickSupplier
+  ) {
 
-        addRequirements(ledSubsystem);
+    addRequirements(ledSubsystem);
     // Use addRequirements() here to declare subsystem dependencies.
 
     this.poseEstimator = poseEstimator;
@@ -89,9 +95,8 @@ public class UpdateLED extends Command {
     // this.leftBSupplier = leftBSupplier;
     // this.rightBSupplier = rightBSupplier;
 
-
     // this.leftStickSupplier = leftStickSupplier;
-        // this.statusSupplier = statusSupplier;
+    // this.statusSupplier = statusSupplier;
   }
 
   // Called when the command is initially scheduled.
@@ -130,43 +135,49 @@ public class UpdateLED extends Command {
     // idle = leftBSupplier.get();
     // startup = rightBSupplier.get();
 
-    
-
     // if(noAprilTags) {
-    //   status = Constants.LED.noAprilTags;
+    // status = Constants.LED.noAprilTags;
     // } else if(safe) {
-    //   status = Constants.LED.safe;
+    // status = Constants.LED.safe;
     // } else if(shooting) {
-    //   status = Constants.LED.shooting;
+    // status = Constants.LED.shooting;
     // } else if(aiming) {
-    //   status = Constants.LED.aiming;
+    // status = Constants.LED.aiming;
     // } else if(readyToShoot) {
-    //   status = Constants.LED.readyToShoot;
+    // status = Constants.LED.readyToShoot;
     // } else if(climbReady) {
-    //   status = Constants.LED.climbReady;
+    // status = Constants.LED.climbReady;
     // } else if(intakeDeployed) {
-    //   status = Constants.LED.intakeDeployed;
+    // status = Constants.LED.intakeDeployed;
     // } else if(intaking) {
-    //   status = Constants.LED.intaking;
+    // status = Constants.LED.intaking;
     // } else if(idle) {
-    //   status = Constants.LED.idle;
+    // status = Constants.LED.idle;
     // } else if(startup) {
-    //   status = Constants.LED.startup;
+    // status = Constants.LED.startup;
     // } else {
-    //   status = 99;
+    // status = 99;
     // }
 
-    numTags = poseEstimator.getNumTags();
+    // *** NUM TAGS
+    // numTags = poseEstimator.getNumTags();
 
-    if(numTags >= 2) {
-      status = Constants.LED.shooting;
-    } else if (numTags == 1) {
-      status = Constants.LED.safe;
-    } else if (numTags == 0) {
-      status = Constants.LED.noAprilTags;
-    } else {
-      status = Constants.LED.startup;
-    }
+    // if(numTags >= 2) {
+    // status = Constants.LED.shooting;
+    // } else if (numTags == 1) {
+    // status = Constants.LED.safe;
+    // } else if (numTags == 0) {
+    // status = Constants.LED.noAprilTags;
+    // } else {
+    // status = Constants.LED.startup;
+    // }
+
+    // *** UPDATED 2S
+
+    visionUpdate = SmartDashboard.getBoolean("BL updated recently", false)
+        || SmartDashboard.getBoolean("BR updated recently", false)
+        || SmartDashboard.getBoolean("FL updated recently", false)
+        || SmartDashboard.getBoolean("FR updated recently", false);
 
     led.setStatus(status);
 

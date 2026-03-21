@@ -33,6 +33,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Constants;
 import frc.robot.Robot;
@@ -56,6 +57,8 @@ public class Vision {
     private Matrix<N3, N1> curStdDevs;
     private final EstimateConsumer estConsumer;
     private int visibleTags;
+    private boolean poseCorrected = false;
+    private double lastUpdatedTimestamp = 0;
 
     // Simulation
     private PhotonCameraSim cameraSim;
@@ -119,7 +122,16 @@ public class Vision {
                         var estStdDevs = getEstimationStdDevs();
 
                         estConsumer.accept(est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
+                        lastUpdatedTimestamp = est.timestampSeconds;
+
                     });
+            
+            if(Timer.getFPGATimestamp() - lastUpdatedTimestamp > Constants.Vision.visionCorrectedRecentlyThreshold) {
+                poseCorrected = false;
+            }
+            else {
+                poseCorrected = true;
+            }
         }
     }
 
@@ -132,9 +144,11 @@ public class Vision {
      */
     private void updateEstimationStdDevs(
             Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets) {
+        
         if (estimatedPose.isEmpty()) {
             // No pose input. Default to single-tag std devs
             curStdDevs = kSingleTagStdDevs;
+
 
         } else {
             // Pose present. Start running Heuristic
@@ -187,7 +201,8 @@ public class Vision {
 
                      double xydeviations = kXYStdDev * Math.pow(avgDist, 2) / numTags ;
                      double thetadeviations = kThetaStdDev * Math.pow(avgDist, 2) / numTags ;
-                     estStdDevs = VecBuilder.fill(xydeviations, xydeviations, thetadeviations);                } 
+                     estStdDevs = VecBuilder.fill(xydeviations, xydeviations, thetadeviations);              
+                      } 
                }
 
                 curStdDevs = estStdDevs;
@@ -230,5 +245,9 @@ public class Vision {
 
     public int getNumTags() {
         return visibleTags;
+    }
+
+    public boolean poseCorrectedRecently() {
+        return poseCorrected;
     }
 }

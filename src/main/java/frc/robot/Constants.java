@@ -81,6 +81,8 @@ public final class Constants {
 
         public static final double kPoseAmbiguityThreshold = 0.2;
         public static final double kSingleTagDistanceThreshold = 2.0;
+
+        public static final double visionCorrectedRecentlyThreshold = 2;
     }
 
     public static final class TurretConstants {

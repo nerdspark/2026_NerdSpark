@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static frc.robot.Constants.Vision.DOGLOG_ENABLED;
 import static frc.robot.Constants.Vision.USE_VISION;
 import static frc.robot.Constants.Vision.kCameraNameBackLeft;
 import static frc.robot.Constants.Vision.kCameraNameBackRight;
@@ -92,6 +93,14 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
             // DogLog.log("PoseEstimator/Formatted Pose", getFomattedPose());            
 
         }
+
+
+        SmartDashboard.putBoolean("BL updated recently", visionBackLeft.poseCorrectedRecently());
+        SmartDashboard.putBoolean("BR updated recently", visionBackRight.poseCorrectedRecently());
+        SmartDashboard.putBoolean("FL updated recently", visionFrontLeft.poseCorrectedRecently());
+        SmartDashboard.putBoolean("FR updated recently", visionFrontRight.poseCorrectedRecently());
+    
+
     }
     
 
