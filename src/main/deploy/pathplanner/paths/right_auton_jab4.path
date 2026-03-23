@@ -21,19 +21,14 @@
       },
       "prevControl": {
         "x": 1.2960485021398003,
-        "y": 1.4799629101283884
+        "y": 1.4799629101283882
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": null
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.5,
-      "rotationDegrees": 90.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -46,8 +41,8 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 38.29016319224311
+    "velocity": 0.0,
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "right_auton_jab",

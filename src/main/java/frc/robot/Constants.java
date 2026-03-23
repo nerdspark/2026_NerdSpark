@@ -296,7 +296,7 @@ public final class Constants {
         // >1.0 = magnifies efficiency → less correction → lower commanded RPS
         // <1.0 = shrinks efficiency → more correction → higher commanded RPS
         public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
-        public static final double defaultEfficiencyScale = 1.08;
+        public static final double defaultEfficiencyScale = 1.077;
 
         // Scales the robot's field-oriented velocity before SOTM subtraction.
         // 1.0 = use odometry as-is.

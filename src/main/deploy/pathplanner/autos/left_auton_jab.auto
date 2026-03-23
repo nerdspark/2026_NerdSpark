@@ -40,6 +40,12 @@
           "data": {
             "pathName": "left_auton_jab3"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "indexer_off"
+          }
         }
       ]
     }
