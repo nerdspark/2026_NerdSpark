@@ -363,8 +363,8 @@ public class RobotContainer {
         // joystick.x().whileTrue(new DriveToPose(drivetrain, () -> new Pose2d(2, 2, Rotation2d.fromDegrees(90))));
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, poseEstimator
-        ));
+        ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem));
+        
             // () -> poseEstimator.getNumTags() >= 2, // turret.turretOnTarget() && turret.shooterAtSpeed() && indexer.getIsActive(), // shooting *** indexer.isActive dont exist anymore
             // () -> false, // turret.turretOnTarget() && turret.shooterAtSpeed() && !indexer.getIsActive(), // ready to shoot
             // () -> false, // intake.rollerOn() && !intake.intakeIsIn(), // intaking

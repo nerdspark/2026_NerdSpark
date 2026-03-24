@@ -343,14 +343,14 @@ public static class LED {
         public static final int testJoystickID = 0;
 
         public static final int shooting = 1;
-        public static final int readyToShoot = 2;
-        public static final int intaking = 3;
-        public static final int aiming = 4;
+        // public static final int readyToShoot = 2;
+        // public static final int intaking = 3;
+        // public static final int aiming = 4;
         public static final int noAprilTags = 5;
-        public static final int climbReady = 6;
-        public static final int intakeDeployed = 7;
+        // public static final int climbReady = 6;
+        // public static final int intakeDeployed = 7;
         public static final int safe = 8;
-        public static final int idle = 9;
+        // public static final int idle = 9;
         public static final int startup = 10;
         public static final int reset = 11;
 }

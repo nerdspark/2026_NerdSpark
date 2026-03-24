@@ -350,27 +350,31 @@ public class LEDSubsystem extends SubsystemBase {
       case Constants.LED.shooting:
         solidColor(kGreen);
         break;
-      case Constants.LED.readyToShoot:
-        blinkColor(kGreen);
-        break;
-      case Constants.LED.intaking:
-        solidColor(kBlue);
-        break;
-      case Constants.LED.aiming:
-        solidColor(kCyan);
-        break;
+
+      // case Constants.LED.readyToShoot:
+      //   blinkColor(kGreen);
+      //   break;
+      // case Constants.LED.intaking:
+      //   solidColor(kBlue);
+      //   break;
+      // case Constants.LED.aiming:
+      //   solidColor(kCyan);
+      //   break;
+
       case Constants.LED.noAprilTags:
         solidColor(kRed); // make it blink red when implementing everything else
         break;
-      case Constants.LED.climbReady: //lined up for climb
-        solidColor(kMagenta); 
-        break;
-      case Constants.LED.idle:
-        solidColor(kWhite);
-        break;
-      case Constants.LED.intakeDeployed:
-        blinkColor(kBlue);
-        break;
+
+      // case Constants.LED.climbReady: //lined up for climb
+      //   solidColor(kMagenta); 
+      //   break;
+      // case Constants.LED.idle:
+      //   solidColor(kWhite);
+      //   break;
+      // case Constants.LED.intakeDeployed:
+      //   blinkColor(kBlue);
+      //   break;
+
       case Constants.LED.safe:
         solidColor(kYellow);
         break;
