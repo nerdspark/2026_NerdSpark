@@ -158,7 +158,10 @@ public class UpdateLED extends Command {
     flUpdated = SmartDashboard.getBoolean("FL Updated Recently", false);
     frUpdated = SmartDashboard.getBoolean("FR Updated Recently", false);
 
-    if(blUpdated || brUpdated || flUpdated || frUpdated) {
+    if (blUpdated && brUpdated || blUpdated && frUpdated || blUpdated && flUpdated 
+    || brUpdated && flUpdated || brUpdated && frUpdated || flUpdated && frUpdated) {
+	    status = Constants.LED.shooting;
+    } else if(blUpdated || brUpdated || flUpdated || frUpdated) {
       status = Constants.LED.readyToShoot;
     } else {
       status = Constants.LED.noAprilTags;

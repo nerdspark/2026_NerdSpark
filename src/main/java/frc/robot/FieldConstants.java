@@ -281,6 +281,11 @@ public class FieldConstants {
             (AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(15).get().getY())
                 - innerOpeningWidth / 2
                 - Units.inchesToMeters(0.75));
+
+    public static final double maxX = centerPoint.getX() + (depth / 2);
+    public static final double oppMaxX = oppCenterPoint.getX() - (depth / 2);
+    public static final double minY = centerPoint.getY() - (width / 2);
+    public static final double maxY = centerPoint.getY() + (width / 2);
   }
 
   public static class Depot {

@@ -5,14 +5,10 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
-import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -181,8 +177,8 @@ public class RobotContainer {
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         joystick.leftTrigger()
-            .whileTrue(new IndexerCommand(indexer, () -> -0.5, () -> turret.turretOnTarget()))
-            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+            .whileTrue(new IndexerCommand(indexer, () -> -0.5, () -> true))
+            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick.y()
             .whileTrue(new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()))
