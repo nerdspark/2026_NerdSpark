@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Amps;
 import static frc.robot.util.TurretUtil.*;
 
+import java.util.concurrent.BlockingDeque;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -46,13 +47,11 @@ import frc.robot.Constants.TurretConstants;
 import frc.robot.util.ShooterParams;
 import frc.robot.Constants.TurretConfig;
 import frc.robot.Constants;
-import frc.robot.Constants.turretTargetConstants;
 import frc.robot.FieldConstants;
 import frc.robot.Constants.ShootMode;
 import frc.robot.Constants.IkSolution;
 import frc.robot.Constants.MapTuneConstants;
 import frc.robot.Constants.SOTM;
-import frc.robot.Constants.SlippageCorrectionConstants;
 import frc.robot.util.ShooterOffsetMap;
 import frc.robot.util.SlippageCorrectionMap;
 
@@ -84,19 +83,22 @@ public class Turret extends SubsystemBase {
     private final ShooterOffsetMap offsetMap = new ShooterOffsetMap();
     private final SlippageCorrectionMap slippageMap = new SlippageCorrectionMap();
 
+    private final boolean isBlue;
+    private Pose2d turretPose = new Pose2d();
+
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> manualOverrider) {
         pose = robotPose;
         speed = speeds;
         manualOverride = manualOverrider;
 
+        isBlue = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
+
         canivore = new CANBus(Constants.CANbus);
-        
         spinMotor = new TalonFX(TurretConfig.spinMotorId, canivore);
         hoodMotor1 = new TalonFX(TurretConfig.hoodMotor1Id, canivore);
         hoodMotor2 = new TalonFX(TurretConfig.hoodMotor2Id, canivore);
         shootMotor1 = new TalonFX(TurretConfig.shootMotor1Id, canivore);
         shootMotor2 = new TalonFX(TurretConfig.shootMotor2Id, canivore);
-
         spinCancoder1 = new CANcoder(TurretConfig.spinCancoder1Id, canivore);
         spinCancoder2 = new CANcoder(TurretConfig.spinCancoder2Id, canivore);
 
@@ -354,10 +356,18 @@ public class Turret extends SubsystemBase {
     }
 
     public boolean turretOnTarget() {
+        double maxX = isBlue ? FieldConstants.Tower.maxX : FieldConstants.Tower.oppMaxX; 
+        double x = turretPose.getX();
+        double y = turretPose.getY();
+        boolean inX = isBlue ? x <= maxX : x >= maxX;
+        boolean inY = isBlue ? y >= FieldConstants.Tower.minY && y <= FieldConstants.Tower.maxY 
+                             : y >= FieldConstants.Tower.oppMinY && y <= FieldConstants.Tower.oppMaxY;
+        boolean climb = inX && inY;
         return Math.abs(spinPose.Position - spinMotor.getPosition().getValueAsDouble()) < 0.1389 
             && Math.abs(hoodPose.Position - hoodMotor1.getPosition().getValueAsDouble()) < 0.6944
             && (SmartDashboard.getBoolean("Shoot", false) 
-                || SmartDashboard.getBoolean("Pass", false));
+                || SmartDashboard.getBoolean("Pass", false))
+            && !climb;
     }
 
     private double applyShooterControl(double motorRps) {
@@ -587,9 +597,8 @@ public class Turret extends SubsystemBase {
         Pose2d currPose = pose.get();
         m_field.setRobotPose(currPose);
         Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(currPose.getRotation());
-        Pose2d turretPose = new Pose2d(currPose.getTranslation().plus(rotationOffset), currPose.getRotation());
+        turretPose = new Pose2d(currPose.getTranslation().plus(rotationOffset), currPose.getRotation());
 
-        boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
         SmartDashboard.putBoolean("Is Blue", isBlue);
         double shootLine = calcTriggerLine(
             isBlue ? FieldConstants.LinesVertical.blueShootLine : FieldConstants.LinesVertical.redShootLine, 
@@ -605,55 +614,38 @@ public class Turret extends SubsystemBase {
             Units.inchesToMeters(40), 
             isBlue ? false : true
         );
+        double oppPassLine = calcTriggerLine(
+            isBlue ? FieldConstants.LinesVertical.redShootLine : FieldConstants.LinesVertical.blueShootLine, 
+            turretPose.getX(), 
+            speeds.vxMetersPerSecond, 
+            Units.inchesToMeters(40), 
+            isBlue ? false : true
+        );
+        double oppNeurtalLine = calcTriggerLine(
+            isBlue ? FieldConstants.LinesVertical.redPassLine : FieldConstants.LinesVertical.bluePassLine, 
+            turretPose.getX(), 
+            speeds.vxMetersPerSecond, 
+            Units.inchesToMeters(40), 
+            isBlue ? true : false
+        );
 
         boolean shoot = isBlue ? turretPose.getX() < shootLine : turretPose.getX() > shootLine;
         SmartDashboard.putBoolean("Shoot", shoot);
-        boolean pass = isBlue ? turretPose.getX() > passLine : turretPose.getX() < passLine; 
+        boolean pass = isBlue ? turretPose.getX() > passLine && turretPose.getX() < oppNeurtalLine || turretPose.getX() > oppPassLine
+                       : turretPose.getX() < passLine && turretPose.getX() > oppNeurtalLine || turretPose.getX() < oppPassLine; 
         SmartDashboard.putBoolean("Pass", pass);
 
         if (shoot || pass) {
-            boolean forceTarget = SmartDashboard.getBoolean(
-                turretTargetConstants.enableKey,
-                turretTargetConstants.defaultEnable
-            );
-            forceTarget = false;
-
             Translation2d goalPose;
             Translation2d passPose;
             if (isBlue) {
                 goalPose = FieldConstants.Hub.topCenterPoint.toTranslation2d();
-                if (forceTarget) {
-                    double targetX = SmartDashboard.getNumber(
-                        turretTargetConstants.targetXKey,
-                        turretTargetConstants.defaultTargetX
-                    );
-                    double targetY = SmartDashboard.getNumber(
-                        turretTargetConstants.targetYKey,
-                        turretTargetConstants.defaultTargetY
-                    );
-
-                    passPose = new Translation2d(targetX, targetY);
-                } else {
-                    passPose = closerPoint(turretPose, FieldConstants.BluePass.left, FieldConstants.BluePass.right) 
+                passPose = closerPoint(turretPose, FieldConstants.BluePass.left, FieldConstants.BluePass.right) 
                         ? FieldConstants.BluePass.left : FieldConstants.BluePass.right;
-                }
             } else {
                 goalPose = FieldConstants.Hub.oppTopCenterPoint.toTranslation2d();
-                if (forceTarget) {
-                    double targetX = SmartDashboard.getNumber(
-                        turretTargetConstants.targetXKey,
-                        turretTargetConstants.defaultTargetX
-                    );
-                    double targetY = SmartDashboard.getNumber(
-                        turretTargetConstants.targetYKey,
-                        turretTargetConstants.defaultTargetY
-                    );
-
-                    passPose = new Translation2d(targetX, targetY);
-                } else {
-                    passPose = closerPoint(turretPose, FieldConstants.RedPass.left, FieldConstants.RedPass.right) 
+                passPose = closerPoint(turretPose, FieldConstants.RedPass.left, FieldConstants.RedPass.right) 
                         ? FieldConstants.RedPass.left : FieldConstants.RedPass.right;
-                }
             }
             
             Translation2d targetPose = shoot ? goalPose : passPose;

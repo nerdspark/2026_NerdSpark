@@ -3,7 +3,6 @@ package frc.robot.commands;
 import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Indexer;
 
 public class IndexerCommand extends InstantCommand {
@@ -35,7 +34,6 @@ public class IndexerCommand extends InstantCommand {
 
     @Override
     public void execute() {
-        // indexer.setIsActive(isActive.get().booleanValue());
         if (index.get()) {
             indexer.spinDex(rollerSpeed);
         } else {
