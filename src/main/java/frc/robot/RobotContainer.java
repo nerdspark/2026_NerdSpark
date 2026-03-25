@@ -25,7 +25,6 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -74,7 +73,7 @@ public class RobotContainer {
     private final SimFuelSubsystem fuelSim;
     private final SimFuelIKSubsystem fuelSimIK;
     private final RealFuelSubsystem fuelReal;
-    // public final LEDSubsystem ledSubsystem = new LEDSubsystem();
+    public final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
     private final Trigger intakeHome;
 
@@ -210,9 +209,6 @@ public class RobotContainer {
             SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
         }));
 
-
-        Color allianceColor = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue ? Color.kBlue : Color.kRed;
-        Color oppAllianceColor = allianceColor == Color.kBlue ? Color.kRed : Color.kBlue;
         // Start-of-shift warning
         for (int i = 1; i <= 5; i++) {
             double time = i; 
@@ -224,15 +220,12 @@ public class RobotContainer {
                         () -> {
                             joystick.setRumble(RumbleType.kBothRumble, 1.0);
                             joystick2.setRumble(RumbleType.kBothRumble, 1.0);
-                            // SmartDashboard.putString("Hub Active Alliance Color", allianceColor.toHexString());
                         },
                         () -> {
                             joystick.setRumble(RumbleType.kBothRumble, 0);
                             joystick2.setRumble(RumbleType.kBothRumble, 0);
-                            // SmartDashboard.putString("Hub Active Alliance Color", Color.kWhite.toHexString());
                         }
                     ).withTimeout(0.25)
-                    .andThen(Commands.runOnce(() -> SmartDashboard.putString("Hub Active Alliance Color", allianceColor.toHexString())))
                 );
         }
 
@@ -246,15 +239,12 @@ public class RobotContainer {
                         () -> {
                             joystick.setRumble(RumbleType.kBothRumble, 1.0);
                             joystick2.setRumble(RumbleType.kBothRumble, 1.0);
-                            // SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString());
                         },
                         () -> {
                             joystick.setRumble(RumbleType.kBothRumble, 0);
                             joystick2.setRumble(RumbleType.kBothRumble, 0);
-                            // SmartDashboard.putString("Hub Active Alliance Color", Color.kWhite.toHexString());
                         }
                     ).withTimeout(0.25)
-                    // .andThen(Commands.runOnce(() -> SmartDashboard.putString("Hub Active Alliance Color", oppAllianceColor.toHexString())))
                 );
         }
 
@@ -367,17 +357,17 @@ public class RobotContainer {
         // joystick.x().whileTrue(new DriveToPose(drivetrain, () -> new Pose2d(2, 2, Rotation2d.fromDegrees(90))));
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        // ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, 
-        //     () -> poseEstimator.getNumTags() >= 2, // turret.turretOnTarget() && turret.shooterAtSpeed() && indexer.getIsActive(), // shooting TODO indexer.isActive dont exist anymore
-        //     () -> false, // turret.turretOnTarget() && turret.shooterAtSpeed() && !indexer.getIsActive(), // ready to shoot
-        //     () -> false, // intake.rollerOn() && !intake.intakeIsIn(), // intaking
-        //     () -> false,  // aiming // prolly not needed ?
-        //     () -> poseEstimator.getNumTags() == 0, // no april tags
-        //     () -> false, // climb ready
-        //     () -> false, // intake.getDeployPosition() > 10.0, // intake deployed TODO 10.0 placeholder
-        //     () -> poseEstimator.getNumTags() == 1, //intake.intakeIsIn(), // safe
-        //     () -> false, // true, // idle
-        //     () -> false)); // startup
+        ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, 
+            () -> poseEstimator.getNumTags() >= 2, // turret.turretOnTarget() && turret.shooterAtSpeed() && indexer.getIsActive(), // shooting TODO indexer.isActive dont exist anymore
+            () -> false, // turret.turretOnTarget() && turret.shooterAtSpeed() && !indexer.getIsActive(), // ready to shoot
+            () -> false, // intake.rollerOn() && !intake.intakeIsIn(), // intaking
+            () -> false,  // aiming // prolly not needed ?
+            () -> poseEstimator.getNumTags() == 0, // no april tags
+            () -> false, // climb ready
+            () -> false, // intake.getDeployPosition() > 10.0, // intake deployed TODO 10.0 placeholder
+            () -> poseEstimator.getNumTags() == 1, //intake.intakeIsIn(), // safe
+            () -> false, // true, // idle
+            () -> false)); // startup
     }
 
     
