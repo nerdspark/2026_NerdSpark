@@ -340,11 +340,11 @@ public class Turret extends SubsystemBase {
     private void aimTurret(double neededAngle) {
         motorPositon = spinMotor.getPosition().getValueAsDouble();
         turretAngle = (motorPositon * TWO_PI) / TurretConstants.spinRatio;
-        // SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
+        SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
 
         neededAngle = normalizeRadians(neededAngle - Math.toRadians(145));
         neededAngle = Math.round(neededAngle * 100.0) / 100.0;
-        // SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
+        SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
 
         double motorRots = (neededAngle * TurretConstants.spinRatio) / TWO_PI;
 
@@ -406,7 +406,7 @@ public class Turret extends SubsystemBase {
         }
     }
 
-    private IkSolution solveIK(double distanceMeters) {
+    private IkSolution solveIK(double distanceMeters, boolean shooting) {
         if (distanceMeters <= 0.0) {
             return null;
         }
@@ -414,7 +414,13 @@ public class Turret extends SubsystemBase {
             AutoAimConstants.useEntryAngleIKKey,
             AutoAimConstants.defaultUseEntryAngleIK
         );
-        double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
+        double deltaHeight;
+        if (shooting) {
+            deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
+        } else {
+            deltaHeight = -getConfiguredMuzzleHeightMeters();
+            distanceMeters -= 1.5;
+        }
 
         DirectIkSelection selection = useEntryAngleIK
             ? solveEntryAngleIKDirect(distanceMeters, deltaHeight)
@@ -494,6 +500,22 @@ public class Turret extends SubsystemBase {
             return null;
         }
         return new DirectIkSelection(thetaDeg, motorRps, false);
+    }
+
+    public IkSolution solveWithRequiredAngle(double distanceMeters) {
+        if (distanceMeters <= 0.0) return null;
+        double hoodDeg = SmartDashboard.getNumber(
+            TurretConstants.fixedAngleHoodDegKey,
+            TurretConstants.fixedAngleHoodDegDefault
+        );
+        hoodDeg = Math.max(TurretConstants.hoodMinDegrees, Math.min(TurretConstants.hoodMaxDegrees, hoodDeg));
+        double launchAngleRad = Math.toRadians(90.0 - hoodDeg);
+        double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
+        double exitSpeedMps = solveIKSpeed(distanceMeters, launchAngleRad, deltaHeight);
+        if (!Double.isFinite(exitSpeedMps) || exitSpeedMps <= 0.0) return null;
+        double correctedRps = slippageMap.correctedMotorRps(launchMpsToMotorRps(exitSpeedMps));
+        if (!Double.isFinite(correctedRps) || correctedRps <= 0.0 || correctedRps > TurretConstants.shooterMaxMotorRps) return null;
+        return new IkSolution(hoodDeg, correctedRps);
     }
 
     private double solveIKSpeed(double distanceMeters, double thetaRad, double deltaHeightMeters) {
@@ -649,18 +671,20 @@ public class Turret extends SubsystemBase {
             );
                         
             SOTM sotm = null;
-            if (useIK && shoot) {
-                IkSolution ikSolution = solveIK(distance);
+            if (useIK) {
+                IkSolution ikSolution = solveIK(distance, shoot);
                 if (ikSolution != null) {
                     double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);
-                    double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
+                    double deltaHeight = shoot
+                        ? getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters()
+                        : -getConfiguredMuzzleHeightMeters();
                     double exitSpeedMps = solveIKSpeed(distance, launchAngleRad, deltaHeight);
                     sotm = applySOTMComp(exitSpeedMps, launchAngleRad, errorDegrees, speeds);
-                    double predictedEntryDeg = computeEntryAngleDeg(
-                        distance,
-                        motorRpsToLaunchSpeedMps(ikSolution.motorRps),
-                        Math.toRadians(ikSolution.hoodDegrees)
-                    );
+                    // double predictedEntryDeg = computeEntryAngleDeg(
+                    //     distance,
+                    //     motorRpsToLaunchSpeedMps(ikSolution.motorRps),
+                    //     Math.toRadians(ikSolution.hoodDegrees)
+                    // );
                     SmartDashboard.putBoolean("Turret/IK/HasSolution", true);
                     SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", ikSolution.hoodDegrees);
                     SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", ikSolution.motorRps);
@@ -686,7 +710,7 @@ public class Turret extends SubsystemBase {
             if (sotm != null) {
                 aimTurret(normalizeRadians(sotm.turretAngle - turretPose.getRotation().getRadians()));
                 hoodPose.Position = hoodDegreesToRotations(90 - Math.toDegrees(sotm.launchAngle));
-                if (useIK && shoot) {
+                if (useIK) {
                     velocity = applyShooterControl(slippageMap.correctedMotorRps(launchMpsToMotorRps(sotm.launchMps)));
                 } else {
                     velocity = applyShooterControl(launchMpsToMotorRps(sotm.launchMps));
