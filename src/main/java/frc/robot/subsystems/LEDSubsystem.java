@@ -351,7 +351,7 @@ public class LEDSubsystem extends SubsystemBase {
         solidColor(kGreen);
         break;
       case Constants.LED.readyToShoot:
-        blinkColor(kGreen);
+        solidColor(kMagenta);
         break;
       case Constants.LED.intaking:
         solidColor(kBlue);

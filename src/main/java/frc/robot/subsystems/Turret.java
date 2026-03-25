@@ -419,6 +419,7 @@ public class Turret extends SubsystemBase {
             deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
         } else {
             deltaHeight = -getConfiguredMuzzleHeightMeters();
+            distanceMeters -= 1.5;
         }
 
         DirectIkSelection selection = useEntryAngleIK
@@ -674,7 +675,9 @@ public class Turret extends SubsystemBase {
                 IkSolution ikSolution = solveIK(distance, shoot);
                 if (ikSolution != null) {
                     double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);
-                    double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
+                    double deltaHeight = shoot
+                        ? getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters()
+                        : -getConfiguredMuzzleHeightMeters();
                     double exitSpeedMps = solveIKSpeed(distance, launchAngleRad, deltaHeight);
                     sotm = applySOTMComp(exitSpeedMps, launchAngleRad, errorDegrees, speeds);
                     // double predictedEntryDeg = computeEntryAngleDeg(
