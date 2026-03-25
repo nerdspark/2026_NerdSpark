@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Amps;
 import static frc.robot.util.TurretUtil.*;
 
+import java.util.concurrent.BlockingDeque;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -83,6 +84,7 @@ public class Turret extends SubsystemBase {
     private final SlippageCorrectionMap slippageMap = new SlippageCorrectionMap();
 
     private final boolean isBlue;
+    private Pose2d turretPose = new Pose2d();
 
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> manualOverrider) {
         pose = robotPose;
@@ -355,9 +357,12 @@ public class Turret extends SubsystemBase {
 
     public boolean turretOnTarget() {
         double maxX = isBlue ? FieldConstants.Tower.maxX : FieldConstants.Tower.oppMaxX; 
-        double x = pose.get().getX();
-        double y = pose.get().getY();
-        boolean climb = (x <= maxX) && (y >= FieldConstants.Tower.minY && y <= FieldConstants.Tower.maxY);
+        double x = turretPose.getX();
+        double y = turretPose.getY();
+        boolean inX = isBlue ? x <= maxX : x >= maxX;
+        boolean inY = isBlue ? y >= FieldConstants.Tower.minY && y <= FieldConstants.Tower.maxY 
+                             : y >= FieldConstants.Tower.oppMinY && y <= FieldConstants.Tower.oppMaxY;
+        boolean climb = inX && inY;
         return Math.abs(spinPose.Position - spinMotor.getPosition().getValueAsDouble()) < 0.1389 
             && Math.abs(hoodPose.Position - hoodMotor1.getPosition().getValueAsDouble()) < 0.6944
             && (SmartDashboard.getBoolean("Shoot", false) 
@@ -592,7 +597,7 @@ public class Turret extends SubsystemBase {
         Pose2d currPose = pose.get();
         m_field.setRobotPose(currPose);
         Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(currPose.getRotation());
-        Pose2d turretPose = new Pose2d(currPose.getTranslation().plus(rotationOffset), currPose.getRotation());
+        turretPose = new Pose2d(currPose.getTranslation().plus(rotationOffset), currPose.getRotation());
 
         SmartDashboard.putBoolean("Is Blue", isBlue);
         double shootLine = calcTriggerLine(
