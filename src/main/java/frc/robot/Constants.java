@@ -115,6 +115,12 @@ public final class Constants {
 
         public static final double hoodRetractTime = 0.28;
 
+        public static final String fixedAngleHoodDegKey = "Turret/FixedAngle/HoodDeg";
+        public static final double fixedAngleHoodDegDefault = 35.0;
+
+        public static final String fixedAngleBandDistanceKey = "Turret/FixedAngle/BandDistanceMeters";
+        public static final double fixedAngleBandDistanceDefault = 4.0;
+
         public static InterpolatingTreeMap<Double, ShooterParams> map = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
             (start, end, t) -> start.interpolate(end, t)

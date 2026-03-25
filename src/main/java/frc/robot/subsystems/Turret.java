@@ -501,6 +501,22 @@ public class Turret extends SubsystemBase {
         return new DirectIkSelection(thetaDeg, motorRps, false);
     }
 
+    public IkSolution solveWithRequiredAngle(double distanceMeters) {
+        if (distanceMeters <= 0.0) return null;
+        double hoodDeg = SmartDashboard.getNumber(
+            TurretConstants.fixedAngleHoodDegKey,
+            TurretConstants.fixedAngleHoodDegDefault
+        );
+        hoodDeg = Math.max(TurretConstants.hoodMinDegrees, Math.min(TurretConstants.hoodMaxDegrees, hoodDeg));
+        double launchAngleRad = Math.toRadians(90.0 - hoodDeg);
+        double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
+        double exitSpeedMps = solveIKSpeed(distanceMeters, launchAngleRad, deltaHeight);
+        if (!Double.isFinite(exitSpeedMps) || exitSpeedMps <= 0.0) return null;
+        double correctedRps = slippageMap.correctedMotorRps(launchMpsToMotorRps(exitSpeedMps));
+        if (!Double.isFinite(correctedRps) || correctedRps <= 0.0 || correctedRps > TurretConstants.shooterMaxMotorRps) return null;
+        return new IkSolution(hoodDeg, correctedRps);
+    }
+
     private double solveIKSpeed(double distanceMeters, double thetaRad, double deltaHeightMeters) {
         double cos = Math.cos(thetaRad);
         if (Math.abs(cos) < 1e-6) {
