@@ -83,6 +83,10 @@ public final class Constants {
         public static final double kSingleTagDistanceThreshold = 2.0;
 
         public static final double visionCorrectedRecentlyThreshold = 2; 
+
+        public enum VisionStatus { 
+            BEST, OK, BAD
+        }
     }
 
     public static final class TurretConstants {
