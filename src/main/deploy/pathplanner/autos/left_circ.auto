@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "middle1"
+            "pathName": "left_circ1"
           }
         },
         {
@@ -21,15 +21,34 @@
                 }
               },
               {
+                "type": "wait",
+                "data": {
+                  "waitTime": 5.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "left_circ2"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
                 "type": "named",
                 "data": {
-                  "name": "indexer_on"
+                  "name": "intake_wiggle"
                 }
               },
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 8.0
+                  "waitTime": 4.64
                 }
               }
             ]
@@ -45,6 +64,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "left",
   "choreoAuto": false
 }

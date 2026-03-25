@@ -1,0 +1,50 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "middle_basic1"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "intake_wiggle"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "indexer_on"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 8.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "indexer_off"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "middle",
+  "choreoAuto": false
+}

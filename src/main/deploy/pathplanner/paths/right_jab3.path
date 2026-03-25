@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.66,
-        "y": 5.909
+        "x": 2.15,
+        "y": 1.894
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.8842453126007004,
-        "y": 5.909
+        "x": 1.697121807201503,
+        "y": 1.5566886524246173
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.867,
-        "y": 4.676
+        "x": 0.381,
+        "y": 0.953
       },
       "prevControl": {
-        "x": 3.0606640963420415,
-        "y": 4.503851349204046
+        "x": 0.5946041786846112,
+        "y": 1.0828970933026318
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,7 +31,19 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "intake_deploy",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_deploy"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
@@ -42,13 +54,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "reversed": false,
-  "folder": "left_auton_depot",
+  "folder": "right_jab",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 0.0
+    "velocity": 0.0,
+    "rotation": 124.114
   },
   "useDefaultConstraints": true
 }

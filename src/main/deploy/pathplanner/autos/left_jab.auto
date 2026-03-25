@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "left_auton_jab1"
+            "pathName": "left_jab1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "left_auton_jab2"
+            "pathName": "left_jab2"
           }
         },
         {
@@ -38,7 +38,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "left_auton_jab3"
+            "pathName": "left_jab3"
           }
         },
         {
@@ -51,6 +51,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "left",
   "choreoAuto": false
 }
