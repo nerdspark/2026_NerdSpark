@@ -135,10 +135,10 @@ public class Vision {
                 poseCorrected = false;
             }
             else {
-                if(Timer.getFPGATimestamp() - lastTimestampWhenTwoOrMoreTagsVisible < 2) {
+                if(Timer.getFPGATimestamp() - lastTimestampWhenTwoOrMoreTagsVisible < Constants.Vision.visionCorrectedRecentlyThreshold) {
                     visionStatus = VisionStatus.BEST;
                 }
-                else if(Timer.getFPGATimestamp() - lastTimestampWhenOnlyOneTagVisibleButGoodDistanceAndAmbiguity < 2) {
+                else if(Timer.getFPGATimestamp() - lastTimestampWhenOnlyOneTagVisibleButGoodDistanceAndAmbiguity < Constants.Vision.visionCorrectedRecentlyThreshold) {
                     visionStatus = VisionStatus.OK;
                 }
                 else {

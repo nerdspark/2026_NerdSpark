@@ -9,6 +9,7 @@ import static frc.robot.Constants.Vision.kRobotToCamBackLeft;
 import static frc.robot.Constants.Vision.kRobotToCamBackRight;
 import static frc.robot.Constants.Vision.kRobotToCamFrontLeft;
 import static frc.robot.Constants.Vision.kRobotToCamFrontRight;
+import static frc.robot.Constants.Vision.VisionStatus;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.Matrix;
@@ -21,6 +22,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
+import frc.robot.Constants.Vision.VisionStatus;
 
 
 public class PoseEstimatorSubsystem extends SubsystemBase {
@@ -34,6 +36,8 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
 
     Pose2d robotPose2d = new Pose2d();
     StructPublisher<Pose2d> publisher;
+
+    private VisionStatus overallVisionStatus = VisionStatus.BAD;
 
 
     //private final Pigeon2 gyro = new Pigeon2(TunerConstants.kPigeonId);
@@ -93,10 +97,28 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
 
         }
 
-        SmartDashboard.putBoolean("BL Updated Recently", visionBackLeft.poseCorrectedRecently());
-        SmartDashboard.putBoolean("BR Updated Recently", visionBackRight.poseCorrectedRecently());
-        SmartDashboard.putBoolean("FL Updated Recently", visionFrontLeft.poseCorrectedRecently());
-        SmartDashboard.putBoolean("FR Updated Recently", visionFrontRight.poseCorrectedRecently());
+        // SmartDashboard.putBoolean("BL Updated Recently", visionBackLeft.poseCorrectedRecently());
+        // SmartDashboard.putBoolean("BR Updated Recently", visionBackRight.poseCorrectedRecently());
+        // SmartDashboard.putBoolean("FL Updated Recently", visionFrontLeft.poseCorrectedRecently());
+        // SmartDashboard.putBoolean("FR Updated Recently", visionFrontRight.poseCorrectedRecently());
+
+        if(visionBackLeft.getVisionStatus() == VisionStatus.BEST ||
+            visionBackRight.getVisionStatus() == VisionStatus.BEST ||
+            visionFrontLeft.getVisionStatus() == VisionStatus.BEST||
+            visionFrontRight.getVisionStatus() == VisionStatus.BEST){
+
+            overallVisionStatus = VisionStatus.BEST;
+        }
+        else if (visionBackLeft.getVisionStatus() == VisionStatus.OK ||
+            visionBackRight.getVisionStatus() == VisionStatus.OK ||
+            visionFrontLeft.getVisionStatus() == VisionStatus.OK||
+            visionFrontRight.getVisionStatus() == VisionStatus.OK){
+            overallVisionStatus = VisionStatus.OK;
+            
+        }
+        else {
+            overallVisionStatus = VisionStatus.BAD;
+        }
 
     }
     
@@ -153,5 +175,11 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
          visionBackRight.getNumTags() + 
          visionFrontLeft.getNumTags() + 
          visionFrontRight.getNumTags(); 
+    }
+
+    public VisionStatus getOverallVisionStatus(){
+
+        return overallVisionStatus;
+
     }
 }
