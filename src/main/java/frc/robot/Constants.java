@@ -211,9 +211,12 @@ public final class Constants {
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;
+        public static final double kp = 10.0;
+        public static final double ki = 5.0;
         public static final double bangbangKp = 999999;
         public static final double peakDutyCycle = 1;
         public static final double peakTorque = 40;
+        public static final double peakReverseTorque = -40;
         public static final double shootStatorCurrentLimit = 140.0;
         public static final double shootSupplyCurrentLimit = 60.0;
     }

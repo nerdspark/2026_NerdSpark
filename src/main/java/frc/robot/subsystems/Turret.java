@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.TurretUtil.*;
 
 import java.util.concurrent.BlockingDeque;
@@ -13,6 +14,7 @@ import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.Follower;
@@ -27,6 +29,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
@@ -42,6 +45,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.util.ShooterParams;
@@ -184,12 +188,17 @@ public class Turret extends SubsystemBase {
                 .withPeakReverseDutyCycle(0)
             )
             .withSlot0(new Slot0Configs()
+                .withKP(TurretConfig.kp)
+                .withKI(TurretConfig.ki)
+                .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
+            )
+            .withSlot1(new Slot1Configs()
                 .withKP(TurretConfig.bangbangKp)
                 .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
             )
             .withTorqueCurrent(new TorqueCurrentConfigs()
                 .withPeakForwardTorqueCurrent(TurretConfig.peakTorque)
-                .withPeakReverseTorqueCurrent(0)
+                .withPeakReverseTorqueCurrent(TurretConfig.peakReverseTorque)
             )
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(Amps.of(TurretConfig.shootStatorCurrentLimit))
@@ -198,25 +207,9 @@ public class Turret extends SubsystemBase {
                 .withSupplyCurrentLimitEnable(true)
             )
         ;
-        TalonFXConfiguration shootConfig2 = new TalonFXConfiguration()
-            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast)
+        TalonFXConfiguration shootConfig2 = shootConfig1.clone()
+            .withMotorOutput(new MotorOutputConfigs()
                 .withInverted(InvertedValue.Clockwise_Positive)
-                .withPeakForwardDutyCycle(TurretConfig.peakDutyCycle)
-                .withPeakReverseDutyCycle(0)
-            )
-            .withSlot0(new Slot0Configs()
-                .withKP(TurretConfig.bangbangKp)
-                .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
-            )
-            .withTorqueCurrent(new TorqueCurrentConfigs()
-                .withPeakForwardTorqueCurrent(TurretConfig.peakTorque)
-                .withPeakReverseTorqueCurrent(0)
-            )
-            .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(Amps.of(TurretConfig.shootStatorCurrentLimit))
-                .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(Amps.of(TurretConfig.shootSupplyCurrentLimit))
-                .withSupplyCurrentLimitEnable(true)
             )
         ;
         CANcoderConfiguration spinCancoder1Config = new CANcoderConfiguration()
@@ -272,7 +265,7 @@ public class Turret extends SubsystemBase {
         motorPositon = (normalizeRadians(turretAngle) * TurretConstants.spinRatio) / TWO_PI;
         spinMotor.setPosition(motorPositon, 2.5);
 
-        // initMapTuneDashboard();
+        initMapTuneDashboard();
 
         // SmartDashboard.setDefaultNumber(
         //     SlippageCorrectionConstants.sotmVelocityScaleKey,
@@ -579,11 +572,11 @@ public class Turret extends SubsystemBase {
         return new SOTM(newTurretAngle, newLaunchAngle, newLaunchMps);
     }
 
-    // private void initMapTuneDashboard() {
-    //     SmartDashboard.setDefaultBoolean(MapTuneConstants.enableKey, MapTuneConstants.defaultEnable);
-    //     SmartDashboard.setDefaultNumber(MapTuneConstants.hoodKey, 0);
-    //     SmartDashboard.setDefaultNumber(MapTuneConstants.shooterKey, 0);
-    // }
+    private void initMapTuneDashboard() {
+        SmartDashboard.setDefaultBoolean(MapTuneConstants.enableKey, MapTuneConstants.defaultEnable);
+        SmartDashboard.setDefaultNumber(MapTuneConstants.hoodKey, 0);
+        SmartDashboard.setDefaultNumber(MapTuneConstants.shooterKey, 0);
+    }
 
     private void applyLiveMap() {
         hoodPose.Position = SmartDashboard.getNumber(MapTuneConstants.hoodKey, 0);
@@ -746,10 +739,10 @@ public class Turret extends SubsystemBase {
         // SmartDashboard.putNumber("Turret/SpinSupply", spinMotor.getSupplyCurrent().getValueAsDouble());
         hoodMotor1.setControl(hoodPose);
         // SmartDashboard.putNumber("Turret/HoodCurrentDeg", hoodRotationsToDegrees(hoodMotor1.getPosition().getValueAsDouble()));
-        // SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
         switch (mode) {
-            case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
-            case TORQUE_CURRENT_BANG_BANG -> shootMotor1.setControl(shootTorqueBang.withVelocity(velocity));
+            case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity).withSlot(1));
+            case TORQUE_CURRENT_BANG_BANG -> shootMotor1.setControl(shootTorqueBang.withVelocity(velocity).withSlot(0));
             case COAST -> shootMotor1.set(0);
         }
 
