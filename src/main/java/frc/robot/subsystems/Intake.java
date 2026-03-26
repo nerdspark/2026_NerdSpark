@@ -17,7 +17,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 
 public class Intake extends SubsystemBase {
@@ -26,7 +26,7 @@ public class Intake extends SubsystemBase {
 
     private final TalonFXSimState intakeSim;
 
-    private final MotionMagicVoltage m_mmRequest = new MotionMagicVoltage(0);
+    private final MotionMagicTorqueCurrentFOC m_mmRequest = new MotionMagicTorqueCurrentFOC(IntakeConstants.homePos);
     private final TorqueCurrentFOC torque1 = new TorqueCurrentFOC(0);
     private final TorqueCurrentFOC torque2 = new TorqueCurrentFOC(0);
     private TalonFXConfiguration deployMotorConfig = new TalonFXConfiguration();

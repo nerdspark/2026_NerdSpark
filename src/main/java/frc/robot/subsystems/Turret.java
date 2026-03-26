@@ -1,10 +1,8 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.TurretUtil.*;
 
-import java.util.concurrent.BlockingDeque;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -29,7 +27,6 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
@@ -45,7 +42,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.util.ShooterParams;
@@ -53,6 +49,7 @@ import frc.robot.Constants.TurretConfig;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.Constants.ShootMode;
+import frc.robot.Constants.SlippageCorrectionConstants;
 import frc.robot.Constants.IkSolution;
 import frc.robot.Constants.MapTuneConstants;
 import frc.robot.Constants.SOTM;
@@ -130,7 +127,7 @@ public class Turret extends SubsystemBase {
                 .withMotionMagicAcceleration(TurretConfig.spinAccel)
             )
             .withClosedLoopRamps(new ClosedLoopRampsConfigs()
-                .withVoltageClosedLoopRampPeriod(0.05))
+                .withVoltageClosedLoopRampPeriod(0.1))
         ;
         TalonFXConfiguration hoodConfig1 = new TalonFXConfiguration()
             .withMotorOutput(new MotorOutputConfigs()
@@ -422,7 +419,7 @@ public class Turret extends SubsystemBase {
             deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
         } else {
             deltaHeight = -getConfiguredMuzzleHeightMeters();
-            distanceMeters -= 1.5;
+            distanceMeters -= SlippageCorrectionConstants.passFudge;
         }
 
         DirectIkSelection selection = useEntryAngleIK
@@ -647,7 +644,7 @@ public class Turret extends SubsystemBase {
             double xError = targetPose.getX() - turretPose.getX();
             double yError = targetPose.getY() - turretPose.getY();
             double errorDegrees = Math.atan2(yError, xError);
-            double distance = turretPose.getTranslation().getDistance(targetPose);
+            double distance = turretPose.getTranslation().getDistance(targetPose) - Units.feetToMeters(1);
             SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
 
             boolean useIK = SmartDashboard.getBoolean(
@@ -663,7 +660,8 @@ public class Turret extends SubsystemBase {
                     double deltaHeight = shoot
                         ? getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters()
                         : -getConfiguredMuzzleHeightMeters();
-                    double exitSpeedMps = solveIKSpeed(distance, launchAngleRad, deltaHeight);
+                    double exitSpeedMps = solveIKSpeed(shoot ? distance : distance - SlippageCorrectionConstants.passFudge, 
+                        launchAngleRad, deltaHeight);
                     sotm = applySOTMComp(exitSpeedMps, launchAngleRad, errorDegrees, speeds);
                     // double predictedEntryDeg = computeEntryAngleDeg(
                     //     distance,
@@ -748,25 +746,4 @@ public class Turret extends SubsystemBase {
 
         SmartDashboard.putData("Turret Field", m_field);
     }
-
-    /**
-     * Runs the SysId Quasistatic test in the given direction for the routine
-     * specified by {@link #sysIdRoutineToApply}.
-     *
-     * @param direction Direction of the SysId Quasistatic test
-     * @return Command to run
-     */
-    // public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-    //     return sysIdRoutineToApply.quasistatic(direction);
-    // }
-
-    /**
-     * Runs the SysId Dynamic test in the given direction for the routine
-     * specified by {@link #m_sysIdRoutineToApply}.
-       * @param direction Direction of the SysId Dynamic test
-     * @return Command to run
-     */
-    // public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-    //     return sysIdRoutineToApply.dynamic(direction);
-    // }
 }

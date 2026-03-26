@@ -16,9 +16,9 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.util.ShooterParams;
 
 public final class Constants {
-    public static final double gyroP = 4.5; //7.4213
+    public static final double gyroP = 15.0;
     public static final double gyroI = 0.0;
-    public static final double gyroD = 0.8; //0.85752
+    public static final double gyroD = 1.0;
 
     public static final String CANbus = "canivore1";
 
@@ -101,7 +101,7 @@ public final class Constants {
         public static final double shooterMaxMotorRps = 6000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
-        public static final double targetHeightMeters = Units.inchesToMeters(72);
+        public static final double targetHeightMeters = Units.inchesToMeters(72) + Units.feetToMeters(1);
         public static final double hoodZeroDegrees = 21.0;
         public static final double hoodMinDegrees = 18.0;
         public static final double hoodMaxDegrees = 65.0;
@@ -181,9 +181,9 @@ public final class Constants {
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
         public static final double spinStatorCurrentLimit = 80.0;
-        public static final double spinSupplyCurrent = 30.0; // 35
+        public static final double spinSupplyCurrent = 30.0;
         public static final double spinVelocity = 50;
-        public static final double spinAccel = 160;
+        public static final double spinAccel = spinVelocity / 0.5; // Full speed in 0.5 sec
 
         public static final int spinCancoder1Id = 26;
         public static final double spinCancoder1Offset = -0.619873046875;
@@ -211,8 +211,8 @@ public final class Constants {
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;
-        public static final double kp = 10.0;
-        public static final double ki = 5.0;
+        public static final double kp = 11.0;
+        public static final double ki = 10.0;
         public static final double bangbangKp = 999999;
         public static final double peakDutyCycle = 1;
         public static final double peakTorque = 40;
@@ -279,7 +279,7 @@ public final class Constants {
 
         // Hood angle (degrees) held fixed during characterization shots.
         public static final String charHoodDegKey = "Slippage/CharHoodDeg";
-        public static final double defaultCharHoodDeg = 27.0;
+        public static final double defaultCharHoodDeg = 35.0; 
 
         // Height (meters) of the surface where characterization balls land.
         // 0.0 = floor shots. Set to targetHeightMeters if shooting at the hub.
@@ -288,8 +288,8 @@ public final class Constants {
 
         // Characterization data — HA=27 deg, floor shots.
         // X: commanded RPS   Y: observed horizontal distance (meters)
-        public static final double[] defaultCommandedRpsPoints    = { 10.0, 20.0,   30.0,   40.0,   50.0  };
-        public static final double[] defaultObservedDistanceMeters = {  0.784, 2.0828, 4.0132, 5.4864, 6.223 };
+        public static final double[] defaultCommandedRpsPoints    = {15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0};
+        public static final double[] defaultObservedDistanceMeters = {1.2446, 2.032, 3.1242, 4.9276, 5.9944, 7.239, 8.0518, 9.0678};
 
         // SmartDashboard keys for the parallel arrays.
         public static final String commandedRpsPointsKey      = "Slippage/CommandedRpsPoints";
@@ -299,13 +299,13 @@ public final class Constants {
         // +offset = curve shifts up → less correction → lower commanded RPS
         // -offset = curve shifts down → more correction → higher commanded RPS
         public static final String efficiencyOffsetKey = "Slippage/EfficiencyOffset";
-        public static final double defaultEfficiencyOffset = 0.0;
+        public static final double defaultEfficiencyOffset = 0.07;
 
         // Multiplicative scalar applied after the additive offset.
         // >1.0 = magnifies efficiency → less correction → lower commanded RPS
         // <1.0 = shrinks efficiency → more correction → higher commanded RPS
         public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
-        public static final double defaultEfficiencyScale = 1.077;
+        public static final double defaultEfficiencyScale = 1.0;
 
         // Scales the robot's field-oriented velocity before SOTM subtraction.
         // 1.0 = use odometry as-is.
@@ -313,13 +313,15 @@ public final class Constants {
         // <1.0 = treat robot as moving slower → increases commanded RPS while moving (shots landing long → decrease)
         public static final String sotmVelocityScaleKey = "Slippage/SotmVelocityScale";
         public static final double defaultSotmVelocityScale = 1.0;
+
+        public static final double passFudge = 1.5;
     }
 
     public static final class IntakeConstants {
         public static final int deployIntakeMotorId = 34;
         public static final int roller1id = 35;
         public static final int roller2id = 36;
-        public static final double kP = 2.0;
+        public static final double kP = 10.0;
         public static final double kI = 0.0;
         public static final double kD = 0.0;
         public static final double kG = 0.0;
@@ -330,15 +332,15 @@ public final class Constants {
         public static final double rollerSupplyCurrentLimit = 25.0;
         public static final double deployStatorCurrentLimit = 60.0;
         public static final double deploySupplyCurrentLimit = 30.0;
-        public static final double motionMagicCruiseVelocityFast = 60.0;
+        public static final double motionMagicCruiseVelocityFast = 75.0;
         public static final double motionMagicCruiseVelocitySlow = 25.0;
-        public static final double motionMagicAcceleration = 150.0;
+        public static final double motionMagicAcceleration = 200.0;
         public static final double motionMagicJerk = 0;
         public static final double homePos = -1.0;
-        public static final double deployPos = 15.0;
+        public static final double deployPos = 16.0;
         public static final double shakePos = 5;
-        public static final double lowerShakePos = 10;
-        public static final double upperShakePos = 6;
+        public static final double lowerShakePos = 12;
+        public static final double upperShakePos = 5;
     }
     
     public static class LED {

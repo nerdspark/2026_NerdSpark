@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems;
 
-import java.nio.channels.ShutdownChannelGroupException;
-
 import com.ctre.phoenix6.configs.CANdleConfiguration;
 import com.ctre.phoenix6.controls.ColorFlowAnimation;
 import com.ctre.phoenix6.controls.ControlRequest;
@@ -13,24 +11,14 @@ import com.ctre.phoenix6.controls.EmptyAnimation;
 import com.ctre.phoenix6.controls.RainbowAnimation;
 import com.ctre.phoenix6.controls.SolidColor;
 import com.ctre.phoenix6.controls.StrobeAnimation;
-import com.ctre.phoenix6.controls.TwinkleAnimation;
 import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.RGBWColor;
 import com.ctre.phoenix6.signals.StatusLedWhenActiveValue;
 import com.ctre.phoenix6.signals.StripTypeValue;
 
-import edu.wpi.first.util.sendable.Sendable;
-import edu.wpi.first.wpilibj.AddressableLED;
-import edu.wpi.first.wpilibj.AddressableLEDBuffer;
-import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
-import frc.robot.RobotContainer;
 
 import java.lang.Math;
 
@@ -55,7 +43,7 @@ public class LEDSubsystem extends SubsystemBase {
   // private boolean turretLocked = false;
   // private boolean startup = false;
   // private double distance;
-  private static int status = 10; // startup
+  private int status = 10; // startup
 
   private static final RGBWColor kGreen = new RGBWColor(54, 255, 0, 0);
   // private static final RGBWColor kYellow = new RGBWColor(255, 255, 0, 0);
@@ -101,7 +89,7 @@ public class LEDSubsystem extends SubsystemBase {
 
     // SmartDashboard.putData("LED state", (Sendable) m_candle.getAppliedControl());
 
-    CommandXboxController joystick = new CommandXboxController(Constants.LED.testJoystickID);
+    // CommandXboxController joystick = new CommandXboxController(Constants.LED.testJoystickID);
 
   }
 

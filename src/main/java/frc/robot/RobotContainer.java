@@ -70,7 +70,6 @@ public class RobotContainer {
     private final SimFuelIKSubsystem fuelSimIK;
     private final RealFuelSubsystem fuelReal;
     public final LEDSubsystem ledSubsystem = new LEDSubsystem();
-
     private final Trigger intakeHome;
 
     private final PIDController gyroController =
@@ -181,8 +180,8 @@ public class RobotContainer {
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick.y()
-            .whileTrue(new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()))
-            .whileFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+            .whileTrue(new IndexerCommand(indexer, () -> 1.0, () -> true)) //turret.turretOnTarget()
+            .whileFalse(new IndexerCommand(indexer, () -> 0.0, () -> true)); //turret.turretOnTarget()
         
         joystick.b().whileTrue(new IntakeJitterCommand(intake));
 
@@ -240,7 +239,7 @@ public class RobotContainer {
                             joystick.setRumble(RumbleType.kBothRumble, 0);
                             joystick2.setRumble(RumbleType.kBothRumble, 0);
                         }
-                    ).withTimeout(0.25)
+                    ).withTimeout(0.5)
                 );
         }
 
@@ -269,18 +268,18 @@ public class RobotContainer {
         ));
     }
 
-    // public void updateDashboard() {
-    //     SmartDashboard.putBoolean("Intake is in", intakeHome.getAsBoolean());
-    //     // Update from HubShiftUtil
-    //     SmartDashboard.putString("Shifts/Remaining Shift Time", 
-    //         String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))
-    //     );
-    //     SmartDashboard.putBoolean("Shifts/Shift Active", HubShiftUtil.getShiftedShiftInfo().active());
-    //     SmartDashboard.putString("Shifts/Game State", HubShiftUtil.getShiftedShiftInfo().currentShift().toString());
-    //     SmartDashboard.putBoolean("Shifts/Active First?",
-    //         DriverStation.getAlliance().orElse(Alliance.Red) == HubShiftUtil.getFirstActiveAlliance()
-    //     );
-    // }
+    public void updateDashboard() {
+
+        // Update from HubShiftUtil
+        SmartDashboard.putString("Shifts/Remaining Shift Time", 
+            String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))
+        );
+        SmartDashboard.putBoolean("Shifts/Shift Active", HubShiftUtil.getShiftedShiftInfo().active());
+        SmartDashboard.putString("Shifts/Game State", HubShiftUtil.getShiftedShiftInfo().currentShift().toString());
+        SmartDashboard.putBoolean("Shifts/Active First?",
+            DriverStation.getAlliance().orElse(Alliance.Red) == HubShiftUtil.getFirstActiveAlliance()
+        );
+    }
 
     // private void configureSysid() {
     //     joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
