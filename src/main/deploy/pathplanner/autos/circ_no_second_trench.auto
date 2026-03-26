@@ -11,22 +11,28 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "race",
           "data": {
             "commands": [
               {
                 "type": "named",
                 "data": {
-                  "name": "indexer_on"
+                  "name": "intake_wiggle"
                 }
               },
               {
-                "type": "named",
+                "type": "wait",
                 "data": {
-                  "name": "intake_wiggle"
+                  "waitTime": 5.0
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "tr_circ2"
           }
         }
       ]
