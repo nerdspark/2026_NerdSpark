@@ -204,14 +204,14 @@ public class Vision {
                             DogLog.log("Vision"+camera.getName()+"/PoseAmbiguity", targets.get(0).getPoseAmbiguity());
                             DogLog.log("Vision"+camera.getName()+"/estStdDevs", estStdDevs);
                         }
-                        lastTimestampWhenOnlyOneTagVisibleButGoodDistanceAndAmbiguity = Timer.getFPGATimestamp();
+                        lastTimestampWhenOnlyOneTagVisibleButGoodDistanceAndAmbiguity = estimatedPose.get().timestampSeconds;
                 } 
                 else {
 
                      double xydeviations = kXYStdDev * Math.pow(avgDist, 2) / numTags ;
                      double thetadeviations = kThetaStdDev * Math.pow(avgDist, 2) / numTags ;
                      estStdDevs = VecBuilder.fill(xydeviations, xydeviations, thetadeviations); 
-                     lastTimestampWhenTwoOrMoreTagsVisible = Timer.getFPGATimestamp();
+                     lastTimestampWhenTwoOrMoreTagsVisible = estimatedPose.get().timestampSeconds;
 
                     } 
                }
