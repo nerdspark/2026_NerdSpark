@@ -69,6 +69,7 @@ public class Turret extends SubsystemBase {
     private Supplier<Pose2d> pose;
     private Supplier<ChassisSpeeds> speed;
     private Supplier<Boolean> manualOverride;
+    private Pose2d turretPose;
 
     private double motorPositon;
     private double turretAngle = 0;
@@ -586,13 +587,17 @@ public class Turret extends SubsystemBase {
         applyShooterControl(velocity);
     }
 
+    public Pose2d getTurretPose() {
+        return turretPose;
+    }
+
     @Override
     public void periodic() {
         ChassisSpeeds speeds = speed.get();
         Pose2d currPose = pose.get();
         m_field.setRobotPose(currPose);
         Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(currPose.getRotation());
-        Pose2d turretPose = new Pose2d(currPose.getTranslation().plus(rotationOffset), currPose.getRotation());
+        turretPose = new Pose2d(currPose.getTranslation().plus(rotationOffset), currPose.getRotation());
 
         SmartDashboard.putBoolean("Is Blue", isBlue);
         double shootLine = calcTriggerLine(

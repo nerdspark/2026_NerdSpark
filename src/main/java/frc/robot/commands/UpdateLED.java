@@ -22,6 +22,7 @@ import frc.robot.Constants.Vision.VisionStatus;
 // import frc.robot.RobotContainer;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
+import frc.robot.subsystems.Turret;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class UpdateLED extends Command {
@@ -45,6 +46,7 @@ public class UpdateLED extends Command {
 
   LEDSubsystem led;
   PoseEstimatorSubsystem poseEstimator;
+  Turret turret;
   // CommandXboxController joystick = RobotContainer.joystick;
 
   // Supplier<Boolean> aSupplier;
@@ -63,12 +65,12 @@ public class UpdateLED extends Command {
  private boolean flUpdated;
  private boolean frUpdated;
 private double hubDistance;
-private double robotX;
-private double robotY;
+private double turretX;
+private double turretY;
 private VisionStatus visionStatus;
 
   
-  public UpdateLED(LEDSubsystem ledSubsystem, PoseEstimatorSubsystem poseEstimator //,
+  public UpdateLED(LEDSubsystem ledSubsystem, PoseEstimatorSubsystem poseEstimator, Turret turret //,
   // Supplier<Integer> statusSupplier
     // Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
     // Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
@@ -90,6 +92,7 @@ private VisionStatus visionStatus;
 
       this.led = ledSubsystem;
       this.poseEstimator = poseEstimator;
+      this.turret = turret;
 
 
   }
@@ -185,11 +188,11 @@ private VisionStatus visionStatus;
       break;
     }
 
-    robotX = poseEstimator.getCurrentPose().getX();
-    robotY = poseEstimator.getCurrentPose().getY();
+    turretX = turret.getTurretPose().getX(); //poseEstimator.getCurrentPose().getX();
+    turretY = turret.getTurretPose().getY(); //poseEstimator.getCurrentPose().getY();
     hubDistance = Math.hypot(
-    robotX - FieldConstants.Hub.topCenterPoint.getX(),
-    robotY - FieldConstants.Hub.topCenterPoint.getY());
+    turretX - FieldConstants.Hub.topCenterPoint.getX(),
+    turretY - FieldConstants.Hub.topCenterPoint.getY());
     
     if(hubDistance < Units.feetToMeters(Constants.LED.hubDistanceLimitFeet)) {
       status = Constants.LED.closeToBub;
