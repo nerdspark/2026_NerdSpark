@@ -4,9 +4,9 @@
 
 package frc.robot.commands;
 
-import java.nio.BufferOverflowException;
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 // import com.ctre.phoenix6.controls.RainbowAnimation;
@@ -17,8 +17,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 // import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
+import frc.robot.Constants.Vision.VisionStatus;
 // import frc.robot.RobotContainer;
 import frc.robot.subsystems.LEDSubsystem;
+import frc.robot.subsystems.PoseEstimatorSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class UpdateLED extends Command {
@@ -39,16 +42,9 @@ public class UpdateLED extends Command {
   
   private int status;
 
-  // private static final RGBWColor kGreen = new RGBWColor(0, 255, 0, 0);
-  // private static final RGBWColor kYellow = new RGBWColor(255, 255, 0, 0);
-  // private static final RGBWColor kRed = new RGBWColor(255, 0, 0, 0);
-  // private static final RGBWColor kBlack = new RGBWColor(0, 0, 0, 0);
-  // private static final RGBWColor kCyan = new RGBWColor(0, 255, 255, 0);
-  // private static final RGBWColor kMagenta = new RGBWColor(255, 0, 255, 0);
-  // private static final RGBWColor kBlue = new RGBWColor(0, 0, 255, 0);
-  // private static final RGBWColor kWhite = new RGBWColor(0, 0, 0, 255);
 
-  LEDSubsystem led = new LEDSubsystem();
+  LEDSubsystem led;
+  PoseEstimatorSubsystem poseEstimator;
   // CommandXboxController joystick = RobotContainer.joystick;
 
   // Supplier<Boolean> aSupplier;
@@ -62,13 +58,17 @@ public class UpdateLED extends Command {
   // Supplier<Boolean> leftBSupplier;
   // Supplier<Boolean> rightBSupplier;
 
- boolean blUpdated;
- boolean brUpdated;
- boolean flUpdated;
- boolean frUpdated;
+ private boolean blUpdated;
+ private boolean brUpdated;
+ private boolean flUpdated;
+ private boolean frUpdated;
+private double hubDistance;
+private double robotX;
+private double robotY;
+private VisionStatus visionStatus;
 
   
-  public UpdateLED(LEDSubsystem ledSubsystem //,
+  public UpdateLED(LEDSubsystem ledSubsystem, PoseEstimatorSubsystem poseEstimator //,
   // Supplier<Integer> statusSupplier
     // Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
     // Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
@@ -87,6 +87,9 @@ public class UpdateLED extends Command {
       // this.rightSupplier = rightSupplier;
       // this.leftBSupplier = leftBSupplier;
       // this.rightBSupplier = rightBSupplier;
+
+      this.led = ledSubsystem;
+      this.poseEstimator = poseEstimator;
 
 
   }
@@ -153,20 +156,45 @@ public class UpdateLED extends Command {
     //   status = 99;
     // }
 
-    blUpdated = SmartDashboard.getBoolean("BL Updated Recently", false);
-    brUpdated = SmartDashboard.getBoolean("BR Updated Recently", false);
-    flUpdated = SmartDashboard.getBoolean("FL Updated Recently", false);
-    frUpdated = SmartDashboard.getBoolean("FR Updated Recently", false);
+    // // UPDATED RECENTLY
+    // blUpdated = SmartDashboard.getBoolean("BL Updated Recently", false);
+    // brUpdated = SmartDashboard.getBoolean("BR Updated Recently", false);
+    // flUpdated = SmartDashboard.getBoolean("FL Updated Recently", false);
+    // frUpdated = SmartDashboard.getBoolean("FR Updated Recently", false);
 
-    if (blUpdated && brUpdated || blUpdated && frUpdated || blUpdated && flUpdated 
-    || brUpdated && flUpdated || brUpdated && frUpdated || flUpdated && frUpdated) {
-	    status = Constants.LED.shooting;
-    } else if(blUpdated || brUpdated || flUpdated || frUpdated) {
-      status = Constants.LED.readyToShoot;
-    } else {
-      status = Constants.LED.noAprilTags;
+    // if (blUpdated && brUpdated || blUpdated && frUpdated || blUpdated && flUpdated 
+    // || brUpdated && flUpdated || brUpdated && frUpdated || flUpdated && frUpdated) {
+	  //   status = Constants.LED.shooting;
+    // } else if(blUpdated || brUpdated || flUpdated || frUpdated) {
+    //   status = Constants.LED.readyToShoot;
+    // } else {
+    //   status = Constants.LED.noAprilTags;
+    // }
+
+    visionStatus = poseEstimator.getOverallVisionStatus(); // VISION STATUS
+
+    switch(visionStatus) {
+      case BEST:
+      status = Constants.LED.visionBest;
+      break;
+      case OK:
+      status = Constants.LED.visionOk;
+      break;
+      case BAD:
+      status = Constants.LED.visionBad;
+      break;
     }
+
+    robotX = poseEstimator.getCurrentPose().getX();
+    robotY = poseEstimator.getCurrentPose().getY();
+    hubDistance = Math.hypot(
+    robotX - FieldConstants.Hub.topCenterPoint.getX(),
+    robotY - FieldConstants.Hub.topCenterPoint.getY());
     
+    if(hubDistance < Units.feetToMeters(Constants.LED.hubDistanceLimitFeet)) {
+      status = Constants.LED.closeToBub;
+    }
+
     led.setStatus(status);
 
     System.out.println(status);
@@ -190,6 +218,5 @@ public class UpdateLED extends Command {
     return false;//pastStatus == status;
     
 
-    // return false;
   }
 }

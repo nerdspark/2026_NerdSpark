@@ -351,16 +351,17 @@ public final class Constants {
         public static final int framerate = 16; //fps
         public static final int totalLEDs = 100;
         public static final int testJoystickID = 0;
+        public static final double hubDistanceLimitFeet = 8.0;
 
-        public static final int shooting = 1;
-        public static final int readyToShoot = 2;
-        public static final int intaking = 3;
-        public static final int aiming = 4;
-        public static final int noAprilTags = 5;
-        public static final int climbReady = 6;
-        public static final int intakeDeployed = 7;
-        public static final int safe = 8;
-        public static final int idle = 9;
+        public static final int visionBest = 1;
+        public static final int visionOk = 2;
+        public static final int closeToBub = 3;
+        // public static final int aiming = 4;
+        public static final int visionBad = 5;
+        // public static final int climbReady = 6;
+        // public static final int intakeDeployed = 7;
+        // public static final int safe = 8;
+        // public static final int idle = 9;
         public static final int startup = 10;
         public static final int reset = 11;
     }
