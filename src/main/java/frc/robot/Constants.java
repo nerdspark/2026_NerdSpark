@@ -16,9 +16,9 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.util.ShooterParams;
 
 public final class Constants {
-    public static final double gyroP = 10.0;
+    public static final double gyroP = 8.3;
     public static final double gyroI = 0.0;
-    public static final double gyroD = 0.0;
+    public static final double gyroD = 0.22;
 
     public static final String CANbus = "canivore1";
 
@@ -174,10 +174,10 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 15.0;
-        public static final double spinKi = 0.0;
+        public static final double spinKp = 8.0;//15.0;
+        public static final double spinKi = 7.0;//6.8;//0.0;
         public static final double spinKd = 0.5;
-        public static final double spinKs = 0.35;
+        public static final double spinKs = 0.8;//0.35;
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
         public static final double spinStatorCurrentLimit = 80.0;
@@ -211,12 +211,12 @@ public final class Constants {
 
         public static final int shootMotor1Id = 30;
         public static final int shootMotor2Id = 31;
-        public static final double kp = 11.0;
-        public static final double ki = 10.0;
+        public static final double kp = 10.0;
+        public static final double ki = 40.0;
         public static final double bangbangKp = 999999;
         public static final double peakDutyCycle = 1;
-        public static final double peakTorque = 40;
-        public static final double peakReverseTorque = -40;
+        public static final double peakTorque = 30;
+        public static final double peakReverseTorque = -10;
         public static final double shootStatorCurrentLimit = 140.0;
         public static final double shootSupplyCurrentLimit = 60.0;
     }
@@ -257,6 +257,7 @@ public final class Constants {
 
     public static final class MapTuneConstants {
         public static final String enableKey = "MapTune/Enable";
+        public static final String spinKey = "MapTune/SpinTarget";
         public static final String hoodKey = "MapTune/HoodTarget";
         public static final String shooterKey = "MapTune/ShooterTarget";
         public static final boolean defaultEnable = false;
@@ -339,7 +340,7 @@ public final class Constants {
         public static final double homePos = -1.0;
         public static final double deployPos = 16.0;
         public static final double shakePos = 5;
-        public static final double lowerShakePos = 12;
+        public static final double lowerShakePos = 11;
         public static final double upperShakePos = 4;
     }
     

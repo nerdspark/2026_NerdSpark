@@ -51,7 +51,7 @@ import frc.robot.util.HubShiftUtil;
 
 public class RobotContainer {
     private final double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-    private final double maxAngularRate = RotationsPerSecond.of(1.25).in(RadiansPerSecond);
+    private final double maxAngularRate = RotationsPerSecond.of(1.2).in(RadiansPerSecond);
 
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
@@ -180,8 +180,8 @@ public class RobotContainer {
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick.y()
-            .whileTrue(new IndexerCommand(indexer, () -> 1.0, () -> true)) //turret.turretOnTarget()
-            .whileFalse(new IndexerCommand(indexer, () -> 0.0, () -> true)); //turret.turretOnTarget()
+            .whileTrue(new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()))
+            .whileFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
         
         joystick.b().whileTrue(new IntakeJitterCommand(intake));
 
