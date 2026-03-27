@@ -641,10 +641,17 @@ public class Turret extends SubsystemBase {
             Translation2d targetPose = shoot ? goalPose : passPose;
             m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
 
-            double xError = targetPose.getX() - turretPose.getX();
-            double yError = targetPose.getY() - turretPose.getY();
+            double predictionSeconds = SmartDashboard.getNumber(
+                SlippageCorrectionConstants.sotmPredictionSecondsKey,
+                SlippageCorrectionConstants.defaultSotmPredictionSeconds);
+            Translation2d predictedTranslation = turretPose.getTranslation().plus(
+                new Translation2d(speeds.vxMetersPerSecond * predictionSeconds,
+                                  speeds.vyMetersPerSecond * predictionSeconds));
+
+            double xError = targetPose.getX() - predictedTranslation.getX();
+            double yError = targetPose.getY() - predictedTranslation.getY();
             double errorDegrees = Math.atan2(yError, xError);
-            double distance = turretPose.getTranslation().getDistance(targetPose) - Units.feetToMeters(1);
+            double distance = predictedTranslation.getDistance(targetPose) - Units.feetToMeters(1);
             SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
 
             boolean useIK = SmartDashboard.getBoolean(
