@@ -24,7 +24,7 @@ public final class Constants {
 
     public static class Vision {
         public static boolean DOGLOG_ENABLED = false;
-        public static final boolean USE_VISION = false;
+        public static final boolean USE_VISION = true;
 
         public static final String kCameraNameFrontRight = "FrontRightCamera";
         public static final Transform3d kRobotToCamFrontRight = new Transform3d(

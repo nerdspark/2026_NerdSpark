@@ -74,13 +74,9 @@ public class SlippageCorrectionMap {
             return 1.0;
         }
         double offset =
-                SmartDashboard.getNumber(
-                SlippageCorrectionConstants.efficiencyOffsetKey,
-                SlippageCorrectionConstants.defaultEfficiencyOffset);
+                SlippageCorrectionConstants.defaultEfficiencyOffset;
         double scale =
-                SmartDashboard.getNumber(
-                SlippageCorrectionConstants.efficiencyScaleKey,
-                SlippageCorrectionConstants.defaultEfficiencyScale);
+                SlippageCorrectionConstants.defaultEfficiencyScale;
         Double factor = efficiencyMap.get(motorRps);
         return (factor != null && factor > 0.0) ? (factor + offset) * scale : 1.0;
     }
