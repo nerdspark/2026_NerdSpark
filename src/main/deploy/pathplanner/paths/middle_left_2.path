@@ -1,0 +1,129 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 6.215,
+        "y": 3.944
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.279549228944247,
+        "y": 4.804282325029655
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.677034400948993,
+        "y": 5.159335705812574
+      },
+      "prevControl": {
+        "x": 6.085883748517203,
+        "y": 4.95491103202847
+      },
+      "nextControl": {
+        "x": 4.904047943415187,
+        "y": 5.545828934579476
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.5036773428232504,
+        "y": 5.331482799525504
+      },
+      "prevControl": {
+        "x": 4.420680235980374,
+        "y": 5.538131338828519
+      },
+      "nextControl": {
+        "x": 2.7397746144721236,
+        "y": 5.159335705812572
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.904179743223965,
+        "y": 4.026
+      },
+      "prevControl": {
+        "x": 2.3309252669039155,
+        "y": 4.621376037959667
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.1296625222024903,
+      "rotationDegrees": 20.0
+    },
+    {
+      "waypointRelativePos": 1.9769094138543464,
+      "rotationDegrees": 20.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "intake_home",
+      "waypointRelativePos": 0.0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_home"
+        }
+      }
+    },
+    {
+      "name": "turret_automatic",
+      "waypointRelativePos": 0.5534308211473584,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "turret_automatic"
+        }
+      }
+    },
+    {
+      "name": "indexer_on",
+      "waypointRelativePos": 2.206974128233964,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "indexer_on"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 90.0
+  },
+  "reversed": false,
+  "folder": "middle_basic",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 90.0
+  },
+  "useDefaultConstraints": true
+}
