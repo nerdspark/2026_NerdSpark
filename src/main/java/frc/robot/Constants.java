@@ -315,6 +315,12 @@ public final class Constants {
         public static final String sotmVelocityScaleKey = "Slippage/SotmVelocityScale";
         public static final double defaultSotmVelocityScale = 1.0;
 
+        // How far ahead (seconds) to predict robot position for shooting calculations.
+        // Compensates for latency between aim computation and ball release.
+        // Increase if shots land behind target while moving; decrease if they land ahead.
+        public static final String sotmPredictionSecondsKey = "Slippage/SotmPredictionSeconds";
+        public static final double defaultSotmPredictionSeconds = 0.020;
+
         public static final double passFudge = 1.5;
     }
 
