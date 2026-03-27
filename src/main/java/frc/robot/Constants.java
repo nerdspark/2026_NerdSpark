@@ -16,9 +16,9 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.util.ShooterParams;
 
 public final class Constants {
-    public static final double gyroP = 15.0;
+    public static final double gyroP = 10.0;
     public static final double gyroI = 0.0;
-    public static final double gyroD = 1.0;
+    public static final double gyroD = 0.0;
 
     public static final String CANbus = "canivore1";
 
@@ -340,7 +340,7 @@ public final class Constants {
         public static final double deployPos = 16.0;
         public static final double shakePos = 5;
         public static final double lowerShakePos = 12;
-        public static final double upperShakePos = 5;
+        public static final double upperShakePos = 4;
     }
     
     public static class LED {
