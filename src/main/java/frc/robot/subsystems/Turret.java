@@ -437,9 +437,9 @@ public class Turret extends SubsystemBase {
         //     "Turret/IK/SolverMode",
         //     useEntryAngleIK ? "EntryAngle" : "MinimumSpeed"
         // );
-        SmartDashboard.putNumber("Turret/Slippage/TheoreticalMotorRps", theoreticalMotorRps);
-        SmartDashboard.putNumber("Turret/Slippage/CorrectedMotorRps", motorRps);
-        SmartDashboard.putNumber("Turret/Slippage/EfficiencyFactor", slippageFactor);
+        // SmartDashboard.putNumber("Turret/Slippage/TheoreticalMotorRps", theoreticalMotorRps);
+        // SmartDashboard.putNumber("Turret/Slippage/CorrectedMotorRps", motorRps);
+        // SmartDashboard.putNumber("Turret/Slippage/EfficiencyFactor", slippageFactor);
         return new IkSolution(hoodDeg, motorRps);
     }
 

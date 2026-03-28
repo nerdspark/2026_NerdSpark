@@ -92,19 +92,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "turret_stop",
-      "waypointRelativePos": 0,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "turret_stop"
-        }
-      }
-    },
-    {
       "name": "intake_deploy",
-      "waypointRelativePos": 1.8830146231721003,
+      "waypointRelativePos": 1.9890552995391602,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",

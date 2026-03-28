@@ -88,17 +88,6 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "turret_automatic",
-      "waypointRelativePos": 0.5534308211473584,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "turret_automatic"
-        }
-      }
-    },
-    {
       "name": "indexer_on",
       "waypointRelativePos": 2.206974128233964,
       "endWaypointRelativePos": null,
