@@ -334,10 +334,10 @@ public class Turret extends SubsystemBase {
         boolean inY = isBlue ? y >= FieldConstants.Tower.minY && y <= FieldConstants.Tower.maxY 
                              : y >= FieldConstants.Tower.oppMinY && y <= FieldConstants.Tower.oppMaxY;
         boolean climb = inX && inY;
-        return Math.abs(spinPose.Position - spinMotor.getPosition().getValueAsDouble()) < 0.1389 
-            && Math.abs(hoodPose.Position - hoodMotor1.getPosition().getValueAsDouble()) < 0.6944
-            && (SmartDashboard.getBoolean("Shoot", false) 
-                || SmartDashboard.getBoolean("Pass", false))
+        boolean pass = SmartDashboard.getBoolean("Pass", false);
+        return Math.abs(spinPose.Position - spinMotor.getPosition().getValueAsDouble()) < (pass ? 0.2778 : 0.1389) 
+            && Math.abs(hoodPose.Position - hoodMotor1.getPosition().getValueAsDouble()) < (pass ? 1.3889 : 0.6944)
+            && (SmartDashboard.getBoolean("Shoot", false) || pass)
             && !climb;
     }
 
@@ -641,7 +641,7 @@ public class Turret extends SubsystemBase {
                         
             SOTM sotm = null;
             if (useIK) {
-                //distance -= Units.feetToMeters(1);
+                distance -= Units.feetToMeters(0.5);
                 IkSolution ikSolution = solveIK(distance, shoot);
                 if (ikSolution != null) {
                     double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);

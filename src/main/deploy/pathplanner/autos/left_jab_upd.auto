@@ -7,19 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "right_jab1"
+            "pathName": "2left_jab1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "right_jab2"
+            "pathName": "2left_jab2"
           }
         },
         {
           "type": "race",
           "data": {
             "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "intake_wiggle"
+                }
+              },
               {
                 "type": "wait",
                 "data": {
@@ -32,19 +38,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "2right_jab3"
+            "pathName": "2left_jab3"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "2right_jab4"
+            "pathName": "2left_jab4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intake_wiggle"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "right",
+  "folder": "left",
   "choreoAuto": false
 }

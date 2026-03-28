@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 7.711,
-        "y": 1.9
+        "y": 1.8
       },
       "prevControl": null,
       "nextControl": {
         "x": 6.711138998931168,
-        "y": 0.537541624555107
+        "y": 0.43754162455510714
       },
       "isLocked": false,
       "linkedName": null
@@ -106,6 +106,17 @@
         "type": "named",
         "data": {
           "name": "indexer_on"
+        }
+      }
+    },
+    {
+      "name": "intake_wiggle",
+      "waypointRelativePos": 2.34,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_wiggle"
         }
       }
     }

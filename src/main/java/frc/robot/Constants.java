@@ -101,7 +101,7 @@ public final class Constants {
         public static final double shooterMaxMotorRps = 6000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
-        public static final double targetHeightMeters = Units.inchesToMeters(72);// + Units.feetToMeters(1);
+        public static final double targetHeightMeters = Units.inchesToMeters(72) + Units.feetToMeters(1);
         public static final double hoodZeroDegrees = 21.0;
         public static final double hoodMinDegrees = 21.0; //18
         public static final double hoodMaxDegrees = 90.0; //65
@@ -182,7 +182,7 @@ public final class Constants {
         public static final double spinKa = 0.0;
         public static final double spinStatorCurrentLimit = 80.0;
         public static final double spinSupplyCurrent = 30.0;
-        public static final double spinVelocity = 60;
+        public static final double spinVelocity = 90;
         public static final double spinAccel = spinVelocity / 0.5; // Full speed in 0.5 sec
 
         public static final int spinCancoder1Id = 26;
