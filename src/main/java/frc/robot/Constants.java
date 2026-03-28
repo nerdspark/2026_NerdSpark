@@ -335,7 +335,7 @@ public final class Constants {
         public static final double kS = 0.0;
         public static final double kA = 0.0;
         public static final double kV = 0.0;
-        public static final double rollerStatorCurrentLimit = 40.0;
+        public static final double rollerStatorCurrentLimit = 30.0; //40
         public static final double rollerSupplyCurrentLimit = 25.0;
         public static final double deployStatorCurrentLimit = 60.0;
         public static final double deploySupplyCurrentLimit = 30.0;
