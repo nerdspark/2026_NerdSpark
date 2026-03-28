@@ -7,13 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "right_jab1"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "right_jab2"
+            "pathName": "middle_basic1"
           }
         },
         {
@@ -23,13 +17,19 @@
               {
                 "type": "named",
                 "data": {
+                  "name": "indexer_on"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
                   "name": "intake_wiggle"
                 }
               },
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 6.0
+                  "waitTime": 4.0
                 }
               }
             ]
@@ -38,25 +38,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "right_jab3"
+            "pathName": "middle_left_1"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 1.75
+            "waitTime": 0
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "right_jab4"
+            "pathName": "middle_left_2"
           }
         },
         {
-          "type": "race",
+          "type": "parallel",
           "data": {
             "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "indexer_on"
+                }
+              },
               {
                 "type": "named",
                 "data": {
@@ -70,6 +76,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "right",
+  "folder": "middle",
   "choreoAuto": false
 }

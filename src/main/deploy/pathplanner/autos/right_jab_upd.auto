@@ -29,7 +29,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 6.0
+                  "waitTime": 5.0
                 }
               }
             ]
@@ -38,32 +38,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "right_jab3"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.75
+            "pathName": "2right_jab3"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "right_jab4"
+            "pathName": "2right_jab4"
           }
         },
         {
-          "type": "race",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "intake_wiggle"
-                }
-              }
-            ]
+            "name": "intake_wiggle"
           }
         }
       ]
