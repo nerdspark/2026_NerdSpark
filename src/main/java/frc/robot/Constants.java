@@ -182,7 +182,7 @@ public final class Constants {
         public static final double spinKa = 0.0;
         public static final double spinStatorCurrentLimit = 80.0;
         public static final double spinSupplyCurrent = 30.0;
-        public static final double spinVelocity = 90;
+        public static final double spinVelocity = 60;
         public static final double spinAccel = spinVelocity / 0.5; // Full speed in 0.5 sec
 
         public static final int spinCancoder1Id = 26;
@@ -275,6 +275,8 @@ public final class Constants {
     }
 
     public static final class SlippageCorrectionConstants {
+        public static final double defaultDistanceOffset = Units.feetToMeters(-1.0);
+
         public static final String enableKey = "Slippage/Enable";
         public static final boolean defaultEnable = true;
 

@@ -641,7 +641,7 @@ public class Turret extends SubsystemBase {
                         
             SOTM sotm = null;
             if (useIK) {
-                distance -= Units.feetToMeters(0.5);
+                distance -= Units.feetToMeters(1);
                 IkSolution ikSolution = solveIK(distance, shoot);
                 if (ikSolution != null) {
                     double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);

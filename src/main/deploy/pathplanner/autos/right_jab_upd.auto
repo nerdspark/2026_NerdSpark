@@ -21,6 +21,12 @@
           "data": {
             "commands": [
               {
+                "type": "named",
+                "data": {
+                  "name": "intake_wiggle"
+                }
+              },
+              {
                 "type": "wait",
                 "data": {
                   "waitTime": 4.0
@@ -39,6 +45,12 @@
           "type": "path",
           "data": {
             "pathName": "2right_jab4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intake_wiggle"
           }
         }
       ]
