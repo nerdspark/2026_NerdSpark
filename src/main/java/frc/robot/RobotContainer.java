@@ -172,17 +172,17 @@ public class RobotContainer {
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
         
-        joystick.rightTrigger().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
-            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
-            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
+        joystick.rightTrigger()
+            .onTrue(new InstantCommand(() -> intake.setRollerPower(-1.0), intake))
+            .onFalse(new InstantCommand(() -> intake.setRollerPower(1.0), intake));
 
         joystick.leftTrigger()
-            .whileTrue(new IndexerCommand(indexer, () -> -0.5, () -> true))
+            .whileTrue(new IndexerCommand(indexer, () -> -0.75, () -> true))
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick.y()
             .whileTrue(new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()))
-            .whileFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
         
         joystick.b().whileTrue(new IntakeJitterCommand(intake));
 
@@ -192,7 +192,9 @@ public class RobotContainer {
         joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
 
         joystick2.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
-        joystick2.rightTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(-1.0), intake));
+        joystick2.rightTrigger().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
+            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
         joystick2.b().or(intakeHome)
             .onTrue(new InstantCommand(() -> override = true))
             .onFalse(new InstantCommand(() -> override = false));
