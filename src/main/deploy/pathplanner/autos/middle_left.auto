@@ -42,6 +42,12 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 0
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "middle_left_2"

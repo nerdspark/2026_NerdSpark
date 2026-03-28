@@ -63,11 +63,11 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.9005328596802744,
-      "rotationDegrees": 20.0
+      "rotationDegrees": 35.0
     },
     {
       "waypointRelativePos": 1.539964476021325,
-      "rotationDegrees": 20.0
+      "rotationDegrees": 35.0
     },
     {
       "waypointRelativePos": 2.275310834813491,
@@ -91,6 +91,17 @@
   ],
   "pointTowardsZones": [],
   "eventMarkers": [
+    {
+      "name": "turret_stop",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "turret_stop"
+        }
+      }
+    },
     {
       "name": "intake_deploy",
       "waypointRelativePos": 1.8830146231721003,
