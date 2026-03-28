@@ -51,7 +51,7 @@ import frc.robot.util.HubShiftUtil;
 
 public class RobotContainer {
     private final double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-    private final double maxAngularRate = RotationsPerSecond.of(1.25).in(RadiansPerSecond);
+    private final double maxAngularRate = RotationsPerSecond.of(1.2).in(RadiansPerSecond);
 
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
@@ -165,6 +165,7 @@ public class RobotContainer {
 
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake))
+            .withTimeout(0.25)
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         joystick.leftBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
@@ -297,6 +298,7 @@ public class RobotContainer {
         NamedCommands.registerCommand(
             "intake_deploy",
             new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
+                .withTimeout(0.25)
                 .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake))
         );
         NamedCommands.registerCommand(

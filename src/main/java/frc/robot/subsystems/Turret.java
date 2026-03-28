@@ -154,28 +154,9 @@ public class Turret extends SubsystemBase {
                 .withMotionMagicAcceleration(TurretConfig.hoodAccel)
             )
         ;
-        TalonFXConfiguration hoodConfig2 = new TalonFXConfiguration()
-            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake)
+        TalonFXConfiguration hoodConfig2 = hoodConfig1.clone()
+            .withMotorOutput(new MotorOutputConfigs()
                 .withInverted(InvertedValue.Clockwise_Positive)
-            )
-            .withSlot0(new Slot0Configs()
-                .withKP(TurretConfig.hoodKp2)
-                .withKI(TurretConfig.hoodKi2)
-                .withKD(TurretConfig.hoodKd2)
-                .withKS(TurretConfig.hoodKs2)
-                .withKV(TurretConfig.hoodKv2)
-                .withKA(TurretConfig.hoodKa2)
-                .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
-            )
-            .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(Amps.of(TurretConfig.hoodStatorCurrentLimit))
-                .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(Amps.of(TurretConfig.hoodSupplyCurrentLimit))
-                .withSupplyCurrentLimitEnable(true)
-            )
-            .withMotionMagic(new MotionMagicConfigs()
-                .withMotionMagicCruiseVelocity(TurretConfig.hoodVelocity)
-                .withMotionMagicAcceleration(TurretConfig.hoodAccel)
             )
         ;
         TalonFXConfiguration shootConfig1 = new TalonFXConfiguration()
@@ -571,11 +552,13 @@ public class Turret extends SubsystemBase {
 
     private void initMapTuneDashboard() {
         SmartDashboard.setDefaultBoolean(MapTuneConstants.enableKey, MapTuneConstants.defaultEnable);
+        SmartDashboard.setDefaultNumber(MapTuneConstants.spinKey, 0);
         SmartDashboard.setDefaultNumber(MapTuneConstants.hoodKey, 0);
         SmartDashboard.setDefaultNumber(MapTuneConstants.shooterKey, 0);
     }
 
     private void applyLiveMap() {
+        spinPose.Position = SmartDashboard.getNumber(MapTuneConstants.spinKey, 0);
         hoodPose.Position = SmartDashboard.getNumber(MapTuneConstants.hoodKey, 0);
         velocity = SmartDashboard.getNumber(MapTuneConstants.shooterKey, 0);
         applyShooterControl(velocity);
@@ -641,10 +624,17 @@ public class Turret extends SubsystemBase {
             Translation2d targetPose = shoot ? goalPose : passPose;
             m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
 
-            double xError = targetPose.getX() - turretPose.getX();
-            double yError = targetPose.getY() - turretPose.getY();
+            double predictionSeconds = SmartDashboard.getNumber(
+                SlippageCorrectionConstants.sotmPredictionSecondsKey,
+                SlippageCorrectionConstants.defaultSotmPredictionSeconds);
+            Translation2d predictedTranslation = turretPose.getTranslation().plus(
+                new Translation2d(speeds.vxMetersPerSecond * predictionSeconds,
+                                  speeds.vyMetersPerSecond * predictionSeconds));
+            m_field.getObject("Prediction pose").setPose(predictedTranslation.getX(), predictedTranslation.getY(), turretPose.getRotation());
+            double xError = targetPose.getX() - predictedTranslation.getX();
+            double yError = targetPose.getY() - predictedTranslation.getY();
             double errorDegrees = Math.atan2(yError, xError);
-            double distance = turretPose.getTranslation().getDistance(targetPose) - Units.feetToMeters(1);
+            double distance = predictedTranslation.getDistance(targetPose);
             SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
 
             boolean useIK = SmartDashboard.getBoolean(
@@ -654,6 +644,7 @@ public class Turret extends SubsystemBase {
                         
             SOTM sotm = null;
             if (useIK) {
+                //distance -= Units.feetToMeters(1);
                 IkSolution ikSolution = solveIK(distance, shoot);
                 if (ikSolution != null) {
                     double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);
@@ -712,19 +703,19 @@ public class Turret extends SubsystemBase {
             // SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", false);
         }
 
+        if (manualOverride.get()) {
+            hoodPose.Position = 0;
+            velocity = 0;
+            mode = ShootMode.COAST;
+            brake = true;
+        }
+
         boolean mapTuneEnabled = SmartDashboard.getBoolean(
             MapTuneConstants.enableKey,
             MapTuneConstants.defaultEnable
         );
         if (mapTuneEnabled) {
             applyLiveMap();
-        }
-
-        if (manualOverride.get()) {
-            hoodPose.Position = 0;
-            velocity = 0;
-            mode = ShootMode.COAST;
-            brake = true;
         }
 
         if (brake) {

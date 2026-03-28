@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CANdleConfiguration;
 import com.ctre.phoenix6.controls.ColorFlowAnimation;
 import com.ctre.phoenix6.controls.ControlRequest;
@@ -19,11 +20,13 @@ import com.ctre.phoenix6.signals.StripTypeValue;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Constants.LED;
 
 import java.lang.Math;
 
 public class LEDSubsystem extends SubsystemBase {
-  private final CANdle m_candle = new CANdle(Constants.LED.id, Constants.CANbus);
+  private final CANBus can;
+  private final CANdle m_candle;
   private XboxController joystick;
 
   // addressable LED
@@ -64,9 +67,8 @@ public class LEDSubsystem extends SubsystemBase {
 
   // Creates a new LEDSubsystem
   public LEDSubsystem() {
-    /*
-     * 
-     */
+    can = new CANBus(Constants.CANbus);
+    m_candle = new CANdle(LED.id, can);
 
     /* Configure CANdle */
     var cfg = new CANdleConfiguration();

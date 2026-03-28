@@ -81,6 +81,8 @@ public class Intake extends SubsystemBase {
         deployMotor.getConfigurator().apply(deployMotorConfig);
         roller1.getConfigurator().apply(rollerMotorConfig);
         roller2.getConfigurator().apply(rollerMotorConfig);
+
+        deployMotor.setControl(m_mmRequest);
     }
 
     public Boolean intakeIsIn() {
