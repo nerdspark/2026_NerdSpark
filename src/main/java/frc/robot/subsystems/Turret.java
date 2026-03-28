@@ -243,7 +243,7 @@ public class Turret extends SubsystemBase {
         motorPositon = (normalizeRadians(turretAngle) * TurretConstants.spinRatio) / TWO_PI;
         spinMotor.setPosition(motorPositon, 2.5);
 
-        initMapTuneDashboard();
+        // initMapTuneDashboard();
 
         // SmartDashboard.setDefaultNumber(
         //     SlippageCorrectionConstants.sotmVelocityScaleKey,
@@ -485,10 +485,8 @@ public class Turret extends SubsystemBase {
 
     public IkSolution solveWithRequiredAngle(double distanceMeters) {
         if (distanceMeters <= 0.0) return null;
-        double hoodDeg = SmartDashboard.getNumber(
-            TurretConstants.fixedAngleHoodDegKey,
-            TurretConstants.fixedAngleHoodDegDefault
-        );
+        double hoodDeg =
+            TurretConstants.fixedAngleHoodDegDefault;
         hoodDeg = Math.max(TurretConstants.hoodMinDegrees, Math.min(TurretConstants.hoodMaxDegrees, hoodDeg));
         double launchAngleRad = Math.toRadians(90.0 - hoodDeg);
         double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
@@ -550,12 +548,12 @@ public class Turret extends SubsystemBase {
         return new SOTM(newTurretAngle, newLaunchAngle, newLaunchMps);
     }
 
-    private void initMapTuneDashboard() {
-        SmartDashboard.setDefaultBoolean(MapTuneConstants.enableKey, MapTuneConstants.defaultEnable);
-        SmartDashboard.setDefaultNumber(MapTuneConstants.spinKey, 0);
-        SmartDashboard.setDefaultNumber(MapTuneConstants.hoodKey, 0);
-        SmartDashboard.setDefaultNumber(MapTuneConstants.shooterKey, 0);
-    }
+    // private void initMapTuneDashboard() {
+    //     SmartDashboard.setDefaultBoolean(MapTuneConstants.enableKey, MapTuneConstants.defaultEnable);
+    //     SmartDashboard.setDefaultNumber(MapTuneConstants.spinKey, 0);
+    //     SmartDashboard.setDefaultNumber(MapTuneConstants.hoodKey, 0);
+    //     SmartDashboard.setDefaultNumber(MapTuneConstants.shooterKey, 0);
+    // }
 
     private void applyLiveMap() {
         spinPose.Position = SmartDashboard.getNumber(MapTuneConstants.spinKey, 0);
@@ -624,9 +622,8 @@ public class Turret extends SubsystemBase {
             Translation2d targetPose = shoot ? goalPose : passPose;
             m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
 
-            double predictionSeconds = SmartDashboard.getNumber(
-                SlippageCorrectionConstants.sotmPredictionSecondsKey,
-                SlippageCorrectionConstants.defaultSotmPredictionSeconds);
+            double predictionSeconds =
+                SlippageCorrectionConstants.defaultSotmPredictionSeconds;
             Translation2d predictedTranslation = turretPose.getTranslation().plus(
                 new Translation2d(speeds.vxMetersPerSecond * predictionSeconds,
                                   speeds.vyMetersPerSecond * predictionSeconds));

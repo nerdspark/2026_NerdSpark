@@ -96,6 +96,17 @@
           "name": "turret_stop"
         }
       }
+    },
+    {
+      "name": "indexer_off",
+      "waypointRelativePos": 0.0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "indexer_off"
+        }
+      }
     }
   ],
   "globalConstraints": {

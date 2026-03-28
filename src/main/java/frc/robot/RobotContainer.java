@@ -318,10 +318,10 @@ public class RobotContainer {
             new IntakeJitterCommand(intake));
         NamedCommands.registerCommand(
             "indexer_on", 
-            new IndexerCommand(indexer, () -> 1.0, () -> true)); //turret.turretOnTarget()
+            new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()));
         NamedCommands.registerCommand(
             "indexer_off", 
-            new IndexerCommand(indexer, () -> 0.0, () -> true)); //turret.turretOnTarget()
+            new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
         NamedCommands.registerCommand(
             "shoot_map", 
             new InstantCommand(() -> startTargeting(false)));
@@ -357,11 +357,6 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
 
         ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem)); // startup
-
-
-        //new--
-        // Automatically stop intake rollers when no button is pressed
-        intake.setDefaultCommand(Commands.run(() -> intake.setRollerPower(0.0), intake));
 
         // Automatically stop indexer when no button is pressed
         indexer.setDefaultCommand(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
