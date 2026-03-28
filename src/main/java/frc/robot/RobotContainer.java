@@ -165,6 +165,7 @@ public class RobotContainer {
 
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake))
+            .withTimeout(0.25)
             .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         joystick.leftBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
@@ -297,6 +298,7 @@ public class RobotContainer {
         NamedCommands.registerCommand(
             "intake_deploy",
             new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
+                .withTimeout(0.25)
                 .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake))
         );
         NamedCommands.registerCommand(

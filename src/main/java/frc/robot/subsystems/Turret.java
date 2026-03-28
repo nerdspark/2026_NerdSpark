@@ -630,11 +630,11 @@ public class Turret extends SubsystemBase {
             Translation2d predictedTranslation = turretPose.getTranslation().plus(
                 new Translation2d(speeds.vxMetersPerSecond * predictionSeconds,
                                   speeds.vyMetersPerSecond * predictionSeconds));
-
+            m_field.getObject("Prediction pose").setPose(predictedTranslation.getX(), predictedTranslation.getY(), turretPose.getRotation());
             double xError = targetPose.getX() - predictedTranslation.getX();
             double yError = targetPose.getY() - predictedTranslation.getY();
             double errorDegrees = Math.atan2(yError, xError);
-            double distance = predictedTranslation.getDistance(targetPose) - Units.feetToMeters(1);
+            double distance = predictedTranslation.getDistance(targetPose);
             SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
 
             boolean useIK = SmartDashboard.getBoolean(
@@ -644,6 +644,7 @@ public class Turret extends SubsystemBase {
                         
             SOTM sotm = null;
             if (useIK) {
+                //distance -= Units.feetToMeters(1);
                 IkSolution ikSolution = solveIK(distance, shoot);
                 if (ikSolution != null) {
                     double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);

@@ -166,7 +166,7 @@ public class UpdateLED extends Command {
     
     led.setStatus(status);
 
-    System.out.println(status);
+    // System.out.println(status);
   }
 
   // Called once the command ends or is interrupted.

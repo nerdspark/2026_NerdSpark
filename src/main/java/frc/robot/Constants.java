@@ -101,10 +101,10 @@ public final class Constants {
         public static final double shooterMaxMotorRps = 6000.0 / 60.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
-        public static final double targetHeightMeters = Units.inchesToMeters(72) + Units.feetToMeters(1);
+        public static final double targetHeightMeters = Units.inchesToMeters(72);// + Units.feetToMeters(1);
         public static final double hoodZeroDegrees = 21.0;
-        public static final double hoodMinDegrees = 18.0;
-        public static final double hoodMaxDegrees = 65.0;
+        public static final double hoodMinDegrees = 21.0; //18
+        public static final double hoodMaxDegrees = 90.0; //65
         public static final double ikEntryAngleTargetDeg = 40.0;
         public static final double ikEntryAngleToleranceDeg = 2.5;
         public static final double lowHoodPreferredDegrees = hoodMinDegrees;
@@ -174,15 +174,15 @@ public final class Constants {
 
     public static final class TurretConfig {
         public static final int spinMotorId = 25;
-        public static final double spinKp = 8.0;//15.0;
+        public static final double spinKp = 7.4;//8.0;//15.0;
         public static final double spinKi = 7.0;//6.8;//0.0;
         public static final double spinKd = 0.5;
-        public static final double spinKs = 0.8;//0.35;
+        public static final double spinKs = 0.78;//0.8;//0.35;
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
         public static final double spinStatorCurrentLimit = 80.0;
         public static final double spinSupplyCurrent = 30.0;
-        public static final double spinVelocity = 50;
+        public static final double spinVelocity = 60;
         public static final double spinAccel = spinVelocity / 0.5; // Full speed in 0.5 sec
 
         public static final int spinCancoder1Id = 26;
@@ -300,7 +300,7 @@ public final class Constants {
         // +offset = curve shifts up → less correction → lower commanded RPS
         // -offset = curve shifts down → more correction → higher commanded RPS
         public static final String efficiencyOffsetKey = "Slippage/EfficiencyOffset";
-        public static final double defaultEfficiencyOffset = 0.07;
+        public static final double defaultEfficiencyOffset = -4.6;
 
         // Multiplicative scalar applied after the additive offset.
         // >1.0 = magnifies efficiency → less correction → lower commanded RPS
@@ -319,7 +319,7 @@ public final class Constants {
         // Compensates for latency between aim computation and ball release.
         // Increase if shots land behind target while moving; decrease if they land ahead.
         public static final String sotmPredictionSecondsKey = "Slippage/SotmPredictionSeconds";
-        public static final double defaultSotmPredictionSeconds = 0.020;
+        public static final double defaultSotmPredictionSeconds = 0.18;
 
         public static final double passFudge = 1.5;
     }
@@ -346,7 +346,7 @@ public final class Constants {
         public static final double homePos = -1.0;
         public static final double deployPos = 16.0;
         public static final double shakePos = 5;
-        public static final double lowerShakePos = 11;
+        public static final double lowerShakePos = 8;
         public static final double upperShakePos = 4;
     }
     
