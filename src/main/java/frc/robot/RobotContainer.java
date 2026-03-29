@@ -12,6 +12,7 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -50,6 +51,10 @@ import frc.robot.util.FuelSim;
 import frc.robot.util.HubShiftUtil;
 
 public class RobotContainer {
+    private SlewRateLimiter xLimiter = new SlewRateLimiter(10);
+    private SlewRateLimiter yLimiter = new SlewRateLimiter(10);
+    private SlewRateLimiter zLimiter = new SlewRateLimiter(25);
+
     private final double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
     private final double maxAngularRate = RotationsPerSecond.of(1.2).in(RadiansPerSecond);
 
@@ -341,9 +346,9 @@ public class RobotContainer {
     private void configureDefaultCommands() {
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getRightY() * maxSpeed)
-                    .withVelocityY(-joystick.getRightX() * maxSpeed)
-                    .withRotationalRate(calcAutoTurn())
+                drive.withVelocityX(xLimiter.calculate(-joystick.getRightY() * maxSpeed))
+                    .withVelocityY(yLimiter.calculate(-joystick.getRightX() * maxSpeed))
+                    .withRotationalRate(zLimiter.calculate(calcAutoTurn()))
             )
         );
 
