@@ -302,7 +302,7 @@ public final class Constants {
         // +offset = curve shifts up → less correction → lower commanded RPS
         // -offset = curve shifts down → more correction → higher commanded RPS
         public static final String efficiencyOffsetKey = "Slippage/EfficiencyOffset";
-        public static final double defaultEfficiencyOffset = -4.62;
+        public static final double defaultEfficiencyOffset = -4.6;
 
         // Multiplicative scalar applied after the additive offset.
         // >1.0 = magnifies efficiency → less correction → lower commanded RPS

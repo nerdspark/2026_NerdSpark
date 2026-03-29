@@ -272,7 +272,6 @@ public class RobotContainer {
     }
 
     public void updateDashboard() {
-        SmartDashboard.putBoolean("Can Index", turret.turretOnTarget());
         // Update from HubShiftUtil
         SmartDashboard.putString("Shifts/Remaining Shift Time", 
             String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))

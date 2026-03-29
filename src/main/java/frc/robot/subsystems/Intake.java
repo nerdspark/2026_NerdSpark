@@ -23,9 +23,8 @@ import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 public class Intake extends SubsystemBase {
     private CANBus canivore;
     private TalonFX roller1, roller2, deployMotor;
-
+    
     private final TalonFXSimState intakeSim;
-
     private final MotionMagicTorqueCurrentFOC m_mmRequest = new MotionMagicTorqueCurrentFOC(IntakeConstants.homePos);
     private TalonFXConfiguration deployMotorConfig = new TalonFXConfiguration();
     private TalonFXConfiguration rollerMotorConfig = new TalonFXConfiguration();

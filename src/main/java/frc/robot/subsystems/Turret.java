@@ -762,5 +762,6 @@ public class Turret extends SubsystemBase {
         }
 
         SmartDashboard.putData("Turret Field", m_field);
+        SmartDashboard.putBoolean("Can Index", turretOnTarget());
     }
 }
