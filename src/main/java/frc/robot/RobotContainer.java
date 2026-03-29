@@ -177,11 +177,11 @@ public class RobotContainer {
             .onFalse(new InstantCommand(() -> intake.setRollerPower(1.0), intake));
 
         joystick.leftTrigger()
-            .whileTrue(new IndexerCommand(indexer, () -> -0.75, () -> true))
+            .whileTrue(new IndexerCommand(indexer, () -> -0.9, () -> true))
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick.y()
-            .whileTrue(new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()))
+            .whileTrue(new IndexerCommand(indexer, () -> 0.9, () -> turret.turretOnTarget()))
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
         
         joystick.b().whileTrue(new IntakeJitterCommand(intake));
@@ -272,7 +272,7 @@ public class RobotContainer {
     }
 
     public void updateDashboard() {
-
+        SmartDashboard.putBoolean("Can Index", turret.turretOnTarget());
         // Update from HubShiftUtil
         SmartDashboard.putString("Shifts/Remaining Shift Time", 
             String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))
@@ -318,7 +318,7 @@ public class RobotContainer {
             new IntakeJitterCommand(intake));
         NamedCommands.registerCommand(
             "indexer_on", 
-            new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()));
+            new IndexerCommand(indexer, () -> 0.9, () -> turret.turretOnTarget()));
         NamedCommands.registerCommand(
             "indexer_off", 
             new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));

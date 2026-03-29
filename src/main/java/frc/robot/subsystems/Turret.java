@@ -321,7 +321,7 @@ public class Turret extends SubsystemBase {
 
         double motorRots = (neededAngle * TurretConstants.spinRatio) / TWO_PI;
 
-        brake = Math.abs(motorRots - spinMotor.getPosition().getValueAsDouble()) <= 0.006944;
+        brake = Math.abs(motorRots - spinMotor.getPosition().getValueAsDouble()) < 0.004167; //0.006944;
 
         spinPose.Position = motorRots;
     }
@@ -439,7 +439,7 @@ public class Turret extends SubsystemBase {
         // );
         // SmartDashboard.putNumber("Turret/Slippage/TheoreticalMotorRps", theoreticalMotorRps);
         // SmartDashboard.putNumber("Turret/Slippage/CorrectedMotorRps", motorRps);
-        // SmartDashboard.putNumber("Turret/Slippage/EfficiencyFactor", slippageFactor);
+        SmartDashboard.putNumber("Turret/Slippage/EfficiencyFactor", slippageFactor);
         return new IkSolution(hoodDeg, motorRps);
     }
 
@@ -482,6 +482,15 @@ public class Turret extends SubsystemBase {
         }
         return new DirectIkSelection(thetaDeg, motorRps, false);
     }
+
+    // private DirectIkSelection solveRequiredPointsIKDirect( 
+    //     double distanceMeters,
+    //     double goalDistanceMeters,
+    //     double deltaHeightMeters,
+    //     double goalDeltaHeightMeters
+    // ){
+    //     double alpha
+    // }
 
     public IkSolution solveWithRequiredAngle(double distanceMeters) {
         if (distanceMeters <= 0.0) return null;
@@ -641,7 +650,7 @@ public class Turret extends SubsystemBase {
                         
             SOTM sotm = null;
             if (useIK) {
-                distance -= Units.feetToMeters(1);
+                distance -= Units.feetToMeters(0.8);
                 IkSolution ikSolution = solveIK(distance, shoot);
                 if (ikSolution != null) {
                     double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);

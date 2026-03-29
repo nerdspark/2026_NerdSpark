@@ -19,8 +19,6 @@ public class Indexer implements Subsystem {
     private final CANBus canivore;
     private final TalonFX passThroughMotor, spindexerMotor;
 
-    private final TorqueCurrentFOC foc = new TorqueCurrentFOC(0);
-
     public Indexer() {
         canivore = new CANBus(Constants.CANbus);
         passThroughMotor = new TalonFX(IndexConfig.passThroughId, canivore);
@@ -50,14 +48,12 @@ public class Indexer implements Subsystem {
     }
 
     public void spinDex(Supplier<Double> rollerSpeed) {
-        foc.Output = IndexConfig.statorCurretLimit * rollerSpeed.get();
-        passThroughMotor.setControl(foc);
-        spindexerMotor.setControl(foc);
+        passThroughMotor.set(rollerSpeed.get());
+        spindexerMotor.set(rollerSpeed.get());
     }
 
     public void stopPassThrough() {
-        foc.Output = 0;
-        passThroughMotor.setControl(foc);
-        spindexerMotor.setControl(foc);
+        passThroughMotor.set(0);
+        spindexerMotor.set(0);
     }
 }

@@ -108,6 +108,17 @@
           "name": "indexer_on"
         }
       }
+    },
+    {
+      "name": "intake_wiggle",
+      "waypointRelativePos": 2.34,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_wiggle"
+        }
+      }
     }
   ],
   "globalConstraints": {

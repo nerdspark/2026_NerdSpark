@@ -27,8 +27,6 @@ public class Intake extends SubsystemBase {
     private final TalonFXSimState intakeSim;
 
     private final MotionMagicTorqueCurrentFOC m_mmRequest = new MotionMagicTorqueCurrentFOC(IntakeConstants.homePos);
-    private final TorqueCurrentFOC torque1 = new TorqueCurrentFOC(0);
-    private final TorqueCurrentFOC torque2 = new TorqueCurrentFOC(0);
     private TalonFXConfiguration deployMotorConfig = new TalonFXConfiguration();
     private TalonFXConfiguration rollerMotorConfig = new TalonFXConfiguration();
 
@@ -98,10 +96,8 @@ public class Intake extends SubsystemBase {
     }
     
     public void setRollerPower(double power) {
-        torque1.Output = -(IntakeConstants.rollerStatorCurrentLimit * power);
-        torque2.Output = IntakeConstants.rollerStatorCurrentLimit * power;
-        roller1.setControl(torque1);
-        roller2.setControl(torque2);
+        roller1.set(-power);
+        roller2.set(power);
     }
 
     public boolean rollerOn() {
