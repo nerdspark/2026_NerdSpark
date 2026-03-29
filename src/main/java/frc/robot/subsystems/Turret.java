@@ -483,14 +483,34 @@ public class Turret extends SubsystemBase {
         return new DirectIkSelection(thetaDeg, motorRps, false);
     }
 
-    // private DirectIkSelection solveRequiredPointsIKDirect( 
-    //     double distanceMeters,
-    //     double goalDistanceMeters,
-    //     double deltaHeightMeters,
-    //     double goalDeltaHeightMeters
-    // ){
-    //     double alpha
-    // }
+    private DirectIkSelection solveTwoPointIKDirect(
+        double d1Meters, double deltaH1Meters,
+        double d2Meters, double deltaH2Meters
+    ) {
+        double denomK = d1Meters * d2Meters * (d2Meters - d1Meters);
+        if (Math.abs(denomK) < 1e-9) return null;
+
+        double K = (deltaH1Meters * d2Meters - deltaH2Meters * d1Meters) / denomK;
+        if (!Double.isFinite(K) || K <= 0.0) return null;
+
+        double tanTheta = (deltaH1Meters + K * d1Meters * d1Meters) / d1Meters;
+        double thetaRad = Math.atan(tanTheta);              // launch angle from horizontal
+        double hoodDeg  = 90.0 - Math.toDegrees(thetaRad); // hood convention: 90 − launchAngle
+
+        if (hoodDeg < TurretConstants.hoodMinDegrees || hoodDeg > TurretConstants.hoodMaxDegrees) {
+            return null;
+        }
+
+        double cosTheta = Math.cos(thetaRad);
+        double speedMps = Math.sqrt(9.80665 / (2.0 * K * cosTheta * cosTheta));
+        if (!Double.isFinite(speedMps) || speedMps <= 0.0) return null;
+
+        double motorRps = launchMpsToMotorRps(speedMps);
+        if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
+            return null;
+        }
+        return new DirectIkSelection(hoodDeg, motorRps, false);
+    }
 
     public IkSolution solveWithRequiredAngle(double distanceMeters) {
         if (distanceMeters <= 0.0) return null;
