@@ -36,6 +36,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Constants;
+import frc.robot.Constants.Vision.VisionStatus;
 import frc.robot.Robot;
 
 import java.util.List;
@@ -59,6 +60,9 @@ public class Vision {
     private int visibleTags;
     private boolean poseCorrected = false;
     private double lastUpdatedTimestamp = 0;
+    VisionStatus visionStatus = VisionStatus.BAD;
+    private double lastTimestampWhenTwoOrMoreTagsVisible = 0;
+    private double lastTimestampWhenOnlyOneTagVisibleButGoodDistanceAndAmbiguity = 0;
 
     // Simulation
     private PhotonCameraSim cameraSim;
@@ -100,6 +104,7 @@ public class Vision {
         Optional<EstimatedRobotPose> visionEst = Optional.empty();
         for (var result : camera.getAllUnreadResults()) {
             visionEst = photonEstimator.estimateCoprocMultiTagPose(result);
+
             if (visionEst.isEmpty()) {
                 visionEst = photonEstimator.estimateLowestAmbiguityPose(result);
             }
@@ -123,13 +128,23 @@ public class Vision {
 
                         estConsumer.accept(est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
                         lastUpdatedTimestamp = est.timestampSeconds;
+
                     });
             
-            if(Timer.getFPGATimestamp() - lastUpdatedTimestamp < Constants.Vision.visionCorrectedRecentlyThreshold) {
-                poseCorrected = true;
+            if(Timer.getFPGATimestamp() - lastUpdatedTimestamp > Constants.Vision.visionCorrectedRecentlyThreshold) {
+                poseCorrected = false;
             }
             else {
-                poseCorrected = false;
+                if(Timer.getFPGATimestamp() - lastTimestampWhenTwoOrMoreTagsVisible < Constants.Vision.visionCorrectedRecentlyThreshold) {
+                    visionStatus = VisionStatus.BEST;
+                }
+                else if(Timer.getFPGATimestamp() - lastTimestampWhenOnlyOneTagVisibleButGoodDistanceAndAmbiguity < Constants.Vision.visionCorrectedRecentlyThreshold) {
+                    visionStatus = VisionStatus.OK;
+                }
+                else {
+                    visionStatus = VisionStatus.BAD;
+                }
+                poseCorrected = true;
             }
         }
     }
@@ -143,9 +158,11 @@ public class Vision {
      */
     private void updateEstimationStdDevs(
             Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets) {
+        
         if (estimatedPose.isEmpty()) {
             // No pose input. Default to single-tag std devs
             curStdDevs = kSingleTagStdDevs;
+
 
         } else {
             // Pose present. Start running Heuristic
@@ -179,26 +196,24 @@ public class Vision {
                 // Increase std devs based on (average) distance
                 if (numTags == 1 && avgDist > Constants.Vision.kSingleTagDistanceThreshold)
                     estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
-                else if (numTags == 1 && avgDist < Constants.Vision.kSingleTagDistanceThreshold) {
-
-                    if(estimatedPose.get().strategy == PoseStrategy.PNP_DISTANCE_TRIG_SOLVE || 
-                          (estimatedPose.get().strategy == PoseStrategy.LOWEST_AMBIGUITY && targets.get(0).getPoseAmbiguity() < kPoseAmbiguityThreshold)) {
+                else if (numTags == 1 && avgDist < Constants.Vision.kSingleTagDistanceThreshold && targets.get(0).getPoseAmbiguity() < kPoseAmbiguityThreshold) {
                         double xydeviations = kXYStdDev * Math.pow(avgDist, 2) / numTags ;
-                            double thetadeviations = kThetaStdDev * Math.pow(avgDist, 2) / numTags ;
-                            estStdDevs = VecBuilder.fill(xydeviations, xydeviations, thetadeviations);
-                            if (Constants.Vision.DOGLOG_ENABLED){
+                        double thetadeviations = kThetaStdDev * Math.pow(avgDist, 2) / numTags ;
+                        estStdDevs = VecBuilder.fill(xydeviations, xydeviations, thetadeviations);
+                        if (Constants.Vision.DOGLOG_ENABLED){
                             DogLog.log("Vision"+camera.getName()+"/PoseAmbiguity", targets.get(0).getPoseAmbiguity());
                             DogLog.log("Vision"+camera.getName()+"/estStdDevs", estStdDevs);
                         }
-                    }else{
-                        estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
-                    }
-                }
+                        lastTimestampWhenOnlyOneTagVisibleButGoodDistanceAndAmbiguity = estimatedPose.get().timestampSeconds;
+                } 
                 else {
 
                      double xydeviations = kXYStdDev * Math.pow(avgDist, 2) / numTags ;
                      double thetadeviations = kThetaStdDev * Math.pow(avgDist, 2) / numTags ;
-                     estStdDevs = VecBuilder.fill(xydeviations, xydeviations, thetadeviations);                } 
+                     estStdDevs = VecBuilder.fill(xydeviations, xydeviations, thetadeviations); 
+                     lastTimestampWhenTwoOrMoreTagsVisible = estimatedPose.get().timestampSeconds;
+
+                    } 
                }
 
                 curStdDevs = estStdDevs;
@@ -245,5 +260,9 @@ public class Vision {
 
     public boolean poseCorrectedRecently() {
         return poseCorrected;
+    }
+
+    public VisionStatus getVisionStatus() {
+        return visionStatus;
     }
 }

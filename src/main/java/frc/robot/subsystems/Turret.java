@@ -71,6 +71,7 @@ public class Turret extends SubsystemBase {
     private Supplier<Pose2d> pose;
     private Supplier<ChassisSpeeds> speed;
     private Supplier<Boolean> manualOverride;
+    private Pose2d turretPose;
 
     private double motorPositon;
     private double turretAngle = 0;
@@ -589,6 +590,10 @@ public class Turret extends SubsystemBase {
         hoodPose.Position = SmartDashboard.getNumber(MapTuneConstants.hoodKey, 0);
         velocity = SmartDashboard.getNumber(MapTuneConstants.shooterKey, 0);
         applyShooterControl(velocity);
+    }
+
+    public Pose2d getTurretPose() {
+        return turretPose;
     }
 
     @Override
