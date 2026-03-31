@@ -12,6 +12,7 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -50,8 +51,12 @@ import frc.robot.util.FuelSim;
 import frc.robot.util.HubShiftUtil;
 
 public class RobotContainer {
+    private SlewRateLimiter xLimiter = new SlewRateLimiter(10);
+    private SlewRateLimiter yLimiter = new SlewRateLimiter(10);
+    private SlewRateLimiter zLimiter = new SlewRateLimiter(25);
+
     private final double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-    private final double maxAngularRate = RotationsPerSecond.of(1.25).in(RadiansPerSecond);
+    private final double maxAngularRate = RotationsPerSecond.of(1.2).in(RadiansPerSecond);
 
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
@@ -70,7 +75,6 @@ public class RobotContainer {
     private final SimFuelIKSubsystem fuelSimIK;
     private final RealFuelSubsystem fuelReal;
     public final LEDSubsystem ledSubsystem = new LEDSubsystem();
-
     private final Trigger intakeHome;
 
     private final PIDController gyroController =
@@ -166,23 +170,24 @@ public class RobotContainer {
 
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake))
-            .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake)));
+            .withTimeout(0.25)
+            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
 
         joystick.leftBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.0), intake)));
         
-        joystick.rightTrigger().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
-            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
-            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
+        joystick.rightTrigger()
+            .onTrue(new InstantCommand(() -> intake.setRollerPower(-1.0), intake))
+            .onFalse(new InstantCommand(() -> intake.setRollerPower(1.0), intake));
 
         joystick.leftTrigger()
-            .whileTrue(new IndexerCommand(indexer, () -> -0.5, () -> true))
+            .whileTrue(new IndexerCommand(indexer, () -> -0.9, () -> true))
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick.y()
-            .whileTrue(new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()))
-            .whileFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+            .whileTrue(new IndexerCommand(indexer, () -> 0.9, () -> turret.turretOnTarget()))
+            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
         
         joystick.b().whileTrue(new IntakeJitterCommand(intake));
 
@@ -192,7 +197,9 @@ public class RobotContainer {
         joystick.povRight().onTrue(new InstantCommand(() -> target = Math.PI / 2.0));
 
         joystick2.leftTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(0.0), intake));
-        joystick2.rightTrigger().onTrue(new InstantCommand(() -> intake.setRollerPower(-1.0), intake));
+        joystick2.rightTrigger().whileTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
+            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
         joystick2.b().or(intakeHome)
             .onTrue(new InstantCommand(() -> override = true))
             .onFalse(new InstantCommand(() -> override = false));
@@ -240,7 +247,7 @@ public class RobotContainer {
                             joystick.setRumble(RumbleType.kBothRumble, 0);
                             joystick2.setRumble(RumbleType.kBothRumble, 0);
                         }
-                    ).withTimeout(0.25)
+                    ).withTimeout(0.5)
                 );
         }
 
@@ -269,18 +276,17 @@ public class RobotContainer {
         ));
     }
 
-    // public void updateDashboard() {
-    //     SmartDashboard.putBoolean("Intake is in", intakeHome.getAsBoolean());
-    //     // Update from HubShiftUtil
-    //     SmartDashboard.putString("Shifts/Remaining Shift Time", 
-    //         String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))
-    //     );
-    //     SmartDashboard.putBoolean("Shifts/Shift Active", HubShiftUtil.getShiftedShiftInfo().active());
-    //     SmartDashboard.putString("Shifts/Game State", HubShiftUtil.getShiftedShiftInfo().currentShift().toString());
-    //     SmartDashboard.putBoolean("Shifts/Active First?",
-    //         DriverStation.getAlliance().orElse(Alliance.Red) == HubShiftUtil.getFirstActiveAlliance()
-    //     );
-    // }
+    public void updateDashboard() {
+        // Update from HubShiftUtil
+        SmartDashboard.putString("Shifts/Remaining Shift Time", 
+            String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))
+        );
+        SmartDashboard.putBoolean("Shifts/Shift Active", HubShiftUtil.getShiftedShiftInfo().active());
+        SmartDashboard.putString("Shifts/Game State", HubShiftUtil.getShiftedShiftInfo().currentShift().toString());
+        SmartDashboard.putBoolean("Shifts/Active First?",
+            DriverStation.getAlliance().orElse(Alliance.Red) == HubShiftUtil.getFirstActiveAlliance()
+        );
+    }
 
     // private void configureSysid() {
     //     joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
@@ -298,7 +304,8 @@ public class RobotContainer {
         NamedCommands.registerCommand(
             "intake_deploy",
             new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
-                .andThen(new InstantCommand(() -> intake.setRollerPower(0.75), intake))
+                .withTimeout(0.25)
+                .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake))
         );
         NamedCommands.registerCommand(
             "intake_home",
@@ -315,7 +322,7 @@ public class RobotContainer {
             new IntakeJitterCommand(intake));
         NamedCommands.registerCommand(
             "indexer_on", 
-            new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()));
+            new IndexerCommand(indexer, () -> 0.9, () -> turret.turretOnTarget()));
         NamedCommands.registerCommand(
             "indexer_off", 
             new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
@@ -339,9 +346,9 @@ public class RobotContainer {
     private void configureDefaultCommands() {
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getRightY() * maxSpeed)
-                    .withVelocityY(-joystick.getRightX() * maxSpeed)
-                    .withRotationalRate(calcAutoTurn())
+                drive.withVelocityX(xLimiter.calculate(-joystick.getRightY() * maxSpeed))
+                    .withVelocityY(yLimiter.calculate(-joystick.getRightX() * maxSpeed))
+                    .withRotationalRate(zLimiter.calculate(calcAutoTurn()))
             )
         );
 
@@ -354,6 +361,9 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
 
         ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, poseEstimator, turret)); // startup
+      
+        // Automatically stop indexer when no button is pressed
+        indexer.setDefaultCommand(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
     }
 
     

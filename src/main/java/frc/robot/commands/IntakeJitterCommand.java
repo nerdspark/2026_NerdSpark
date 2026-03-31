@@ -12,6 +12,7 @@ public class IntakeJitterCommand extends InstantCommand {
     Intake intake;
     Supplier<Double> shakeTarget;
     Timer timer;
+    boolean fast = false;
 
 
     public IntakeJitterCommand(Intake intake) {
@@ -27,9 +28,9 @@ public class IntakeJitterCommand extends InstantCommand {
     }
 
     public void jitter() {
-        if (timer.get() < 0.5) { // activate if the timer is a whole number
+        if (timer.get() < 0.3) { // activate if the timer is a whole number
             changeShakePos(IntakeConstants.upperShakePos);
-        } else if(timer.get() > 0.5 && timer.get() < 1) { 
+        } else if(timer.get() > 0.3 && timer.get() < 0.6) { 
             changeShakePos(IntakeConstants.lowerShakePos);
         } else { 
             timer.reset();
@@ -45,6 +46,10 @@ public class IntakeJitterCommand extends InstantCommand {
     @Override
     public void execute() {
         jitter();
+        if (!fast) {
+            intake.useFastConfig();
+            fast = true;
+        }
         intake.setDeployPosition(shakeTarget);
     }
 

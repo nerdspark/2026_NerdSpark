@@ -17,18 +17,15 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 
 public class Intake extends SubsystemBase {
     private CANBus canivore;
     private TalonFX roller1, roller2, deployMotor;
-
+    
     private final TalonFXSimState intakeSim;
-
-    private final MotionMagicVoltage m_mmRequest = new MotionMagicVoltage(0);
-    private final TorqueCurrentFOC torque1 = new TorqueCurrentFOC(0);
-    private final TorqueCurrentFOC torque2 = new TorqueCurrentFOC(0);
+    private final MotionMagicTorqueCurrentFOC m_mmRequest = new MotionMagicTorqueCurrentFOC(IntakeConstants.homePos);
     private TalonFXConfiguration deployMotorConfig = new TalonFXConfiguration();
     private TalonFXConfiguration rollerMotorConfig = new TalonFXConfiguration();
 
@@ -81,6 +78,8 @@ public class Intake extends SubsystemBase {
         deployMotor.getConfigurator().apply(deployMotorConfig);
         roller1.getConfigurator().apply(rollerMotorConfig);
         roller2.getConfigurator().apply(rollerMotorConfig);
+
+        deployMotor.setControl(m_mmRequest);
     }
 
     public Boolean intakeIsIn() {
@@ -96,10 +95,8 @@ public class Intake extends SubsystemBase {
     }
     
     public void setRollerPower(double power) {
-        torque1.Output = -(IntakeConstants.rollerStatorCurrentLimit * power);
-        torque2.Output = IntakeConstants.rollerStatorCurrentLimit * power;
-        roller1.setControl(torque1);
-        roller2.setControl(torque2);
+        roller1.set(-power);
+        roller2.set(power);
     }
 
     public boolean rollerOn() {

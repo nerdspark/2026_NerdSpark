@@ -117,7 +117,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 /* also log the requested output for SysId */
                 SignalLogger.writeDouble("Rotational_Volts", output.in(Volts));
                 SignalLogger.writeDouble("Rotational_Velocity", this.getState().Speeds.omegaRadiansPerSecond);
-                SignalLogger.writeDouble("Rotational_Position", this.getState().Pose.getRotation().getRotations());
+                SignalLogger.writeDouble("Rotational_Position", this.getState().Pose.getRotation().getRadians());
             },
             null,
             this

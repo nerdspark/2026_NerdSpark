@@ -24,6 +24,8 @@ public class SlippageCorrectionMap {
     private static final double G = 9.80665;
     private static final double TWO_PI = 2.0 * Math.PI;
 
+    private static boolean refreshed = false;
+
     private final InterpolatingTreeMap<Double, Double> efficiencyMap =
             new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), SlippageCorrectionMap::lerp);
     private boolean hasData = false;
@@ -50,6 +52,9 @@ public class SlippageCorrectionMap {
     //     SmartDashboard.setDefaultNumberArray(
     //             SlippageCorrectionConstants.observedDistancePointsKey,
     //             SlippageCorrectionConstants.defaultObservedDistanceMeters);
+    //     SmartDashboard.setDefaultNumber(
+    //             SlippageCorrectionConstants.sotmPredictionSecondsKey,
+    //             SlippageCorrectionConstants.defaultSotmPredictionSeconds);
     // }
 
     /**
@@ -68,18 +73,17 @@ public class SlippageCorrectionMap {
      * Returns 1.0 when disabled or no data is available.
      */
     public double efficiencyAt(double motorRps) {
-        refresh();
-        boolean enabled = 
-                SlippageCorrectionConstants.defaultEnable;
+        if (!refreshed) {
+            refresh();
+            refreshed = true;
+        }
+        boolean enabled = SlippageCorrectionConstants.defaultEnable;
         if (!enabled || !hasData) {
             return 1.0;
         }
-        double offset =
-                SlippageCorrectionConstants.defaultEfficiencyOffset;
-        double scale =
-                SlippageCorrectionConstants.defaultEfficiencyScale;
+        double scale = SlippageCorrectionConstants.defaultEfficiencyScale;
         Double factor = efficiencyMap.get(motorRps);
-        return (factor != null && factor > 0.0) ? (factor + offset) * scale : 1.0;
+        return (factor != null && factor > 0.0) ? factor * scale : 1.0;
     }
 
     /**
@@ -91,7 +95,10 @@ public class SlippageCorrectionMap {
     public double correctedMotorRps(double theoreticalRps) {
         double eff = efficiencyAt(theoreticalRps);
         if (eff <= 0.0) return theoreticalRps;
-        return theoreticalRps / eff;
+        double offset =
+            SlippageCorrectionConstants.defaultEfficiencyOffset
+        ;
+        return (theoreticalRps / eff) + offset;
     }
 
     private void refresh() {

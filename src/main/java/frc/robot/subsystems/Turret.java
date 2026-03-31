@@ -12,6 +12,7 @@ import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.Follower;
@@ -48,6 +49,7 @@ import frc.robot.Constants.TurretConfig;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.Constants.ShootMode;
+import frc.robot.Constants.SlippageCorrectionConstants;
 import frc.robot.Constants.IkSolution;
 import frc.robot.Constants.MapTuneConstants;
 import frc.robot.Constants.SOTM;
@@ -84,6 +86,7 @@ public class Turret extends SubsystemBase {
     private final SlippageCorrectionMap slippageMap = new SlippageCorrectionMap();
 
     private final boolean isBlue;
+    private Pose2d turretPose = new Pose2d();
 
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> manualOverrider) {
         pose = robotPose;
@@ -125,7 +128,7 @@ public class Turret extends SubsystemBase {
                 .withMotionMagicAcceleration(TurretConfig.spinAccel)
             )
             .withClosedLoopRamps(new ClosedLoopRampsConfigs()
-                .withVoltageClosedLoopRampPeriod(0.05))
+                .withVoltageClosedLoopRampPeriod(0.1))
         ;
         TalonFXConfiguration hoodConfig1 = new TalonFXConfiguration()
             .withMotorOutput(new MotorOutputConfigs()
@@ -152,28 +155,9 @@ public class Turret extends SubsystemBase {
                 .withMotionMagicAcceleration(TurretConfig.hoodAccel)
             )
         ;
-        TalonFXConfiguration hoodConfig2 = new TalonFXConfiguration()
-            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake)
+        TalonFXConfiguration hoodConfig2 = hoodConfig1.clone()
+            .withMotorOutput(new MotorOutputConfigs()
                 .withInverted(InvertedValue.Clockwise_Positive)
-            )
-            .withSlot0(new Slot0Configs()
-                .withKP(TurretConfig.hoodKp2)
-                .withKI(TurretConfig.hoodKi2)
-                .withKD(TurretConfig.hoodKd2)
-                .withKS(TurretConfig.hoodKs2)
-                .withKV(TurretConfig.hoodKv2)
-                .withKA(TurretConfig.hoodKa2)
-                .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
-            )
-            .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(Amps.of(TurretConfig.hoodStatorCurrentLimit))
-                .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(Amps.of(TurretConfig.hoodSupplyCurrentLimit))
-                .withSupplyCurrentLimitEnable(true)
-            )
-            .withMotionMagic(new MotionMagicConfigs()
-                .withMotionMagicCruiseVelocity(TurretConfig.hoodVelocity)
-                .withMotionMagicAcceleration(TurretConfig.hoodAccel)
             )
         ;
         TalonFXConfiguration shootConfig1 = new TalonFXConfiguration()
@@ -183,12 +167,17 @@ public class Turret extends SubsystemBase {
                 .withPeakReverseDutyCycle(0)
             )
             .withSlot0(new Slot0Configs()
+                .withKP(TurretConfig.kp)
+                .withKI(TurretConfig.ki)
+                .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
+            )
+            .withSlot1(new Slot1Configs()
                 .withKP(TurretConfig.bangbangKp)
                 .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
             )
             .withTorqueCurrent(new TorqueCurrentConfigs()
                 .withPeakForwardTorqueCurrent(TurretConfig.peakTorque)
-                .withPeakReverseTorqueCurrent(0)
+                .withPeakReverseTorqueCurrent(TurretConfig.peakReverseTorque)
             )
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(Amps.of(TurretConfig.shootStatorCurrentLimit))
@@ -197,25 +186,9 @@ public class Turret extends SubsystemBase {
                 .withSupplyCurrentLimitEnable(true)
             )
         ;
-        TalonFXConfiguration shootConfig2 = new TalonFXConfiguration()
-            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast)
+        TalonFXConfiguration shootConfig2 = shootConfig1.clone()
+            .withMotorOutput(new MotorOutputConfigs()
                 .withInverted(InvertedValue.Clockwise_Positive)
-                .withPeakForwardDutyCycle(TurretConfig.peakDutyCycle)
-                .withPeakReverseDutyCycle(0)
-            )
-            .withSlot0(new Slot0Configs()
-                .withKP(TurretConfig.bangbangKp)
-                .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign)
-            )
-            .withTorqueCurrent(new TorqueCurrentConfigs()
-                .withPeakForwardTorqueCurrent(TurretConfig.peakTorque)
-                .withPeakReverseTorqueCurrent(0)
-            )
-            .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(Amps.of(TurretConfig.shootStatorCurrentLimit))
-                .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(Amps.of(TurretConfig.shootSupplyCurrentLimit))
-                .withSupplyCurrentLimitEnable(true)
             )
         ;
         CANcoderConfiguration spinCancoder1Config = new CANcoderConfiguration()
@@ -349,20 +322,23 @@ public class Turret extends SubsystemBase {
 
         double motorRots = (neededAngle * TurretConstants.spinRatio) / TWO_PI;
 
-        brake = Math.abs(motorRots - spinMotor.getPosition().getValueAsDouble()) <= 0.006944;
+        brake = Math.abs(motorRots - spinMotor.getPosition().getValueAsDouble()) < 0.004167; //0.006944;
 
         spinPose.Position = motorRots;
     }
 
     public boolean turretOnTarget() {
         double maxX = isBlue ? FieldConstants.Tower.maxX : FieldConstants.Tower.oppMaxX; 
-        double x = pose.get().getX();
-        double y = pose.get().getY();
-        boolean climb = (x <= maxX) && (y >= FieldConstants.Tower.minY && y <= FieldConstants.Tower.maxY);
-        return Math.abs(spinPose.Position - spinMotor.getPosition().getValueAsDouble()) < 0.1389 
-            && Math.abs(hoodPose.Position - hoodMotor1.getPosition().getValueAsDouble()) < 0.6944
-            && (SmartDashboard.getBoolean("Shoot", false) 
-                || SmartDashboard.getBoolean("Pass", false))
+        double x = turretPose.getX();
+        double y = turretPose.getY();
+        boolean inX = isBlue ? x <= maxX : x >= maxX;
+        boolean inY = isBlue ? y >= FieldConstants.Tower.minY && y <= FieldConstants.Tower.maxY 
+                             : y >= FieldConstants.Tower.oppMinY && y <= FieldConstants.Tower.oppMaxY;
+        boolean climb = inX && inY;
+        boolean pass = SmartDashboard.getBoolean("Pass", false);
+        return Math.abs(spinPose.Position - spinMotor.getPosition().getValueAsDouble()) < (pass ? 0.2778 : 0.1389) 
+            && Math.abs(hoodPose.Position - hoodMotor1.getPosition().getValueAsDouble()) < (pass ? 1.3889 : 0.6944)
+            && (SmartDashboard.getBoolean("Shoot", false) || pass)
             && !climb;
     }
 
@@ -425,7 +401,7 @@ public class Turret extends SubsystemBase {
             deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
         } else {
             deltaHeight = -getConfiguredMuzzleHeightMeters();
-            distanceMeters -= 1.5;
+            distanceMeters -= SlippageCorrectionConstants.passFudge;
         }
 
         DirectIkSelection selection = useEntryAngleIK
@@ -462,8 +438,8 @@ public class Turret extends SubsystemBase {
         //     "Turret/IK/SolverMode",
         //     useEntryAngleIK ? "EntryAngle" : "MinimumSpeed"
         // );
-        SmartDashboard.putNumber("Turret/Slippage/TheoreticalMotorRps", theoreticalMotorRps);
-        SmartDashboard.putNumber("Turret/Slippage/CorrectedMotorRps", motorRps);
+        // SmartDashboard.putNumber("Turret/Slippage/TheoreticalMotorRps", theoreticalMotorRps);
+        // SmartDashboard.putNumber("Turret/Slippage/CorrectedMotorRps", motorRps);
         SmartDashboard.putNumber("Turret/Slippage/EfficiencyFactor", slippageFactor);
         return new IkSolution(hoodDeg, motorRps);
     }
@@ -508,12 +484,39 @@ public class Turret extends SubsystemBase {
         return new DirectIkSelection(thetaDeg, motorRps, false);
     }
 
+    private DirectIkSelection solveTwoPointIKDirect(
+        double d1Meters, double deltaH1Meters,
+        double d2Meters, double deltaH2Meters
+    ) {
+        double denomK = d1Meters * d2Meters * (d2Meters - d1Meters);
+        if (Math.abs(denomK) < 1e-9) return null;
+
+        double K = (deltaH1Meters * d2Meters - deltaH2Meters * d1Meters) / denomK;
+        if (!Double.isFinite(K) || K <= 0.0) return null;
+
+        double tanTheta = (deltaH1Meters + K * d1Meters * d1Meters) / d1Meters;
+        double thetaRad = Math.atan(tanTheta);              // launch angle from horizontal
+        double hoodDeg  = 90.0 - Math.toDegrees(thetaRad); // hood convention: 90 − launchAngle
+
+        if (hoodDeg < TurretConstants.hoodMinDegrees || hoodDeg > TurretConstants.hoodMaxDegrees) {
+            return null;
+        }
+
+        double cosTheta = Math.cos(thetaRad);
+        double speedMps = Math.sqrt(9.80665 / (2.0 * K * cosTheta * cosTheta));
+        if (!Double.isFinite(speedMps) || speedMps <= 0.0) return null;
+
+        double motorRps = launchMpsToMotorRps(speedMps);
+        if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
+            return null;
+        }
+        return new DirectIkSelection(hoodDeg, motorRps, false);
+    }
+
     public IkSolution solveWithRequiredAngle(double distanceMeters) {
         if (distanceMeters <= 0.0) return null;
-        double hoodDeg = SmartDashboard.getNumber(
-            TurretConstants.fixedAngleHoodDegKey,
-            TurretConstants.fixedAngleHoodDegDefault
-        );
+        double hoodDeg =
+            TurretConstants.fixedAngleHoodDegDefault;
         hoodDeg = Math.max(TurretConstants.hoodMinDegrees, Math.min(TurretConstants.hoodMaxDegrees, hoodDeg));
         double launchAngleRad = Math.toRadians(90.0 - hoodDeg);
         double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
@@ -577,11 +580,13 @@ public class Turret extends SubsystemBase {
 
     // private void initMapTuneDashboard() {
     //     SmartDashboard.setDefaultBoolean(MapTuneConstants.enableKey, MapTuneConstants.defaultEnable);
+    //     SmartDashboard.setDefaultNumber(MapTuneConstants.spinKey, 0);
     //     SmartDashboard.setDefaultNumber(MapTuneConstants.hoodKey, 0);
     //     SmartDashboard.setDefaultNumber(MapTuneConstants.shooterKey, 0);
     // }
 
     private void applyLiveMap() {
+        spinPose.Position = SmartDashboard.getNumber(MapTuneConstants.spinKey, 0);
         hoodPose.Position = SmartDashboard.getNumber(MapTuneConstants.hoodKey, 0);
         velocity = SmartDashboard.getNumber(MapTuneConstants.shooterKey, 0);
         applyShooterControl(velocity);
@@ -651,10 +656,16 @@ public class Turret extends SubsystemBase {
             Translation2d targetPose = shoot ? goalPose : passPose;
             m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
 
-            double xError = targetPose.getX() - turretPose.getX();
-            double yError = targetPose.getY() - turretPose.getY();
+            double predictionSeconds =
+                SlippageCorrectionConstants.defaultSotmPredictionSeconds;
+            Translation2d predictedTranslation = turretPose.getTranslation().plus(
+                new Translation2d(speeds.vxMetersPerSecond * predictionSeconds,
+                                  speeds.vyMetersPerSecond * predictionSeconds));
+            m_field.getObject("Prediction pose").setPose(predictedTranslation.getX(), predictedTranslation.getY(), turretPose.getRotation());
+            double xError = targetPose.getX() - predictedTranslation.getX();
+            double yError = targetPose.getY() - predictedTranslation.getY();
             double errorDegrees = Math.atan2(yError, xError);
-            double distance = turretPose.getTranslation().getDistance(targetPose);
+            double distance = predictedTranslation.getDistance(targetPose);
             SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
 
             boolean useIK = SmartDashboard.getBoolean(
@@ -664,13 +675,15 @@ public class Turret extends SubsystemBase {
                         
             SOTM sotm = null;
             if (useIK) {
+                distance -= Units.feetToMeters(0.8);
                 IkSolution ikSolution = solveIK(distance, shoot);
                 if (ikSolution != null) {
                     double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);
                     double deltaHeight = shoot
                         ? getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters()
                         : -getConfiguredMuzzleHeightMeters();
-                    double exitSpeedMps = solveIKSpeed(distance, launchAngleRad, deltaHeight);
+                    double exitSpeedMps = solveIKSpeed(shoot ? distance : distance - SlippageCorrectionConstants.passFudge, 
+                        launchAngleRad, deltaHeight);
                     sotm = applySOTMComp(exitSpeedMps, launchAngleRad, errorDegrees, speeds);
                     // double predictedEntryDeg = computeEntryAngleDeg(
                     //     distance,
@@ -721,19 +734,19 @@ public class Turret extends SubsystemBase {
             // SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", false);
         }
 
+        if (manualOverride.get()) {
+            hoodPose.Position = 0;
+            velocity = 0;
+            mode = ShootMode.COAST;
+            brake = true;
+        }
+
         boolean mapTuneEnabled = SmartDashboard.getBoolean(
             MapTuneConstants.enableKey,
             MapTuneConstants.defaultEnable
         );
         if (mapTuneEnabled) {
             applyLiveMap();
-        }
-
-        if (manualOverride.get()) {
-            hoodPose.Position = 0;
-            velocity = 0;
-            mode = ShootMode.COAST;
-            brake = true;
         }
 
         if (brake) {
@@ -746,34 +759,14 @@ public class Turret extends SubsystemBase {
         // SmartDashboard.putNumber("Turret/SpinSupply", spinMotor.getSupplyCurrent().getValueAsDouble());
         hoodMotor1.setControl(hoodPose);
         // SmartDashboard.putNumber("Turret/HoodCurrentDeg", hoodRotationsToDegrees(hoodMotor1.getPosition().getValueAsDouble()));
-        // SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
         switch (mode) {
-            case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity));
-            case TORQUE_CURRENT_BANG_BANG -> shootMotor1.setControl(shootTorqueBang.withVelocity(velocity));
+            case DUTY_CYCLE_BANG_BANG -> shootMotor1.setControl(shootDutyBang.withVelocity(velocity).withSlot(1));
+            case TORQUE_CURRENT_BANG_BANG -> shootMotor1.setControl(shootTorqueBang.withVelocity(velocity).withSlot(0));
             case COAST -> shootMotor1.set(0);
         }
 
         SmartDashboard.putData("Turret Field", m_field);
+        SmartDashboard.putBoolean("Can Index", turretOnTarget());
     }
-
-    /**
-     * Runs the SysId Quasistatic test in the given direction for the routine
-     * specified by {@link #sysIdRoutineToApply}.
-     *
-     * @param direction Direction of the SysId Quasistatic test
-     * @return Command to run
-     */
-    // public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-    //     return sysIdRoutineToApply.quasistatic(direction);
-    // }
-
-    /**
-     * Runs the SysId Dynamic test in the given direction for the routine
-     * specified by {@link #m_sysIdRoutineToApply}.
-       * @param direction Direction of the SysId Dynamic test
-     * @return Command to run
-     */
-    // public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-    //     return sysIdRoutineToApply.dynamic(direction);
-    // }
 }

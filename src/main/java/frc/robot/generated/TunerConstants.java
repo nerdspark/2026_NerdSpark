@@ -31,7 +31,7 @@ public class TunerConstants {
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains = new Slot0Configs()
         .withKP(5.26885).withKI(0).withKD(0)
-        .withKS(4.53832).withKV(0.124).withKA(0.89048);
+        .withKS(4.53832).withKV(0.124).withKA(0.89048);//KP 5.26885
     // private static final Slot0Configs driveGains = new Slot0Configs()
     //     .withKP(0.1).withKI(0).withKD(0)
     //     .withKS(0).withKV(0.124);
@@ -54,20 +54,23 @@ public class TunerConstants {
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    private static final Current kSlipCurrent = Amps.of(120);
+    private static final Current kSlipCurrent = Amps.of(80);
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
     private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration()
         .withCurrentLimits(
             new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(Amps.of(120))
+                .withStatorCurrentLimit(Amps.of(80))
                 .withStatorCurrentLimitEnable(true)
                 .withSupplyCurrentLimit(Amps.of(40)) // 60
                 .withSupplyCurrentLimitEnable(true))
         .withClosedLoopRamps(
             new ClosedLoopRampsConfigs()
-                .withTorqueClosedLoopRampPeriod(0.1));
+                .withTorqueClosedLoopRampPeriod(0.2))
+        .withOpenLoopRamps(
+            new OpenLoopRampsConfigs()
+                .withVoltageOpenLoopRampPeriod(0.25));
     private static final TalonFXConfiguration steerInitialConfigs = new TalonFXConfiguration()
         .withCurrentLimits(
             new CurrentLimitsConfigs()
