@@ -70,7 +70,7 @@ private double turretY;
 private VisionStatus visionStatus;
 
   
-  public UpdateLED(LEDSubsystem ledSubsystem, PoseEstimatorSubsystem poseEstimator, Turret turret //,
+  public UpdateLED(LEDSubsystem ledSubsystem, PoseEstimatorSubsystem poseEstimator //,
   // Supplier<Integer> statusSupplier
     // Supplier<Boolean> aSupplier, Supplier<Boolean> bSupplier, Supplier<Boolean> xSupplier,
     // Supplier<Boolean> ySupplier, Supplier<Boolean> upSupplier, Supplier<Boolean> downSupplier,
@@ -188,8 +188,8 @@ private VisionStatus visionStatus;
       break;
     }
 
-    turretX = turret.getTurretPose().getX(); //poseEstimator.getCurrentPose().getX();
-    turretY = turret.getTurretPose().getY(); //poseEstimator.getCurrentPose().getY();
+    turretX = SmartDashboard.getNumber("Turret/X", 0); //poseEstimator.getCurrentPose().getX();
+    turretY = SmartDashboard.getNumber("Turret/Y", 0); //poseEstimator.getCurrentPose().getY();
     hubDistance = Math.hypot(
     turretX - FieldConstants.Hub.topCenterPoint.getX(),
     turretY - FieldConstants.Hub.topCenterPoint.getY());
