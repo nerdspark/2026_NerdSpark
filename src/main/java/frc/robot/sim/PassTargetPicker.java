@@ -13,10 +13,7 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import javax.imageio.ImageIO;
 import javax.swing.JCheckBox;
@@ -40,15 +37,19 @@ public class PassTargetPicker {
 
     private final DoubleArrayPublisher fieldClickPub;
     private final BufferedImage fieldImage;
+
     private final FieldPanel fieldPanel;
     private final JCheckBox enableBox;
     private final JLabel coordsLabel;
+
     private JFrame frame;
 
     public PassTargetPicker() {
         NetworkTable smart = NetworkTableInstance.getDefault().getTable("SmartDashboard");
         fieldClickPub = smart.getDoubleArrayTopic(PassTargetConstants.fieldClickKey).publish();
+
         fieldImage = loadFieldImage();
+
         fieldPanel = new FieldPanel();
         enableBox = new JCheckBox("Pass target enabled");
         coordsLabel = new JLabel();
@@ -68,6 +69,7 @@ public class PassTargetPicker {
                 PassTargetConstants.enableKey,
                 PassTargetConstants.defaultEnable
             ));
+
             enableBox.addActionListener(event -> SmartDashboard.putBoolean(
                 PassTargetConstants.enableKey,
                 enableBox.isSelected()
@@ -80,6 +82,7 @@ public class PassTargetPicker {
             frame.getContentPane().setLayout(new BorderLayout());
             frame.getContentPane().add(fieldPanel, BorderLayout.CENTER);
             frame.getContentPane().add(controls, BorderLayout.SOUTH);
+
             frame.setMinimumSize(new Dimension(700, 400));
             frame.setLocationByPlatform(true);
             frame.setVisible(true);
@@ -96,40 +99,26 @@ public class PassTargetPicker {
             PassTargetConstants.enableKey,
             PassTargetConstants.defaultEnable
         ));
+
         double targetX = SmartDashboard.getNumber(
             PassTargetConstants.targetXKey,
             PassTargetConstants.defaultTargetX
         );
+
         double targetY = SmartDashboard.getNumber(
             PassTargetConstants.targetYKey,
             PassTargetConstants.defaultTargetY
         );
+
         coordsLabel.setText(String.format("Target: X %.2f, Y %.2f", targetX, targetY));
         fieldPanel.repaint();
     }
 
     private BufferedImage loadFieldImage() {
-        String localAppData = System.getenv("LOCALAPPDATA");
-        if (localAppData == null) {
-            return null;
-        }
-        Path imagePath = Paths.get(
-            localAppData,
-            "Programs",
-            "FRC Elastic",
-            "data",
-            "flutter_assets",
-            "assets",
-            "fields",
-            "2026-field.png"
-        );
-        File file = imagePath.toFile();
-        if (!file.exists()) {
-            return null;
-        }
         try {
-            return ImageIO.read(file);
-        } catch (IOException ex) {
+            return ImageIO.read(getClass().getResource("/2026_field.png"));
+        } catch (IOException | IllegalArgumentException e) {
+            e.printStackTrace();
             return null;
         }
     }
@@ -149,18 +138,26 @@ public class PassTargetPicker {
         @Override
         protected void paintComponent(Graphics graphics) {
             super.paintComponent(graphics);
+
             Graphics2D g2 = (Graphics2D) graphics.create();
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
             computeImageRect();
+
+            // Draw the field image
             if (fieldImage != null) {
-                g2.drawImage(fieldImage, imageRect.x, imageRect.y, imageRect.width, imageRect.height, null);
+                g2.drawImage(fieldImage,
+                    imageRect.x, imageRect.y,
+                    imageRect.width, imageRect.height,
+                    null
+                );
             } else {
                 g2.setColor(new Color(40, 40, 40));
                 g2.fillRect(imageRect.x, imageRect.y, imageRect.width, imageRect.height);
             }
 
+            // Draw target marker
             drawTargetOverlay(g2);
 
             g2.dispose();
@@ -169,14 +166,17 @@ public class PassTargetPicker {
         private void computeImageRect() {
             int panelWidth = getWidth();
             int panelHeight = getHeight();
+
             if (panelWidth <= 0 || panelHeight <= 0) {
                 imageRect.setBounds(0, 0, 0, 0);
                 return;
             }
 
             double fieldAspect = FieldConstants.fieldLength / FieldConstants.fieldWidth;
+
             int drawWidth = panelWidth;
             int drawHeight = (int) Math.round(drawWidth / fieldAspect);
+
             if (drawHeight > panelHeight) {
                 drawHeight = panelHeight;
                 drawWidth = (int) Math.round(drawHeight * fieldAspect);
@@ -184,6 +184,7 @@ public class PassTargetPicker {
 
             int x = (panelWidth - drawWidth) / 2;
             int y = (panelHeight - drawHeight) / 2;
+
             imageRect.setBounds(x, y, drawWidth, drawHeight);
         }
 
@@ -192,22 +193,27 @@ public class PassTargetPicker {
                 PassTargetConstants.enableKey,
                 PassTargetConstants.defaultEnable
             );
+
             if (!enabled) {
                 return;
             }
+
             double targetX = SmartDashboard.getNumber(
                 PassTargetConstants.targetXKey,
                 PassTargetConstants.defaultTargetX
             );
+
             double targetY = SmartDashboard.getNumber(
                 PassTargetConstants.targetYKey,
                 PassTargetConstants.defaultTargetY
             );
+
             int px = fieldToPixelX(targetX);
             int py = fieldToPixelY(targetY);
 
             double scaleX = imageRect.getWidth() / FieldConstants.fieldLength;
             double scaleY = imageRect.getHeight() / FieldConstants.fieldWidth;
+
             double radiusPixels = TurretConstants.passTargetRadiusMeters * Math.min(scaleX, scaleY);
 
             g2.setColor(new Color(180, 180, 180, 200));
@@ -221,6 +227,7 @@ public class PassTargetPicker {
 
             g2.setColor(new Color(240, 240, 240));
             g2.fillOval(px - 4, py - 4, 8, 8);
+
             g2.setFont(g2.getFont().deriveFont(Font.BOLD, 12f));
             g2.drawString("Pass", px + 6, py - 6);
         }
@@ -229,6 +236,7 @@ public class PassTargetPicker {
             if (!imageRect.contains(x, y)) {
                 return;
             }
+
             double fieldX = ((x - imageRect.x) / (double) imageRect.width) * FieldConstants.fieldLength;
             double fieldY = FieldConstants.fieldWidth
                 - ((y - imageRect.y) / (double) imageRect.height) * FieldConstants.fieldWidth;
