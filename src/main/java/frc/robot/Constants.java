@@ -242,10 +242,10 @@ public final class Constants {
     }
 
     public static final class PassTargetConstants {
-        public static final String enableKey = "PassTarget/Enable";
-        public static final String targetXKey = "PassTarget/X";
-        public static final String targetYKey = "PassTarget/Y";
-        public static final String fieldClickKey = "Field/PassTargetClick";
+        public static final String enableKey = "Turret/Pass/TargetPickerEnabled";
+        public static final String targetXKey = "Turret/Pass/TargetX";
+        public static final String targetYKey = "Turret/Pass/TargetY";
+        public static final String fieldClickKey = "Turret/Pass/PassTargetClick";
         public static final boolean defaultEnable = false;
         public static final double defaultTargetX = FieldConstants.Hub.topCenterPoint.getX();
         public static final double defaultTargetY = FieldConstants.Hub.topCenterPoint.getY();

@@ -42,6 +42,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LEDSubsystem;
+import frc.robot.subsystems.PassTargetSelectorSubsystem;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
 import frc.robot.subsystems.RealFuelSubsystem;
 import frc.robot.subsystems.SimFuelIKSubsystem;
@@ -76,6 +77,7 @@ public class RobotContainer {
     private final RealFuelSubsystem fuelReal;
     public final LEDSubsystem ledSubsystem = new LEDSubsystem();
     private final Trigger intakeHome;
+    private final PassTargetSelectorSubsystem passTargetSelector;
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
@@ -127,6 +129,7 @@ public class RobotContainer {
         );
 
         poseEstimator = new PoseEstimatorSubsystem(drivetrain);
+        passTargetSelector = new PassTargetSelectorSubsystem();
 
         turret = new Turret(
             () -> drivetrain.getState().Pose,
