@@ -22,25 +22,22 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.LED;
 
-import java.lang.Math;
-
 public class LEDSubsystem extends SubsystemBase {
   private final CANBus can;
   private final CANdle m_candle;
   private XboxController joystick;
   
-  private static int status = 10; // startup
-  // TODO change static^?
+  private int status = 10; // startup
 
   private static final RGBWColor kGreen = new RGBWColor(54, 255, 0, 0);
   // private static final RGBWColor kYellow = new RGBWColor(255, 255, 0, 0);
-  private static final RGBWColor kYellow = new RGBWColor(255, 127, 0, 0); // looks like yellow
+  // private static final RGBWColor kYellow = new RGBWColor(255, 127, 0, 0); // looks like yellow
   private static final RGBWColor kRed = new RGBWColor(255, 0, 0, 0);
   private static final RGBWColor kBlack = new RGBWColor(0, 0, 0, 0);
-  private static final RGBWColor kCyan = new RGBWColor(0, 160, 255, 0); // made cyan more bluey
+  // private static final RGBWColor kCyan = new RGBWColor(0, 160, 255, 0); // made cyan more bluey
   private static final RGBWColor kMagenta = new RGBWColor(255, 0, 255, 0);
-  private static final RGBWColor kBlue = new RGBWColor(0, 0, 255, 0);
-  private static final RGBWColor kWhite = new RGBWColor(255, 255, 255, 255);
+  // private static final RGBWColor kBlue = new RGBWColor(0, 0, 255, 0);
+  // private static final RGBWColor kWhite = new RGBWColor(255, 255, 255, 255);
 
   private int ledStartIndex = 8;
   private int ledEndIndex = 400;
@@ -184,9 +181,9 @@ public class LEDSubsystem extends SubsystemBase {
     this.ledEndIndex = ledEndIndex;
   }
   
-  private double distanceCurve(double distance) { 
-    return Math.pow(Math.abs(distance), 2);
-  }
+  // private double distanceCurve(double distance) { 
+  //   return Math.pow(Math.abs(distance), 2);
+  // }
 
   public int getStatus() {
     return status;
@@ -199,8 +196,6 @@ public class LEDSubsystem extends SubsystemBase {
 
   public void updateLED() {   
     // red error state maybe
-    
-
     switch(status) { // TODO implement override logic
       // maybe do that with ints and status variables in Constants and comparing if they are greater
       

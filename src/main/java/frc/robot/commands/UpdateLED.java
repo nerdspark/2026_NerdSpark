@@ -4,10 +4,7 @@
 
 package frc.robot.commands;
 
-import java.util.function.Supplier;
-
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 // import com.ctre.phoenix6.controls.RainbowAnimation;
 // import com.ctre.phoenix6.controls.SolidColor;
@@ -60,14 +57,14 @@ public class UpdateLED extends Command {
   // Supplier<Boolean> leftBSupplier;
   // Supplier<Boolean> rightBSupplier;
 
- private boolean blUpdated;
- private boolean brUpdated;
- private boolean flUpdated;
- private boolean frUpdated;
-private double hubDistance;
-private double turretX;
-private double turretY;
-private VisionStatus visionStatus;
+  //  private boolean blUpdated;
+  //  private boolean brUpdated;
+  //  private boolean flUpdated;
+  //  private boolean frUpdated;
+  private double hubDistance;
+  private double turretX;
+  private double turretY;
+  private VisionStatus visionStatus;
 
   
   public UpdateLED(LEDSubsystem ledSubsystem, PoseEstimatorSubsystem poseEstimator, Turret turret //,
@@ -191,16 +188,15 @@ private VisionStatus visionStatus;
     turretX = turret.getTurretPose().getX(); //poseEstimator.getCurrentPose().getX();
     turretY = turret.getTurretPose().getY(); //poseEstimator.getCurrentPose().getY();
     hubDistance = Math.hypot(
-    turretX - FieldConstants.Hub.topCenterPoint.getX(),
-    turretY - FieldConstants.Hub.topCenterPoint.getY());
+      turretX - FieldConstants.Hub.topCenterPoint.getX(),
+      turretY - FieldConstants.Hub.topCenterPoint.getY()
+    );
     
     if(hubDistance < Units.feetToMeters(Constants.LED.hubDistanceLimitFeet)) {
       status = Constants.LED.closeToBub;
     }
 
     led.setStatus(status);
-
-    // System.out.println(status);
   }
 
   // Called once the command ends or is interrupted.
