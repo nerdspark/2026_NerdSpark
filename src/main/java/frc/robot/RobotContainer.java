@@ -297,8 +297,8 @@ public class RobotContainer {
         // joystick.x().whileTrue(new DriveToPose(drivetrain, () -> new Pose2d(2, 2, Rotation2d.fromDegrees(90))));
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem)); // startup
-
+        ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, poseEstimator, turret)); // startup
+      
         // Automatically stop indexer when no button is pressed
         indexer.setDefaultCommand(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
     }

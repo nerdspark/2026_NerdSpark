@@ -71,6 +71,7 @@ public class Turret extends SubsystemBase {
     private Supplier<Pose2d> pose;
     private Supplier<ChassisSpeeds> speed;
     private Supplier<Boolean> manualOverride;
+    private Pose2d turretPose;
 
     private double turretAngle = 0;
     private boolean brake = false;
@@ -534,6 +535,10 @@ public class Turret extends SubsystemBase {
     //     velocity = SmartDashboard.getNumber(MapTuneConstants.shooterKey, 0);
     //     applyShooterControl(velocity);
     // }
+
+    public Pose2d getTurretPose() {
+        return turretPose;
+    }
 
     @Override
     public void periodic() {
