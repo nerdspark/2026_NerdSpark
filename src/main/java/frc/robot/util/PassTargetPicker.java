@@ -1,4 +1,4 @@
-package frc.robot.sim;
+package frc.robot.util;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;

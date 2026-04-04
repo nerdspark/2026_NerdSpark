@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.FieldConstants;
 import frc.robot.Constants.turretTargetConstants;
 
-public class RealFuelSubsystem extends SubsystemBase {
+public class FuelSubsystem extends SubsystemBase {
     private boolean enabled = false;
 
     public void enableTargeting(boolean enable) {
