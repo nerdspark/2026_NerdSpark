@@ -103,6 +103,7 @@ public final class Constants {
         // Set to 1.0 for pure physics model; slippage is handled by SlippageCorrectionMap.
         public static final double shooterLaunchEfficiency = 1.0;
         public static final double shooterMaxMotorRps = 5800.0 / 60.0;
+        public static final double shootGearRatio = 2.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
         public static final double targetHeightMeters = Units.inchesToMeters(56.5); //72
