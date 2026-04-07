@@ -102,18 +102,23 @@ public final class Constants {
         // Ball exit speed as a fraction of wheel surface speed.
         // Set to 1.0 for pure physics model; slippage is handled by SlippageCorrectionMap.
         public static final double shooterLaunchEfficiency = 1.0;
-        public static final double shooterMaxMotorRps = 6000.0 / 60.0;
+        public static final double shooterMaxMotorRps = 5800.0 / 60.0;
+        public static final double shootGearRatio = 2.0;
         public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
-        public static final double targetHeightMeters = Units.inchesToMeters(72) + Units.feetToMeters(0.8);
+        public static final double targetHeightMeters = Units.inchesToMeters(56.5); //72
         public static final double hoodZeroDegrees = 21.0;
-        public static final double hoodMinDegrees = 21.0; //18
-        public static final double hoodMaxDegrees = 90.0; //65
+        public static final double hoodMinDegrees = 21.0;
+        public static final double hoodMaxDegrees = 90.0;
         public static final double ikEntryAngleTargetDeg = 40.0;
         public static final double ikEntryAngleToleranceDeg = 2.5;
         public static final double lowHoodPreferredDegrees = hoodMinDegrees;
         public static final double passTargetRadiusMeters = Units.inchesToMeters(5.91) / 2.0;
         public static final int passTargetCirclePoints = 24;
+
+        // Offsets for the secondary point to get a better arc
+        public static final double secondPointHeight = Units.inchesToMeters(25); //21.5
+        public static final double secondPointDistance = Units.inchesToMeters(19);
 
         public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(4.699), -Units.inchesToMeters(0.21));
 
@@ -270,12 +275,6 @@ public final class Constants {
     public static final class AutoAimConstants {
         public static final String useIKSolverKey = "TurretTarget/UseIKSolver";
         public static final boolean defaultUseIKSolver = true;
-        public static final String useEntryAngleIKKey = "TurretTarget/UseEntryAngleIK";
-        public static final boolean defaultUseEntryAngleIK = false;
-        public static final String useShootOnMoveCompKey = "TurretTarget/UseShootOnMoveComp";
-        public static final boolean defaultUseShootOnMoveComp = true;
-        public static final String modelMuzzleHeightMetersKey = "TurretTarget/ModelMuzzleHeightMeters";
-        public static final String modelTargetHeightMetersKey = "TurretTarget/ModelTargetHeightMeters";
     }
 
     public static final class SlippageCorrectionConstants {

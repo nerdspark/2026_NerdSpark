@@ -71,11 +71,11 @@ public class Turret extends SubsystemBase {
     private Supplier<Pose2d> pose;
     private Supplier<ChassisSpeeds> speed;
     private Supplier<Boolean> manualOverride;
-    private Pose2d turretPose;
 
-    private double motorPositon;
     private double turretAngle = 0;
     private boolean brake = false;
+    public boolean shoot = false;
+    public boolean pass = false;
 
     private Debouncer torqueCurrentDebouncer = new Debouncer(0.02, DebounceType.kFalling);
     private ShootMode mode = ShootMode.COAST;
@@ -241,15 +241,10 @@ public class Turret extends SubsystemBase {
             TWO_PI
         );
         // Normalize to -pi to pi
-        motorPositon = (normalizeRadians(turretAngle) * TurretConstants.spinRatio) / TWO_PI;
-        spinMotor.setPosition(motorPositon, 2.5);
+        double motorPositon = (normalizeRadians(turretAngle) * TurretConstants.spinRatio) / TWO_PI;
+        spinMotor.setPosition(motorPositon, 1);
 
         // initMapTuneDashboard();
-
-        // SmartDashboard.setDefaultNumber(
-        //     SlippageCorrectionConstants.sotmVelocityScaleKey,
-        //     SlippageCorrectionConstants.defaultSotmVelocityScale
-        // );
     }
 
     /**
@@ -300,10 +295,10 @@ public class Turret extends SubsystemBase {
      * 
      * @param normalizedError the normalized error of the turret to spin to
      */
-    private void turretIdle(double normalizedError) {
-        hoodPose.Position = -0.002;
+    private void turretIdle() {
+        hoodPose.Position = -0.001;
         velocity = applyShooterControl(30);
-        aimTurret(normalizedError);
+        brake = true;
     }
 
     /**
@@ -312,17 +307,33 @@ public class Turret extends SubsystemBase {
     * @param neededAngle the field-centric target angle minus the chassis heading in radians
     */
     private void aimTurret(double neededAngle) {
-        motorPositon = spinMotor.getPosition().getValueAsDouble();
-        turretAngle = (motorPositon * TWO_PI) / TurretConstants.spinRatio;
-        SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
+        double motorPose = spinMotor.getPosition().getValueAsDouble();
+        turretAngle = (motorPose * TWO_PI) / TurretConstants.spinRatio;
 
         neededAngle = normalizeRadians(neededAngle - Math.toRadians(145));
-        neededAngle = Math.round(neededAngle * 100.0) / 100.0;
-        SmartDashboard.putNumber("Target Angle", Math.toDegrees(neededAngle));
+        //neededAngle = Math.round(neededAngle * 100.0) / 100.0;
+        double target = neededAngle;
+        if (target > 165 || target < -175) {
+            double err1 = turretAngle - neededAngle;
+            double err2 = 0;
+            if (turretAngle > 0) {
+                err2 = turretAngle - (neededAngle + TWO_PI);
+            } else {
+                err2 = turretAngle - (neededAngle - TWO_PI);
+            }
+            if (Math.abs(err2) < Math.abs(err1)) {
+                if (turretAngle > 0) {
+                    target = neededAngle + TWO_PI;
+                } else {
+                    target = neededAngle - TWO_PI;
+                }
+            }
+        }
+        SmartDashboard.putNumber("Target Angle", Math.toDegrees(target));
 
-        double motorRots = (neededAngle * TurretConstants.spinRatio) / TWO_PI;
+        double motorRots = (target * TurretConstants.spinRatio) / TWO_PI;
 
-        brake = Math.abs(motorRots - spinMotor.getPosition().getValueAsDouble()) < 0.004167; //0.006944;
+        brake = Math.abs(target - turretAngle) < Math.toRadians(0.15);
 
         spinPose.Position = motorRots;
     }
@@ -335,10 +346,9 @@ public class Turret extends SubsystemBase {
         boolean inY = isBlue ? y >= FieldConstants.Tower.minY && y <= FieldConstants.Tower.maxY 
                              : y >= FieldConstants.Tower.oppMinY && y <= FieldConstants.Tower.oppMaxY;
         boolean climb = inX && inY;
-        boolean pass = SmartDashboard.getBoolean("Pass", false);
         return Math.abs(spinPose.Position - spinMotor.getPosition().getValueAsDouble()) < (pass ? 0.2778 : 0.1389) 
             && Math.abs(hoodPose.Position - hoodMotor1.getPosition().getValueAsDouble()) < (pass ? 1.3889 : 0.6944)
-            && (SmartDashboard.getBoolean("Shoot", false) || pass)
+            && (shoot || pass)
             && !climb;
     }
 
@@ -356,57 +366,32 @@ public class Turret extends SubsystemBase {
         return motorRps;
     }
 
-    public boolean shooterAtSpeed() {
-        velocity = SmartDashboard.getNumber(MapTuneConstants.shooterKey, 0);
-        boolean inTolerance = Math.abs(shootMotor1.getVelocity().getValueAsDouble() - velocity) <= 3;
-        return inTolerance;
-    }
-
-    private double getConfiguredMuzzleHeightMeters() {
-        return SmartDashboard.getNumber(
-            AutoAimConstants.modelMuzzleHeightMetersKey,
-            TurretConstants.shooterMuzzleHeightMeters
-        );
-    }
-
-    private double getConfiguredTargetHeightMeters() {
-        return SmartDashboard.getNumber(
-            AutoAimConstants.modelTargetHeightMetersKey,
-            TurretConstants.targetHeightMeters
-        );
-    }
-
     private static final class DirectIkSelection {
         private final double hoodDegrees;
         private final double motorRps;
-        private final boolean usedPrimaryObjective;
 
-        private DirectIkSelection(double hoodDegrees, double motorRps, boolean usedPrimaryObjective) {
+        private DirectIkSelection(double hoodDegrees, double motorRps) {
             this.hoodDegrees = hoodDegrees;
             this.motorRps = motorRps;
-            this.usedPrimaryObjective = usedPrimaryObjective;
         }
     }
 
-    private IkSolution solveIK(double distanceMeters, boolean shooting) {
+    private IkSolution solveIK(double distanceMeters) {
         if (distanceMeters <= 0.0) {
             return null;
         }
-        boolean useEntryAngleIK = SmartDashboard.getBoolean(
-            AutoAimConstants.useEntryAngleIKKey,
-            AutoAimConstants.defaultUseEntryAngleIK
-        );
         double deltaHeight;
-        if (shooting) {
-            deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
+        if (shoot) {
+            deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
         } else {
-            deltaHeight = -getConfiguredMuzzleHeightMeters();
+            deltaHeight = -TurretConstants.shooterMuzzleHeightMeters;
             distanceMeters -= SlippageCorrectionConstants.passFudge;
         }
 
-        DirectIkSelection selection = useEntryAngleIK
-            ? solveEntryAngleIKDirect(distanceMeters, deltaHeight)
-            : solveMinimumSpeedIKDirect(distanceMeters, deltaHeight);
+        DirectIkSelection selection = solveTwoPointIKDirect(
+            distanceMeters, deltaHeight, 
+            distanceMeters - TurretConstants.secondPointDistance, deltaHeight + TurretConstants.secondPointHeight
+        );
         if (selection == null) {
             return null;
         }
@@ -419,28 +404,13 @@ public class Turret extends SubsystemBase {
                 selection.hoodDegrees + offsets.hoodOffsetDeg
             )
         );
-        double theoreticalMotorRps = Math.max(
-            0.0,
-            useEntryAngleIK
-                ? Math.min(TurretConstants.shooterMaxMotorRps, selection.motorRps + offsets.motorRpsOffset)
-                : selection.motorRps + offsets.motorRpsOffset
-        );
-        double slippageFactor = slippageMap.efficiencyAt(theoreticalMotorRps);
+        double theoreticalMotorRps = Math.max(0.0, selection.motorRps + offsets.motorRpsOffset);
         double motorRps = slippageMap.correctedMotorRps(theoreticalMotorRps);
         // After slippage correction the commanded RPS can exceed the motor's physical
         // limit even if the theoretical RPS was within bounds — reject the solution.
         if (motorRps > TurretConstants.shooterMaxMotorRps) {
             return null;
         }
-        // SmartDashboard.putBoolean("Turret/IK/UseEntryAngleMode", useEntryAngleIK);
-        // SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", selection.usedPrimaryObjective);
-        // SmartDashboard.putString(
-        //     "Turret/IK/SolverMode",
-        //     useEntryAngleIK ? "EntryAngle" : "MinimumSpeed"
-        // );
-        // SmartDashboard.putNumber("Turret/Slippage/TheoreticalMotorRps", theoreticalMotorRps);
-        // SmartDashboard.putNumber("Turret/Slippage/CorrectedMotorRps", motorRps);
-        SmartDashboard.putNumber("Turret/Slippage/EfficiencyFactor", slippageFactor);
         return new IkSolution(hoodDeg, motorRps);
     }
 
@@ -460,7 +430,7 @@ public class Turret extends SubsystemBase {
         double speedMps = solveIKSpeed(distanceMeters, Math.toRadians(desiredThetaDeg), deltaHeightMeters);
         double motorRps = launchMpsToMotorRps(speedMps);
         if (Double.isFinite(motorRps) && motorRps > 0.0 && motorRps <= TurretConstants.shooterMaxMotorRps) {
-            return new DirectIkSelection(desiredThetaDeg, motorRps, true);
+            return new DirectIkSelection(desiredThetaDeg, motorRps);
         }
 
         return solveMinimumSpeedIKDirect(distanceMeters, deltaHeightMeters);
@@ -481,7 +451,7 @@ public class Turret extends SubsystemBase {
         if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
             return null;
         }
-        return new DirectIkSelection(thetaDeg, motorRps, false);
+        return new DirectIkSelection(thetaDeg, motorRps);
     }
 
     private DirectIkSelection solveTwoPointIKDirect(
@@ -510,21 +480,7 @@ public class Turret extends SubsystemBase {
         if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
             return null;
         }
-        return new DirectIkSelection(hoodDeg, motorRps, false);
-    }
-
-    public IkSolution solveWithRequiredAngle(double distanceMeters) {
-        if (distanceMeters <= 0.0) return null;
-        double hoodDeg =
-            TurretConstants.fixedAngleHoodDegDefault;
-        hoodDeg = Math.max(TurretConstants.hoodMinDegrees, Math.min(TurretConstants.hoodMaxDegrees, hoodDeg));
-        double launchAngleRad = Math.toRadians(90.0 - hoodDeg);
-        double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
-        double exitSpeedMps = solveIKSpeed(distanceMeters, launchAngleRad, deltaHeight);
-        if (!Double.isFinite(exitSpeedMps) || exitSpeedMps <= 0.0) return null;
-        double correctedRps = slippageMap.correctedMotorRps(launchMpsToMotorRps(exitSpeedMps));
-        if (!Double.isFinite(correctedRps) || correctedRps <= 0.0 || correctedRps > TurretConstants.shooterMaxMotorRps) return null;
-        return new IkSolution(hoodDeg, correctedRps);
+        return new DirectIkSelection(hoodDeg, motorRps);
     }
 
     private double solveIKSpeed(double distanceMeters, double thetaRad, double deltaHeightMeters) {
@@ -542,19 +498,6 @@ public class Turret extends SubsystemBase {
             return Double.NaN;
         }
         return Math.sqrt(vSquared);
-    }
-
-    private double computeEntryAngleDeg(double distanceMeters, double launchSpeedMps, double launchAngleRad) {
-        double horizontalSpeed = launchSpeedMps * Math.cos(launchAngleRad);
-        if (horizontalSpeed <= 1e-6) {
-            return Double.NaN;
-        }
-        double time = distanceMeters / horizontalSpeed;
-        if (!Double.isFinite(time) || time <= 0.0) {
-            return Double.NaN;
-        }
-        double verticalVelocityAtTarget = launchSpeedMps * Math.sin(launchAngleRad) - 9.80665 * time;
-        return Math.toDegrees(Math.atan2(-verticalVelocityAtTarget, horizontalSpeed));
     }
     
    /**
@@ -585,12 +528,12 @@ public class Turret extends SubsystemBase {
     //     SmartDashboard.setDefaultNumber(MapTuneConstants.shooterKey, 0);
     // }
 
-    private void applyLiveMap() {
-        spinPose.Position = SmartDashboard.getNumber(MapTuneConstants.spinKey, 0);
-        hoodPose.Position = SmartDashboard.getNumber(MapTuneConstants.hoodKey, 0);
-        velocity = SmartDashboard.getNumber(MapTuneConstants.shooterKey, 0);
-        applyShooterControl(velocity);
-    }
+    // private void applyLiveMap() {
+    //     spinPose.Position = SmartDashboard.getNumber(MapTuneConstants.spinKey, 0);
+    //     hoodPose.Position = SmartDashboard.getNumber(MapTuneConstants.hoodKey, 0);
+    //     velocity = SmartDashboard.getNumber(MapTuneConstants.shooterKey, 0);
+    //     applyShooterControl(velocity);
+    // }
 
     public Pose2d getTurretPose() {
         return turretPose;
@@ -634,9 +577,9 @@ public class Turret extends SubsystemBase {
             isBlue ? true : false
         );
 
-        boolean shoot = isBlue ? turretPose.getX() < shootLine : turretPose.getX() > shootLine;
+        shoot = isBlue ? turretPose.getX() < shootLine : turretPose.getX() > shootLine;
         SmartDashboard.putBoolean("Shoot", shoot);
-        boolean pass = isBlue ? turretPose.getX() > passLine && turretPose.getX() < oppNeurtalLine || turretPose.getX() > oppPassLine
+        pass = isBlue ? turretPose.getX() > passLine && turretPose.getX() < oppNeurtalLine || turretPose.getX() > oppPassLine
                        : turretPose.getX() < passLine && turretPose.getX() > oppNeurtalLine || turretPose.getX() < oppPassLine; 
         SmartDashboard.putBoolean("Pass", pass);
 
@@ -656,16 +599,15 @@ public class Turret extends SubsystemBase {
             Translation2d targetPose = shoot ? goalPose : passPose;
             m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
 
-            double predictionSeconds =
-                SlippageCorrectionConstants.defaultSotmPredictionSeconds;
-            Translation2d predictedTranslation = turretPose.getTranslation().plus(
-                new Translation2d(speeds.vxMetersPerSecond * predictionSeconds,
-                                  speeds.vyMetersPerSecond * predictionSeconds));
-            m_field.getObject("Prediction pose").setPose(predictedTranslation.getX(), predictedTranslation.getY(), turretPose.getRotation());
-            double xError = targetPose.getX() - predictedTranslation.getX();
-            double yError = targetPose.getY() - predictedTranslation.getY();
+            // double predictionSeconds = SlippageCorrectionConstants.defaultSotmPredictionSeconds;
+            // Translation2d predictedTranslation = turretPose.getTranslation().plus(
+            //     new Translation2d(speeds.vxMetersPerSecond * predictionSeconds,
+            //                       speeds.vyMetersPerSecond * predictionSeconds));
+            // m_field.getObject("Prediction pose").setPose(predictedTranslation.getX(), predictedTranslation.getY(), turretPose.getRotation());
+            double xError = targetPose.getX() - turretPose.getX();
+            double yError = targetPose.getY() - turretPose.getY();
             double errorDegrees = Math.atan2(yError, xError);
-            double distance = predictedTranslation.getDistance(targetPose);
+            double distance = turretPose.getTranslation().getDistance(targetPose);
             SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
 
             boolean useIK = SmartDashboard.getBoolean(
@@ -675,32 +617,29 @@ public class Turret extends SubsystemBase {
                         
             SOTM sotm = null;
             if (useIK) {
-                distance -= Units.feetToMeters(0.8);
-                IkSolution ikSolution = solveIK(distance, shoot);
+                IkSolution ikSolution = solveIK(distance);
                 if (ikSolution != null) {
                     double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);
-                    double deltaHeight = shoot
-                        ? getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters()
-                        : -getConfiguredMuzzleHeightMeters();
-                    double exitSpeedMps = solveIKSpeed(shoot ? distance : distance - SlippageCorrectionConstants.passFudge, 
-                        launchAngleRad, deltaHeight);
+                    double deltaHeight;
+                    if (shoot) {
+                        deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
+                    } else {
+                        deltaHeight = -TurretConstants.shooterMuzzleHeightMeters;
+                        distance -= SlippageCorrectionConstants.passFudge;
+                    }
+                    double exitSpeedMps = solveIKSpeed(distance, launchAngleRad, deltaHeight);
                     sotm = applySOTMComp(exitSpeedMps, launchAngleRad, errorDegrees, speeds);
-                    // double predictedEntryDeg = computeEntryAngleDeg(
-                    //     distance,
-                    //     motorRpsToLaunchSpeedMps(ikSolution.motorRps),
-                    //     Math.toRadians(ikSolution.hoodDegrees)
-                    // );
                     SmartDashboard.putBoolean("Turret/IK/HasSolution", true);
                     SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", ikSolution.hoodDegrees);
                     SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", ikSolution.motorRps);
-                    // SmartDashboard.putNumber("Turret/IK/PredictedEntryDeg", predictedEntryDeg);
                 } else {
-                    turretIdle(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
-                    SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
-                    SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
-                    SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
-                    // SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
-                    // SmartDashboard.putNumber("Turret/IK/test", Double.NaN);
+                    ShooterParams params = aimOnFly(shoot ? distance : Double.MAX_VALUE);
+                    sotm = applySOTMComp(
+                        motorRpsToLaunchSpeedMps(params.shooterSpeed), 
+                        Math.toRadians(90 - hoodRotationsToDegrees(params.hoodPose)), 
+                        errorDegrees, 
+                        speeds
+                    );
                 }
             } else {
                 ShooterParams params = aimOnFly(shoot ? distance : Double.MAX_VALUE);
@@ -713,7 +652,7 @@ public class Turret extends SubsystemBase {
             }
 
             if (sotm != null) {
-                aimTurret(normalizeRadians(sotm.turretAngle - turretPose.getRotation().getRadians()));
+                aimTurret(sotm.turretAngle - turretPose.getRotation().getRadians());
                 hoodPose.Position = hoodDegreesToRotations(90 - Math.toDegrees(sotm.launchAngle));
                 if (useIK) {
                     velocity = applyShooterControl(slippageMap.correctedMotorRps(launchMpsToMotorRps(sotm.launchMps)));
@@ -721,10 +660,10 @@ public class Turret extends SubsystemBase {
                     velocity = applyShooterControl(launchMpsToMotorRps(sotm.launchMps));
                 }
             } else {
-                turretIdle(normalizeRadians(errorDegrees - turretPose.getRotation().getRadians()));
+                turretIdle();
             }
         } else {
-            turretIdle(normalizeRadians(turretPose.getRotation().getRadians()));
+            turretIdle();
             SmartDashboard.putNumber("Turret/DistanceToTarget", 0.0);
             SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
             SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
@@ -741,13 +680,13 @@ public class Turret extends SubsystemBase {
             brake = true;
         }
 
-        boolean mapTuneEnabled = SmartDashboard.getBoolean(
-            MapTuneConstants.enableKey,
-            MapTuneConstants.defaultEnable
-        );
-        if (mapTuneEnabled) {
-            applyLiveMap();
-        }
+        // boolean mapTuneEnabled = SmartDashboard.getBoolean(
+        //     MapTuneConstants.enableKey,
+        //     MapTuneConstants.defaultEnable
+        // );
+        // if (mapTuneEnabled) {
+        //     applyLiveMap();
+        // }
 
         if (brake) {
             spinMotor.setControl(new StaticBrake());
@@ -768,5 +707,6 @@ public class Turret extends SubsystemBase {
 
         SmartDashboard.putData("Turret Field", m_field);
         SmartDashboard.putBoolean("Can Index", turretOnTarget());
+        SmartDashboard.putNumber("Turret Angle", Math.toDegrees(turretAngle));
     }
 }

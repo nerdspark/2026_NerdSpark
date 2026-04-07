@@ -14,12 +14,10 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -29,7 +27,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.turretTargetConstants;
@@ -39,15 +36,12 @@ import frc.robot.commands.UpdateLED;
 import frc.robot.commands.IntakeJitterCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
-import frc.robot.subsystems.RealFuelSubsystem;
-import frc.robot.subsystems.SimFuelIKSubsystem;
-import frc.robot.subsystems.SimFuelSubsystem;
 import frc.robot.subsystems.Turret;
-import frc.robot.util.FuelSim;
 import frc.robot.util.HubShiftUtil;
 
 public class RobotContainer {
@@ -55,8 +49,8 @@ public class RobotContainer {
     private SlewRateLimiter yLimiter = new SlewRateLimiter(10);
     private SlewRateLimiter zLimiter = new SlewRateLimiter(25);
 
-    private final double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-    private final double maxAngularRate = RotationsPerSecond.of(1.2).in(RadiansPerSecond);
+    private double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+    private double maxAngularRate = RotationsPerSecond.of(1.2).in(RadiansPerSecond);
 
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
@@ -71,11 +65,10 @@ public class RobotContainer {
     private boolean override = true;
     private final Indexer indexer;
     private final Intake intake;
-    private final SimFuelSubsystem fuelSim;
-    private final SimFuelIKSubsystem fuelSimIK;
-    private final RealFuelSubsystem fuelReal;
+    private final FuelSubsystem fuel;
     public final LEDSubsystem ledSubsystem = new LEDSubsystem();
     private final Trigger intakeHome;
+    private final Trigger slowMode;
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
@@ -84,47 +77,6 @@ public class RobotContainer {
     public RobotContainer() {
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
         gyroController.setIntegratorRange(-2.0, 2.0);
-
-        SmartDashboard.setDefaultBoolean(
-            AutoAimConstants.useIKSolverKey,
-            AutoAimConstants.defaultUseIKSolver
-        );
-        SmartDashboard.putBoolean(
-            AutoAimConstants.useIKSolverKey,
-            AutoAimConstants.defaultUseIKSolver
-        );
-        SmartDashboard.setDefaultBoolean(
-            AutoAimConstants.useEntryAngleIKKey,
-            AutoAimConstants.defaultUseEntryAngleIK
-        );
-        SmartDashboard.putBoolean(
-            AutoAimConstants.useEntryAngleIKKey,
-            AutoAimConstants.defaultUseEntryAngleIK
-        );
-        SmartDashboard.setDefaultBoolean(
-            AutoAimConstants.useShootOnMoveCompKey,
-            AutoAimConstants.defaultUseShootOnMoveComp
-        );
-        SmartDashboard.putBoolean(
-            AutoAimConstants.useShootOnMoveCompKey,
-            AutoAimConstants.defaultUseShootOnMoveComp
-        );
-        SmartDashboard.setDefaultNumber(
-            AutoAimConstants.modelMuzzleHeightMetersKey,
-            Constants.TurretConstants.shooterMuzzleHeightMeters
-        );
-        SmartDashboard.putNumber(
-            AutoAimConstants.modelMuzzleHeightMetersKey,
-            Constants.TurretConstants.shooterMuzzleHeightMeters
-        );
-        SmartDashboard.setDefaultNumber(
-            AutoAimConstants.modelTargetHeightMetersKey,
-            Constants.TurretConstants.targetHeightMeters
-        );
-        SmartDashboard.putNumber(
-            AutoAimConstants.modelTargetHeightMetersKey,
-            Constants.TurretConstants.targetHeightMeters
-        );
 
         poseEstimator = new PoseEstimatorSubsystem(drivetrain);
 
@@ -139,22 +91,11 @@ public class RobotContainer {
         // HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
         indexer = new Indexer();
+        slowMode = new Trigger(() -> (indexer.isIndex && turret.shoot));
         intake = new Intake();
         intakeHome = new Trigger(() -> intake.intakeIsIn());
 
-        fuelSim = RobotBase.isSimulation()
-            ? new SimFuelSubsystem(
-                () -> drivetrain.getState().Pose,
-                () -> drivetrain.getState().Speeds
-            )
-            : null;
-        fuelSimIK = RobotBase.isSimulation()
-            ? new SimFuelIKSubsystem(
-                () -> drivetrain.getState().Pose,
-                () -> drivetrain.getState().Speeds
-            )
-            : null;
-        fuelReal = RobotBase.isSimulation() ? null : new RealFuelSubsystem();
+        fuel = new FuelSubsystem();
 
         configureNamedCommands();
         configureDefaultCommands();
@@ -212,6 +153,15 @@ public class RobotContainer {
             SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
         }));
 
+        slowMode.onTrue(new InstantCommand(() -> {
+                maxSpeed *= 0.25;
+                maxAngularRate *= 0.25;
+            }))
+            .onFalse(new InstantCommand(() -> {
+                maxSpeed *= 4;
+                maxAngularRate *= 4;
+            }));
+
         // Start-of-shift warning
         for (int i = 1; i <= 5; i++) {
             double time = i; 
@@ -259,20 +209,10 @@ public class RobotContainer {
 
         // Auto-enable targeting in enabled modes; no button hold needed for spin-up.
         RobotModeTriggers.teleop().onTrue(Commands.runOnce(() ->
-            enableTargeting(
-                // SmartDashboard.getBoolean(
-                    // AutoAimConstants.useIKSolverKey,
-                    AutoAimConstants.defaultUseIKSolver
-                // )
-            )
+            startTargeting()
         ));
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() ->
-            enableTargeting(
-                // SmartDashboard.getBoolean(
-                    // AutoAimConstants.useIKSolverKey,
-                    AutoAimConstants.defaultUseIKSolver
-                // )
-            )
+            startTargeting()
         ));
     }
 
@@ -327,11 +267,8 @@ public class RobotContainer {
             "indexer_off", 
             new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
         NamedCommands.registerCommand(
-            "shoot_map", 
-            new InstantCommand(() -> startTargeting(false)));
-        NamedCommands.registerCommand(
-            "shoot_ik", 
-            new InstantCommand(() -> startTargeting(true)));
+            "shoot_start", 
+            new InstantCommand(this::startTargeting));
         NamedCommands.registerCommand(
             "shoot_stop", 
             new InstantCommand(this::stopTargeting));
@@ -389,8 +326,7 @@ public class RobotContainer {
         return FieldConstants.defaultAprilTagType;
     }
 
-    private void enableTargeting(boolean useIK) {
-        SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, useIK);
+    private void startTargeting() {
         Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
         Translation2d target = alliance == Alliance.Red
             ? FieldConstants.Hub.oppTopCenterPoint.toTranslation2d()
@@ -398,43 +334,12 @@ public class RobotContainer {
         SmartDashboard.putBoolean(turretTargetConstants.enableKey, true);
         SmartDashboard.putNumber(turretTargetConstants.targetXKey, target.getX());
         SmartDashboard.putNumber(turretTargetConstants.targetYKey, target.getY());
-        if (fuelReal != null) {
-            fuelReal.enableTargeting(true);
-            fuelReal.setTarget(target);
-        }
-    }
-
-    private void startTargeting(boolean useIK) {
-        enableTargeting(useIK);
-        Translation2d target = new Translation2d(
-            turretTargetConstants.defaultTargetX
-            // SmartDashboard.getNumber(
-            //     turretTargetConstants.targetXKey,
-            //     turretTargetConstants.defaultTargetX
-            // ),
-            , turretTargetConstants.defaultTargetY)
-            // SmartDashboard.getNumber(
-            //     turretTargetConstants.targetYKey,
-            //     turretTargetConstants.defaultTargetY
-            // )
-        ;
-        if (fuelSimIK != null && useIK) {
-            Translation3d launchPosition = fuelSimIK.getRobotLaunchPosition();
-            Translation3d baseVelocity = fuelSimIK.computeLaunchVelocityToTarget(target);
-            Translation3d launchVelocity = fuelSimIK.launchVel(baseVelocity);
-            FuelSim.getInstance().spawnFuel(launchPosition, launchVelocity);
-        } else if (fuelSim != null && !useIK) {
-            Translation3d launchPosition = fuelSim.getRobotLaunchPosition();
-            Translation3d baseVelocity = fuelSim.computeLaunchVelocityToTarget(target);
-            Translation3d launchVelocity = fuelSim.launchVel(baseVelocity);
-            FuelSim.getInstance().spawnFuel(launchPosition, launchVelocity);
-        }
+        fuel.enableTargeting(true);
+        fuel.setTarget(target);
     }
 
     private void stopTargeting() {
         SmartDashboard.putBoolean(turretTargetConstants.enableKey, false);
-        if (fuelReal != null) {
-            fuelReal.enableTargeting(false);
-        }
+        fuel.enableTargeting(false);
     }
 }

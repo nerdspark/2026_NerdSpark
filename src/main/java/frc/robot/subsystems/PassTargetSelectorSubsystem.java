@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PassTargetConstants;
 import frc.robot.Constants.turretTargetConstants;
-import frc.robot.sim.PassTargetPicker;
+import frc.robot.util.PassTargetPicker;
 
 public class PassTargetSelectorSubsystem extends SubsystemBase {
     private final DoubleArraySubscriber fieldClickSub;

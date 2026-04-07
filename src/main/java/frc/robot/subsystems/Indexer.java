@@ -6,7 +6,6 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -18,6 +17,8 @@ import frc.robot.Constants.IndexConfig;
 public class Indexer implements Subsystem {
     private final CANBus canivore;
     private final TalonFX passThroughMotor, spindexerMotor;
+
+    public boolean isIndex = false;
 
     public Indexer() {
         canivore = new CANBus(Constants.CANbus);
@@ -50,10 +51,12 @@ public class Indexer implements Subsystem {
     public void spinDex(Supplier<Double> rollerSpeed) {
         passThroughMotor.set(rollerSpeed.get());
         spindexerMotor.set(rollerSpeed.get());
+        isIndex = true;
     }
 
     public void stopPassThrough() {
         passThroughMotor.set(0);
         spindexerMotor.set(0);
+        isIndex = false;
     }
 }

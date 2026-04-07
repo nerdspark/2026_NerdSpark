@@ -49,8 +49,9 @@ public final class TurretUtil {
     }
 
     public static double motorRpsToLaunchSpeedMps(double motorRps) {
+        double wheelRps = motorRps / TurretConstants.shootGearRatio;
         return ((Math.PI * 2) * TurretConstants.shooterWheelRadius)
-            * motorRps
+            * wheelRps
             * TurretConstants.shooterLaunchEfficiency;
     }
 
@@ -60,7 +61,8 @@ public final class TurretUtil {
         if (denominator <= 1e-9) {
             return 0.0;
         }
-        return launchSpeedMps / denominator;
+        double wheelRps = launchSpeedMps / denominator;
+        return wheelRps * TurretConstants.shootGearRatio;
     }
 
     private static double timeOfFlight(double shooterRps, double hoodRadians, double distanceMeters) {
