@@ -116,7 +116,7 @@
     "rotation": 90.0
   },
   "reversed": false,
-  "folder": "middle_basic",
+  "folder": "middle",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 90.0

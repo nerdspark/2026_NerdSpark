@@ -42,6 +42,28 @@
           "name": "intake_deploy"
         }
       }
+    },
+    {
+      "name": "indexer_on",
+      "waypointRelativePos": 0.5,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "indexer_on"
+        }
+      }
+    },
+    {
+      "name": "intake_wiggle",
+      "waypointRelativePos": 0.5000000000000012,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake_wiggle"
+        }
+      }
     }
   ],
   "globalConstraints": {
@@ -57,7 +79,7 @@
     "rotation": 90.0
   },
   "reversed": false,
-  "folder": "middle_basic",
+  "folder": "middle",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 90.0

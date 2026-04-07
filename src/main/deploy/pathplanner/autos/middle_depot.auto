@@ -34,6 +34,18 @@
           "data": {
             "pathName": "middle_depot2"
           }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "middle_depot3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intake_wiggle"
+          }
         }
       ]
     }
