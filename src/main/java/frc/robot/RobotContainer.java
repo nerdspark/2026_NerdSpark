@@ -127,8 +127,8 @@ public class RobotContainer {
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick.y()
-            .whileTrue(new IndexerCommand(indexer, () -> 0.9, () -> turret.turretOnTarget()))
-            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+            .whileTrue(new IndexerCommand(indexer, () -> 0.9, () -> true))
+            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true)); //turret.turretOnTarget()
         
         joystick.b().whileTrue(new IntakeJitterCommand(intake));
 
@@ -217,6 +217,7 @@ public class RobotContainer {
     }
 
     public void updateDashboard() {
+        SmartDashboard.putBoolean("SlowmodeOn", slowMode.getAsBoolean());
         // Update from HubShiftUtil
         SmartDashboard.putString("Shifts/Remaining Shift Time", 
             String.format("%.1f", Math.max(HubShiftUtil.getShiftedShiftInfo().remainingTime(), 0.0))
