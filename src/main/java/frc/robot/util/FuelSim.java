@@ -1,7 +1,9 @@
 package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -238,15 +240,19 @@ public class FuelSim {
         }
     }
 
-        private StructArrayPublisher<Translation3d> fuelPublisher = NetworkTableInstance.getDefault()
-            .getStructArrayTopic("Fuel Simulation/Fuels", Translation3d.struct)
+        private StructArrayPublisher<Pose3d> fuelPublisher = NetworkTableInstance.getDefault()
+            .getStructArrayTopic("Field/Objects/Fuels", Pose3d.struct)
             .publish();
     
     /**
      * Adds array of `Translation3d`'s to NetworkTables at "/Fuel Simulation/Fuels"
      */
     public void logFuels() {
-        fuelPublisher.set(fuels.stream().map((fuel) -> fuel.pos).toArray(Translation3d[]::new));
+        fuelPublisher.set(
+        fuels.stream()
+            .map(fuel -> new Pose3d(fuel.pos, new Rotation3d()))
+            .toArray(Pose3d[]::new)
+    );
     }
 
     /**

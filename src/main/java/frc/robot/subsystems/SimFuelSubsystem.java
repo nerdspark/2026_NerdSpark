@@ -44,7 +44,7 @@ public class SimFuelSubsystem extends SubsystemBase {
             Units.inchesToMeters(26),
             -Units.inchesToMeters(26),
             Units.inchesToMeters(26),
-            () -> true
+            () -> false
         );
 
         instance.start();

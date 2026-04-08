@@ -12,6 +12,8 @@ import static frc.robot.util.TurretUtil.normalizeRadians;
 
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
@@ -668,16 +670,51 @@ public class Turret extends SubsystemBase {
         return turretPose;
     }
 
+private boolean isNetInTheWay(double targetX, double targetY) {
+    double turretX = turretPose.getX();
+    double turretY = turretPose.getY();
+    double dx = targetX - turretX;
+
+    // Guard against vertical path (no X travel)
+    if (Math.abs(dx) < 1e-9) return false;
+
+    // Check both nets
+    double[] netXs    = { FieldConstants.Net.blueNearCorner.getX(), FieldConstants.Net.redNearCorner.getX() };
+    double[] netMinYs = { FieldConstants.Net.blueNearCorner.getY(), FieldConstants.Net.redNearCorner.getY() };
+    double[] netMaxYs = { FieldConstants.Net.blueFarCorner.getY(),  FieldConstants.Net.redFarCorner.getY()  };
+
+    for (int i = 0; i < 2; i++) {
+        double t = (netXs[i] - turretX) / dx;
+
+        // t must be within [0, 1]
+        if (t < 0.0 || t > 1.0) continue;
+
+        double yAtNet = turretY + t * (targetY - turretY);
+
+        if (yAtNet >= netMinYs[i] && yAtNet <= netMaxYs[i]) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
     @Override
     public void periodic() {
-        // ChassisSpeeds speeds = speed.get();
-        // Pose2d currPose = pose.get();
-        ChassisSpeeds speeds = new ChassisSpeeds(1.0, 0.5, 0.0);
-        Pose2d currPose = new Pose2d(6,4,new Rotation2d());
+        ChassisSpeeds speeds = speed.get();
+        Pose2d currPose = pose.get();
+        // ChassisSpeeds speeds = new ChassisSpeeds(1.0, 0.5, 0.0);
+        // Pose2d currPose = new Pose2d(2, 6, new Rotation2d());
 
         m_field.setRobotPose(currPose);
         Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(currPose.getRotation());
         turretPose = new Pose2d(currPose.getTranslation().plus(rotationOffset), currPose.getRotation());
+
+        Logger.recordOutput("Turret/RobotPose", turretPose);
+        Logger.recordOutput("Turret/ChassisSpeeds", speeds);
+        Logger.recordOutput("Turret/TargetAngle", spinPose.Position);
+        Logger.recordOutput("Turret/Hood", hoodPose.Position);
+        Logger.recordOutput("Turret/ShooterRPS", velocity);
 
         SmartDashboard.putBoolean("Is Blue", isBlue);
         double shootLine = calcTriggerLine(
@@ -775,21 +812,22 @@ public class Turret extends SubsystemBase {
         } else if (pass && passTargetPickerEnabled) {
             // Read dashboard click coordinate
             double clickX = SmartDashboard.getNumber(
-                PassTargetConstants.targetXKey,
-                PassTargetConstants.defaultTargetX
-            );
+                    PassTargetConstants.targetXKey,
+                    PassTargetConstants.defaultTargetX);
             double clickY = SmartDashboard.getNumber(
-                PassTargetConstants.targetYKey,
-                PassTargetConstants.defaultTargetY
-            );
-            
-            
+                    PassTargetConstants.targetYKey,
+                    PassTargetConstants.defaultTargetY);
+
+            boolean hubInTheWay = isNetInTheWay(clickX, clickY);
+
             Translation2d passPose = new Translation2d(clickX, clickY);
 
             m_field.getObject("Pass Target").setPose(
                     passPose.getX(), passPose.getY(), new Rotation2d());
             SmartDashboard.putNumber("Turret/DistanceToTarget",
                     turretPose.getTranslation().getDistance(passPose));
+
+            SmartDashboard.putBoolean("Turret/Pass/HubInTheWay", hubInTheWay);
 
             PassSolution passSolution = computePassSolution(passPose, speeds);
             if (passSolution != null) {

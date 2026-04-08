@@ -137,6 +137,19 @@ public class FieldConstants {
         AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(21).get().toPose2d();
   }
 
+  public static class Net {
+    // Assumes the hub is a flat rectangle near the neutral zone
+    public static final double width = Units.inchesToMeters(58.41);
+    public static final double height = Units.inchesToMeters(120.36);
+    
+    // Best approximations 
+    public static final Translation2d blueNearCorner = new Translation2d(Units.inchesToMeters(215), fieldWidth / 2.0 - width / 2.0);
+    public static final Translation2d blueFarCorner = new Translation2d(Units.inchesToMeters(215), fieldWidth / 2.0 + width / 2.0);
+    public static final Translation2d redNearCorner = new Translation2d(Units.inchesToMeters(436.2), fieldWidth / 2.0 - width / 2.0);
+    public static final Translation2d redFarCorner = new Translation2d(Units.inchesToMeters(436.2), fieldWidth / 2.0 + width / 2.0);
+
+  }
+
   /** Left Bump related constants */
   public static class LeftBump {
 

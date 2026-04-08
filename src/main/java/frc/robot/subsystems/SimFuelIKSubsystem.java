@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.TurretConstants;
@@ -29,27 +30,58 @@ public class SimFuelIKSubsystem {
     public Translation3d getRobotLaunchPosition() {
         Pose2d pose = poseSupplier.get();
         Translation2d turretTranslation = pose.getTranslation()
-            .plus(TurretConstants.robotToTurret.rotateBy(pose.getRotation()));
+                .plus(TurretConstants.robotToTurret.rotateBy(pose.getRotation()));
         return new Translation3d(
-            turretTranslation.getX(),
-            turretTranslation.getY(),
-            getConfiguredMuzzleHeightMeters()
-        );
+                turretTranslation.getX(),
+                turretTranslation.getY(),
+                Units.inchesToMeters(26));
     }
 
     public Translation3d launchVel(Translation3d fieldRelativeVelocity) {
         ChassisSpeeds fieldSpeeds = speedsSupplier.get();
         return new Translation3d(
-            fieldRelativeVelocity.getX() + fieldSpeeds.vxMetersPerSecond,
-            fieldRelativeVelocity.getY() + fieldSpeeds.vyMetersPerSecond,
-            fieldRelativeVelocity.getZ()
-        );
+                fieldRelativeVelocity.getX() + fieldSpeeds.vxMetersPerSecond,
+                fieldRelativeVelocity.getY() + fieldSpeeds.vyMetersPerSecond,
+                fieldRelativeVelocity.getZ());
+    }
+
+    public Translation3d computeLaunchVelocityToTarget(Translation2d target, double targetHeightMeters) {
+        Pose2d pose = poseSupplier.get();
+        Translation2d turretTranslation = pose.getTranslation()
+                .plus(TurretConstants.robotToTurret.rotateBy(pose.getRotation()));
+        double dx = target.getX() - turretTranslation.getX();
+        double dy = target.getY() - turretTranslation.getY();
+        double distance = Math.hypot(dx, dy);
+        if (distance <= 1e-6) {
+            return new Translation3d();
+        }
+
+        double muzzleHeight = getConfiguredMuzzleHeightMeters();
+        double deltaHeight = targetHeightMeters - muzzleHeight;
+        double alphaRad = Math.atan2(deltaHeight, distance);
+        double launchAngleRad = 0.5 * (alphaRad + (Math.PI / 2.0));
+
+        double speedMps = solveSpeedFromEquation(distance, launchAngleRad, deltaHeight);
+        if (!Double.isFinite(speedMps) || speedMps <= 0.0) {
+            return new Translation3d();
+        }
+
+        double horizontalSpeed = speedMps * Math.cos(launchAngleRad);
+        double verticalSpeed = speedMps * Math.sin(launchAngleRad);
+        double unitX = dx / distance;
+        double unitY = dy / distance;
+
+        ChassisSpeeds fieldSpeeds = speedsSupplier.get();
+        return new Translation3d(
+                unitX * horizontalSpeed - fieldSpeeds.vxMetersPerSecond,
+                unitY * horizontalSpeed - fieldSpeeds.vyMetersPerSecond,
+                verticalSpeed);
     }
 
     public Translation3d computeLaunchVelocityToTarget(Translation2d target) {
         Pose2d pose = poseSupplier.get();
         Translation2d turretTranslation = pose.getTranslation()
-            .plus(TurretConstants.robotToTurret.rotateBy(pose.getRotation()));
+                .plus(TurretConstants.robotToTurret.rotateBy(pose.getRotation()));
         double dx = target.getX() - turretTranslation.getX();
         double dy = target.getY() - turretTranslation.getY();
         double distance = Math.hypot(dx, dy);
@@ -71,16 +103,14 @@ public class SimFuelIKSubsystem {
         double unitY = dy / distance;
 
         Translation3d fieldVelocity = new Translation3d(
-            unitX * horizontalSpeed,
-            unitY * horizontalSpeed,
-            verticalSpeed
-        );
+                unitX * horizontalSpeed,
+                unitY * horizontalSpeed,
+                verticalSpeed);
         ChassisSpeeds fieldSpeeds = speedsSupplier.get();
         return new Translation3d(
-            fieldVelocity.getX() - fieldSpeeds.vxMetersPerSecond,
-            fieldVelocity.getY() - fieldSpeeds.vyMetersPerSecond,
-            fieldVelocity.getZ()
-        );
+                fieldVelocity.getX() - fieldSpeeds.vxMetersPerSecond,
+                fieldVelocity.getY() - fieldSpeeds.vyMetersPerSecond,
+                fieldVelocity.getZ());
     }
 
     private ShotSolution solveShotForDistance(double distanceMeters) {
@@ -89,36 +119,32 @@ public class SimFuelIKSubsystem {
         }
 
         boolean useEntryAngleIK = SmartDashboard.getBoolean(
-            AutoAimConstants.useEntryAngleIKKey,
-            AutoAimConstants.defaultUseEntryAngleIK
-        );
+                AutoAimConstants.useEntryAngleIKKey,
+                AutoAimConstants.defaultUseEntryAngleIK);
         double deltaHeight = getConfiguredTargetHeightMeters() - getConfiguredMuzzleHeightMeters();
 
         DirectShotSelection selection = useEntryAngleIK
-            ? solveEntryAngleIKDirect(distanceMeters, deltaHeight)
-            : solveMinimumSpeedIKDirect(distanceMeters, deltaHeight);
+                ? solveEntryAngleIKDirect(distanceMeters, deltaHeight)
+                : solveMinimumSpeedIKDirect(distanceMeters, deltaHeight);
         if (selection == null) {
             return null;
         }
 
         ShooterOffsetMap.Offsets offsets = offsetMap.sample(distanceMeters);
         double hoodDeg = clamp(
-            selection.hoodDegrees + offsets.hoodOffsetDeg,
-            TurretConstants.hoodMinDegrees,
-            TurretConstants.hoodMaxDegrees
-        );
+                selection.hoodDegrees + offsets.hoodOffsetDeg,
+                TurretConstants.hoodMinDegrees,
+                TurretConstants.hoodMaxDegrees);
         double motorRps = clamp(
-            selection.motorRps + offsets.motorRpsOffset,
-            0.0,
-            useEntryAngleIK ? TurretConstants.shooterMaxMotorRps : Double.POSITIVE_INFINITY
-        );
+                selection.motorRps + offsets.motorRpsOffset,
+                0.0,
+                useEntryAngleIK ? TurretConstants.shooterMaxMotorRps : Double.POSITIVE_INFINITY);
         return new ShotSolution(hoodDeg, motorRps);
     }
 
     private DirectShotSelection solveEntryAngleIKDirect(
-        double distanceMeters,
-        double deltaHeightMeters
-    ) {
+            double distanceMeters,
+            double deltaHeightMeters) {
         double targetEntryRad = Math.toRadians(TurretConstants.ikEntryAngleTargetDeg);
         double desiredThetaRad = Math.atan(Math.tan(targetEntryRad) + (2.0 * deltaHeightMeters / distanceMeters));
         double desiredThetaDeg = Math.toDegrees(desiredThetaRad);
@@ -138,9 +164,8 @@ public class SimFuelIKSubsystem {
     }
 
     private DirectShotSelection solveMinimumSpeedIKDirect(
-        double distanceMeters,
-        double deltaHeightMeters
-    ) {
+            double distanceMeters,
+            double deltaHeightMeters) {
         double alphaRad = Math.atan2(deltaHeightMeters, distanceMeters);
         double thetaDeg = Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
         if (thetaDeg < TurretConstants.hoodMinDegrees || thetaDeg > TurretConstants.hoodMaxDegrees) {
@@ -156,16 +181,14 @@ public class SimFuelIKSubsystem {
 
     private double getConfiguredMuzzleHeightMeters() {
         return SmartDashboard.getNumber(
-            AutoAimConstants.modelMuzzleHeightMetersKey,
-            TurretConstants.shooterMuzzleHeightMeters
-        );
+                AutoAimConstants.modelMuzzleHeightMetersKey,
+                TurretConstants.shooterMuzzleHeightMeters);
     }
 
     private double getConfiguredTargetHeightMeters() {
         return SmartDashboard.getNumber(
-            AutoAimConstants.modelTargetHeightMetersKey,
-            TurretConstants.targetHeightMeters
-        );
+                AutoAimConstants.modelTargetHeightMetersKey,
+                TurretConstants.targetHeightMeters);
     }
 
     private static double solveSpeedFromEquation(double distanceMeters, double thetaRad, double deltaHeightMeters) {
