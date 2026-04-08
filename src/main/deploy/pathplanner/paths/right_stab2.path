@@ -156,7 +156,7 @@
   "reversed": false,
   "folder": "right_stab",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 0.6,
     "rotation": -90.0
   },
   "useDefaultConstraints": true
