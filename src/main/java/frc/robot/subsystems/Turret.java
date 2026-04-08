@@ -310,10 +310,10 @@ public class Turret extends SubsystemBase {
         double motorPose = spinMotor.getPosition().getValueAsDouble();
         turretAngle = (motorPose * TWO_PI) / TurretConstants.spinRatio;
 
-        neededAngle = normalizeRadians(neededAngle - Math.toRadians(115));
+        neededAngle = normalizeRadians(neededAngle - Math.toRadians(120));
         //neededAngle = Math.round(neededAngle * 100.0) / 100.0;
         double target = neededAngle;
-        if (target > 165 || target < -179) {
+        if (target > Math.toRadians(165) || target < -Math.toRadians(178)) {
             double err1 = turretAngle - neededAngle;
             double err2 = 0;
             if (turretAngle > 0) {
