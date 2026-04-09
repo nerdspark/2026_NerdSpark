@@ -195,14 +195,14 @@ public class Turret extends SubsystemBase {
             .withMagnetSensor(new MagnetSensorConfigs()
                 .withAbsoluteSensorDiscontinuityPoint(1)
                 .withMagnetOffset(TurretConfig.spinCancoder1Offset)
-                .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
+                .withSensorDirection(SensorDirectionValue.Clockwise_Positive)
             )
         ;
         CANcoderConfiguration spinCancoder2Config = new CANcoderConfiguration()
             .withMagnetSensor(new MagnetSensorConfigs()
                 .withAbsoluteSensorDiscontinuityPoint(1)
                 .withMagnetOffset(TurretConfig.spinCancoder2Offset)
-                .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
+                .withSensorDirection(SensorDirectionValue.Clockwise_Positive)
             )
         ;
 
@@ -227,15 +227,15 @@ public class Turret extends SubsystemBase {
         double turretAngle = floorMod(
             (TWO_PI/TurretConstants.spinTeeth) * (
                 floorMod(
-                    -(TurretConstants.spinCancoder1Teeth/TWO_PI) * theta1, TurretConstants.spinCancoder1Teeth
-                ) + TurretConstants.spinCancoder1Teeth * floorMod(
+                    -(TurretConstants.spinCancoder2Teeth/TWO_PI) * theta2, TurretConstants.spinCancoder2Teeth
+                ) + TurretConstants.spinCancoder2Teeth * floorMod(
                     modInverse(
-                        TurretConstants.spinCancoder1Teeth, TurretConstants.spinCancoder2Teeth
+                        TurretConstants.spinCancoder2Teeth, TurretConstants.spinCancoder1Teeth
                     ) * (
-                        floorMod(-(TurretConstants.spinCancoder2Teeth/TWO_PI) * theta2, TurretConstants.spinCancoder2Teeth) 
-                        - floorMod(-(TurretConstants.spinCancoder1Teeth/TWO_PI) * theta1, TurretConstants.spinCancoder1Teeth)
+                        floorMod(-(TurretConstants.spinCancoder1Teeth/TWO_PI) * theta1, TurretConstants.spinCancoder1Teeth) 
+                        - floorMod(-(TurretConstants.spinCancoder2Teeth/TWO_PI) * theta2, TurretConstants.spinCancoder2Teeth)
                     ), 
-                    TurretConstants.spinCancoder2Teeth
+                    TurretConstants.spinCancoder1Teeth
                 )
             ), 
             TWO_PI
@@ -388,7 +388,7 @@ public class Turret extends SubsystemBase {
             distanceMeters -= SlippageCorrectionConstants.passFudge;
         }
 
-        DirectIkSelection selection = solveMinSpeedEntryAngleIKDirect(distanceMeters, deltaHeight);
+        DirectIkSelection selection = solveMinimumSpeedIKDirect(distanceMeters, deltaHeight);
         if (selection == null) {
             return null;
         }
@@ -449,6 +449,7 @@ public class Turret extends SubsystemBase {
         if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
             return null;
         }
+        SmartDashboard.putNumber("Turret/TheoreticalRps", motorRps);
         return new DirectIkSelection(thetaDeg, motorRps);
     }
 
@@ -631,6 +632,7 @@ public class Turret extends SubsystemBase {
                     SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", ikSolution.hoodDegrees);
                     SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", ikSolution.motorRps);
                 } else {
+                    SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
                     ShooterParams params = aimOnFly(shoot ? distance : Double.MAX_VALUE);
                     sotm = applySOTMComp(
                         motorRpsToLaunchSpeedMps(params.shooterSpeed), 
@@ -640,6 +642,7 @@ public class Turret extends SubsystemBase {
                     );
                 }
             } else {
+                SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
                 ShooterParams params = aimOnFly(shoot ? distance : Double.MAX_VALUE);
                 sotm = applySOTMComp(
                     motorRpsToLaunchSpeedMps(params.shooterSpeed), 

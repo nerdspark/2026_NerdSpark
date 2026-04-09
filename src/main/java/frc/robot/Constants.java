@@ -92,8 +92,8 @@ public final class Constants {
     public static final class TurretConstants {
         public static final double spinRatio = 210 / 21.0;
         public static final double spinTeeth = 210;
-        public static final double spinCancoder1Teeth = 15;
-        public static final double spinCancoder2Teeth = 14;
+        public static final double spinCancoder1Teeth = 14;
+        public static final double spinCancoder2Teeth = 15;
 
         public static final double hoodRatio = 50;
         public static final double shooterWheelRadius = Units.inchesToMeters(4);
@@ -181,15 +181,15 @@ public final class Constants {
         public static final double spinKs = 0.4;
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
-        public static final double spinStatorCurrentLimit = 50.0; //120
+        public static final double spinStatorCurrentLimit = 80.0; //120
         public static final double spinSupplyCurrent = 30.0;
         public static final double spinVelocity = 25;
         public static final double spinAccel = 100;
 
         public static final int spinCancoder1Id = 26;
-        public static final double spinCancoder1Offset = -0.938232421875;
+        public static final double spinCancoder1Offset = -0.157958984375;
         public static final int spinCancoder2Id = 27;
-        public static final double spinCancoder2Offset = -0.918212890625;
+        public static final double spinCancoder2Offset = -0.157470703125;
 
         public static final int hoodMotor1Id = 28;
         public static final int hoodMotor2Id = 29;
