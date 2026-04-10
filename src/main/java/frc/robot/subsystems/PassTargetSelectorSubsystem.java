@@ -1,24 +1,19 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.networktables.DoubleArraySubscriber;
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PassTargetConstants;
 import frc.robot.Constants.turretTargetConstants;
-import frc.robot.util.PassTargetPicker;
 
 public class PassTargetSelectorSubsystem extends SubsystemBase {
     private final DoubleArraySubscriber fieldClickSub;
-    private final PassTargetPicker picker;
     private boolean lastEnabled = false;
 
     public PassTargetSelectorSubsystem() {
-        NetworkTable smart = NetworkTableInstance.getDefault().getTable("SmartDashboard");
-        fieldClickSub = smart.getDoubleArrayTopic(PassTargetConstants.fieldClickKey).subscribe(new double[] {});
-        picker = new PassTargetPicker();
-        picker.start();
+        fieldClickSub = NetworkTableInstance.getDefault().getTable("SmartDashboard")
+            .getDoubleArrayTopic(PassTargetConstants.fieldClickKey).subscribe(new double[] {});
 
         SmartDashboard.setDefaultBoolean(PassTargetConstants.enableKey, PassTargetConstants.defaultEnable);
         SmartDashboard.setDefaultNumber(PassTargetConstants.targetXKey, PassTargetConstants.defaultTargetX);

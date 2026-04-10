@@ -112,3 +112,20 @@ wpi.java.configureTestTasks(test)
 tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
 }
+
+// Pass Target Picker — run on driver station laptop
+task runPicker(type: JavaExec) {
+    mainClass = 'frc.robot.util.PassTargetPickerMain'
+    classpath = sourceSets.main.runtimeClasspath
+    if (project.hasProperty('team')) {
+        args project.team
+    }
+}
+
+task pickerJar(type: Jar) {
+    archiveBaseName = 'PassTargetPicker'
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    from sourceSets.main.output
+    manifest { attributes 'Main-Class': 'frc.robot.util.PassTargetPickerMain' }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}

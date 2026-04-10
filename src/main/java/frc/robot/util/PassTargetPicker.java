@@ -13,10 +13,7 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import javax.imageio.ImageIO;
 import javax.swing.JCheckBox;
@@ -109,27 +106,9 @@ public class PassTargetPicker {
     }
 
     private BufferedImage loadFieldImage() {
-        String localAppData = System.getenv("LOCALAPPDATA");
-        if (localAppData == null) {
-            return null;
-        }
-        Path imagePath = Paths.get(
-            localAppData,
-            "Programs",
-            "FRC Elastic",
-            "data",
-            "flutter_assets",
-            "assets",
-            "fields",
-            "2026-field.png"
-        );
-        File file = imagePath.toFile();
-        if (!file.exists()) {
-            return null;
-        }
         try {
-            return ImageIO.read(file);
-        } catch (IOException ex) {
+            return ImageIO.read(getClass().getResource("/frc/robot/resources/2026_field.png"));
+        } catch (IOException | IllegalArgumentException e) {
             return null;
         }
     }

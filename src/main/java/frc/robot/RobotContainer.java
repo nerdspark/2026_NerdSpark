@@ -42,6 +42,7 @@ import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
+import frc.robot.subsystems.PassTargetSelectorSubsystem;
 import frc.robot.subsystems.Turret;
 import frc.robot.util.HubShiftUtil;
 
@@ -68,6 +69,7 @@ public class RobotContainer {
     private final Intake intake;
     private final FuelSubsystem fuel;
     public final LEDSubsystem ledSubsystem = new LEDSubsystem();
+    private final PassTargetSelectorSubsystem passTargetSelector = new PassTargetSelectorSubsystem();
     private final Trigger intakeHome;
     private final Trigger slowMode;
 
