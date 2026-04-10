@@ -1,64 +1,72 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.networktables.DoubleArraySubscriber;
+import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.BooleanSubscriber;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 import frc.robot.Constants.PassTargetConstants;
 import frc.robot.Constants.turretTargetConstants;
 import frc.robot.sim.PassTargetPicker;
 
 public class PassTargetSelectorSubsystem extends SubsystemBase {
-    private final DoubleArraySubscriber fieldClickSub;
+
     private final PassTargetPicker picker;
+
+    // Subscribers — read what PassTargetCursor publishes
+    private final BooleanSubscriber enabledSub;
+    private final DoubleSubscriber targetXSub;
+    private final DoubleSubscriber targetYSub;
+
+    // Publishers — write to turret target topics
+    private final BooleanPublisher turretEnabledPub;
+    private final DoublePublisher turretXPub;
+    private final DoublePublisher turretYPub;
+
     private boolean lastEnabled = false;
 
     public PassTargetSelectorSubsystem() {
-        NetworkTable smart = NetworkTableInstance.getDefault().getTable("SmartDashboard");
-        fieldClickSub = smart.getDoubleArrayTopic(PassTargetConstants.fieldClickKey).subscribe(new double[] {});
+        NetworkTable table = NetworkTableInstance.getDefault().getTable("SmartDashboard");
+
+        // Read pass target state written by PassTargetCursor
+        enabledSub = table.getBooleanTopic(PassTargetConstants.enableKey)
+                          .subscribe(PassTargetConstants.defaultEnable);
+        targetXSub = table.getDoubleTopic(PassTargetConstants.targetXKey)
+                          .subscribe(PassTargetConstants.defaultTargetX);
+        targetYSub = table.getDoubleTopic(PassTargetConstants.targetYKey)
+                          .subscribe(PassTargetConstants.defaultTargetY);
+
+        // Write turret target state
+        turretEnabledPub = table.getBooleanTopic(turretTargetConstants.enableKey).publish();
+        turretXPub       = table.getDoubleTopic(turretTargetConstants.targetXKey).publish();
+        turretYPub       = table.getDoubleTopic(turretTargetConstants.targetYKey).publish();
+
         picker = new PassTargetPicker();
         picker.start();
-
-        SmartDashboard.setDefaultBoolean(PassTargetConstants.enableKey, PassTargetConstants.defaultEnable);
-        SmartDashboard.setDefaultNumber(PassTargetConstants.targetXKey, PassTargetConstants.defaultTargetX);
-        SmartDashboard.setDefaultNumber(PassTargetConstants.targetYKey, PassTargetConstants.defaultTargetY);
     }
 
     @Override
     public void periodic() {
-        boolean enabled = SmartDashboard.getBoolean(
-            PassTargetConstants.enableKey,
-            PassTargetConstants.defaultEnable
-        );
+        boolean enabled = enabledSub.get();
+
         if (!enabled) {
             if (lastEnabled) {
-                SmartDashboard.putBoolean(turretTargetConstants.enableKey, false);
+                turretEnabledPub.set(false);
             }
             lastEnabled = false;
             return;
         }
+
         lastEnabled = true;
 
-        double targetX = SmartDashboard.getNumber(
-            PassTargetConstants.targetXKey,
-            PassTargetConstants.defaultTargetX
-        );
-        double targetY = SmartDashboard.getNumber(
-            PassTargetConstants.targetYKey,
-            PassTargetConstants.defaultTargetY
-        );
+        double targetX = targetXSub.get();
+        double targetY = targetYSub.get();
 
-        double[] click = fieldClickSub.get();
-        if (click.length >= 2) {
-            targetX = click[0];
-            targetY = click[1];
-            SmartDashboard.putNumber(PassTargetConstants.targetXKey, targetX);
-            SmartDashboard.putNumber(PassTargetConstants.targetYKey, targetY);
-        }
-
-        SmartDashboard.putBoolean(turretTargetConstants.enableKey, true);
-        SmartDashboard.putNumber(turretTargetConstants.targetXKey, targetX);
-        SmartDashboard.putNumber(turretTargetConstants.targetYKey, targetY);
+        turretEnabledPub.set(true);
+        turretXPub.set(targetX);
+        turretYPub.set(targetY);
     }
 }

@@ -778,7 +778,7 @@ private boolean isNetInTheWay(double targetX, double targetY) {
             SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
 
             boolean useIK = SmartDashboard.getBoolean(
-                    AutoAimConstants.useIKSolverKey,
+                    AutoAimConstants.useIKSolverKey,    
                     AutoAimConstants.defaultUseIKSolver);
 
             if (useIK) {

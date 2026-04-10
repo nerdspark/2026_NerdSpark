@@ -10,8 +10,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
@@ -24,7 +22,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
-import edu.wpi.first.networktables.DoubleArrayPublisher;
+import edu.wpi.first.networktables.BooleanSubscriber;
+import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -33,51 +32,70 @@ import frc.robot.Constants.TurretConstants;
 import frc.robot.FieldConstants;
 
 public class PassTargetPicker {
-    private static final int REFRESH_MS = 200;
+    private static final int REFRESH_MS = 50;
 
-    private final DoubleArrayPublisher fieldClickPub;
     private final BufferedImage fieldImage;
-
     private final FieldPanel fieldPanel;
     private final JCheckBox enableBox;
-    private final JLabel coordsLabel;
+    private final JLabel statusLabel;
+
+    // Snapshot NT values once per timer tick and pass them into paint,
+    // so refreshUi() and paintComponent() always see the same frame of data.
+    private double cursorX = PassTargetConstants.defaultTargetX;
+    private double cursorY = PassTargetConstants.defaultTargetY;
+    private double lockedX = PassTargetConstants.defaultTargetX;
+    private double lockedY = PassTargetConstants.defaultTargetY;
+    private boolean enabled = PassTargetConstants.defaultEnable;
+
+    // Use typed subscribers consistently instead of mixing SmartDashboard,
+    // raw getEntry(), and typed Publisher APIs across the two files.
+    private final DoubleSubscriber cursorXSub;
+    private final DoubleSubscriber cursorYSub;
+    private final DoubleSubscriber lockedXSub;
+    private final DoubleSubscriber lockedYSub;
+    private final BooleanSubscriber enabledSub;
+
+    private double currentSpeed;
 
     private JFrame frame;
 
     public PassTargetPicker() {
-        NetworkTable smart = NetworkTableInstance.getDefault().getTable("SmartDashboard");
-        fieldClickPub = smart.getDoubleArrayTopic(PassTargetConstants.fieldClickKey).publish();
+        fieldImage  = loadFieldImage();
+        fieldPanel  = new FieldPanel();
+        enableBox   = new JCheckBox("Pass target enabled");
+        statusLabel = new JLabel();
 
-        fieldImage = loadFieldImage();
+        // Local — only needed to create the subscribers; not stored as a field.
+        NetworkTable table = NetworkTableInstance.getDefault().getTable("SmartDashboard");
 
-        fieldPanel = new FieldPanel();
-        enableBox = new JCheckBox("Pass target enabled");
-        coordsLabel = new JLabel();
+        cursorXSub = table.getDoubleTopic(PassTargetConstants.cursorXKey)
+                          .subscribe(PassTargetConstants.defaultTargetX);
+        cursorYSub = table.getDoubleTopic(PassTargetConstants.cursorYKey)
+                          .subscribe(PassTargetConstants.defaultTargetY);
+        lockedXSub = table.getDoubleTopic(PassTargetConstants.targetXKey)
+                          .subscribe(PassTargetConstants.defaultTargetX);
+        lockedYSub = table.getDoubleTopic(PassTargetConstants.targetYKey)
+                          .subscribe(PassTargetConstants.defaultTargetY);
+        enabledSub = table.getBooleanTopic(PassTargetConstants.enableKey)
+                          .subscribe(PassTargetConstants.defaultEnable);
+
+        currentSpeed = SmartDashboard.getNumber("Turret/Pass/CursorSpeed", 0.0);
     }
 
     public void start() {
         SwingUtilities.invokeLater(() -> {
-            if (frame != null) {
-                frame.setVisible(true);
-                return;
-            }
+            if (frame != null) { frame.setVisible(true); return; }
 
             frame = new JFrame("Pass Target Picker");
             frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 
-            enableBox.setSelected(SmartDashboard.getBoolean(
-                PassTargetConstants.enableKey,
-                PassTargetConstants.defaultEnable
-            ));
-
-            enableBox.addActionListener(event -> SmartDashboard.putBoolean(
-                PassTargetConstants.enableKey,
-                enableBox.isSelected()
-            ));
+            enableBox.setSelected(enabledSub.get());
+            enableBox.addActionListener(e -> SmartDashboard.putBoolean(
+                PassTargetConstants.enableKey, enableBox.isSelected()));
 
             JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
             controls.add(enableBox);
-            controls.add(coordsLabel);
+            controls.add(statusLabel);
 
             frame.getContentPane().setLayout(new BorderLayout());
             frame.getContentPane().add(fieldPanel, BorderLayout.CENTER);
@@ -87,30 +105,30 @@ public class PassTargetPicker {
             frame.setLocationByPlatform(true);
             frame.setVisible(true);
 
-            Timer refresh = new Timer(REFRESH_MS, event -> refreshUi());
+            Timer refresh = new Timer(REFRESH_MS, e -> refreshUi());
             refresh.start();
-
             refreshUi();
         });
     }
 
+    // Called exclusively on the EDT via the Swing Timer. NT subscriber.get() calls
+    // are thread-safe per the NT4 API, and the snapshot fields (cursorX, etc.) are
+    // both written here and read in paintComponent() — both on the EDT — so no
+    // additional synchronization is needed.
     private void refreshUi() {
-        enableBox.setSelected(SmartDashboard.getBoolean(
-            PassTargetConstants.enableKey,
-            PassTargetConstants.defaultEnable
-        ));
+        enabled = enabledSub.get();
+        cursorX = cursorXSub.get();
+        cursorY = cursorYSub.get();
+        lockedX = lockedXSub.get();
+        lockedY = lockedYSub.get();
 
-        double targetX = SmartDashboard.getNumber(
-            PassTargetConstants.targetXKey,
-            PassTargetConstants.defaultTargetX
-        );
+        currentSpeed = SmartDashboard.getNumber("Turret/Pass/CursorSpeed", 0.0);
 
-        double targetY = SmartDashboard.getNumber(
-            PassTargetConstants.targetYKey,
-            PassTargetConstants.defaultTargetY
-        );
+        enableBox.setSelected(enabled);
+        statusLabel.setText(String.format(
+            "Cursor: (%.2f, %.2f) Locked: (%.2f, %.2f) Current Cursor Speed: %.2f",
+            cursorX, cursorY, lockedX, lockedY, currentSpeed));
 
-        coordsLabel.setText(String.format("Target: X %.2f, Y %.2f", targetX, targetY));
         fieldPanel.repaint();
     }
 
@@ -126,139 +144,90 @@ public class PassTargetPicker {
     private final class FieldPanel extends JComponent {
         private final Rectangle imageRect = new Rectangle();
 
-        private FieldPanel() {
-            addMouseListener(new MouseAdapter() {
-                @Override
-                public void mousePressed(MouseEvent event) {
-                    handleClick(event.getX(), event.getY());
-                }
-            });
-        }
-
         @Override
         protected void paintComponent(Graphics graphics) {
             super.paintComponent(graphics);
-
             Graphics2D g2 = (Graphics2D) graphics.create();
-            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                                RenderingHints.VALUE_ANTIALIAS_ON);
 
             computeImageRect();
 
-            // Draw the field image
             if (fieldImage != null) {
                 g2.drawImage(fieldImage,
-                    imageRect.x, imageRect.y,
-                    imageRect.width, imageRect.height,
-                    null
-                );
+                    imageRect.x, imageRect.y, imageRect.width, imageRect.height, null);
             } else {
                 g2.setColor(new Color(40, 40, 40));
                 g2.fillRect(imageRect.x, imageRect.y, imageRect.width, imageRect.height);
             }
 
-            // Draw target marker
-            drawTargetOverlay(g2);
+            if (enabled) drawLockedMarker(g2, lockedX, lockedY);
+            drawCursorCrosshair(g2, cursorX, cursorY);
 
             g2.dispose();
         }
 
-        private void computeImageRect() {
-            int panelWidth = getWidth();
-            int panelHeight = getHeight();
+        private void drawLockedMarker(Graphics2D g2, double fx, double fy) {
+            int px = fieldToPixelX(fx);
+            int py = fieldToPixelY(fy);
 
-            if (panelWidth <= 0 || panelHeight <= 0) {
-                imageRect.setBounds(0, 0, 0, 0);
-                return;
-            }
-
-            double fieldAspect = FieldConstants.fieldLength / FieldConstants.fieldWidth;
-
-            int drawWidth = panelWidth;
-            int drawHeight = (int) Math.round(drawWidth / fieldAspect);
-
-            if (drawHeight > panelHeight) {
-                drawHeight = panelHeight;
-                drawWidth = (int) Math.round(drawHeight * fieldAspect);
-            }
-
-            int x = (panelWidth - drawWidth) / 2;
-            int y = (panelHeight - drawHeight) / 2;
-
-            imageRect.setBounds(x, y, drawWidth, drawHeight);
-        }
-
-        private void drawTargetOverlay(Graphics2D g2) {
-            boolean enabled = SmartDashboard.getBoolean(
-                PassTargetConstants.enableKey,
-                PassTargetConstants.defaultEnable
-            );
-
-            if (!enabled) {
-                return;
-            }
-
-            double targetX = SmartDashboard.getNumber(
-                PassTargetConstants.targetXKey,
-                PassTargetConstants.defaultTargetX
-            );
-
-            double targetY = SmartDashboard.getNumber(
-                PassTargetConstants.targetYKey,
-                PassTargetConstants.defaultTargetY
-            );
-
-            int px = fieldToPixelX(targetX);
-            int py = fieldToPixelY(targetY);
-
-            double scaleX = imageRect.getWidth() / FieldConstants.fieldLength;
+            double scaleX = imageRect.getWidth()  / FieldConstants.fieldLength;
             double scaleY = imageRect.getHeight() / FieldConstants.fieldWidth;
+            double r = TurretConstants.passTargetRadiusMeters * Math.min(scaleX, scaleY);
 
-            double radiusPixels = TurretConstants.passTargetRadiusMeters * Math.min(scaleX, scaleY);
-
-            g2.setColor(new Color(180, 180, 180, 200));
-            g2.setStroke(new BasicStroke(2.0f));
+            g2.setColor(new Color(100, 180, 255, 150));
+            g2.setStroke(new BasicStroke(2.5f));
             g2.drawOval(
-                (int) Math.round(px - radiusPixels),
-                (int) Math.round(py - radiusPixels),
-                (int) Math.round(radiusPixels * 2.0),
-                (int) Math.round(radiusPixels * 2.0)
-            );
+                (int) Math.round(px - r), (int) Math.round(py - r),
+                (int) Math.round(r * 2),  (int) Math.round(r * 2));
 
-            g2.setColor(new Color(240, 240, 240));
-            g2.fillOval(px - 4, py - 4, 8, 8);
+            g2.setColor(new Color(80, 160, 255));
+            g2.fillOval(px - 5, py - 5, 10, 10);
 
+            g2.setColor(Color.WHITE);
             g2.setFont(g2.getFont().deriveFont(Font.BOLD, 12f));
-            g2.drawString("Pass", px + 6, py - 6);
+            g2.drawString("Locked", px + 8, py - 6);
         }
 
-        private void handleClick(int x, int y) {
-            if (!imageRect.contains(x, y)) {
-                return;
-            }
+        private void drawCursorCrosshair(Graphics2D g2, double fx, double fy) {
+            int px = fieldToPixelX(fx);
+            int py = fieldToPixelY(fy);
+            int inner = 6, arm = 14;
 
-            double fieldX = ((x - imageRect.x) / (double) imageRect.width) * FieldConstants.fieldLength;
-            double fieldY = FieldConstants.fieldWidth
-                - ((y - imageRect.y) / (double) imageRect.height) * FieldConstants.fieldWidth;
+            g2.setColor(new Color(255, 215, 50, 230));
+            g2.setStroke(new BasicStroke(2.0f));
+            g2.drawLine(px - arm, py, px - inner, py);
+            g2.drawLine(px + inner, py, px + arm,  py);
+            g2.drawLine(px, py - arm, px, py - inner);
+            g2.drawLine(px, py + inner, px, py + arm);
+            g2.drawOval(px - inner, py - inner, inner * 2, inner * 2);
 
-            fieldX = clamp(fieldX, 0.0, FieldConstants.fieldLength);
-            fieldY = clamp(fieldY, 0.0, FieldConstants.fieldWidth);
-
-            fieldClickPub.set(new double[] { fieldX, fieldY });
+            g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 11f));
+            g2.setColor(new Color(255, 215, 50));
+            g2.drawString("A to lock", px + 10, py + 4);
         }
 
-        private int fieldToPixelX(double fieldX) {
-            double x = imageRect.x + (fieldX / FieldConstants.fieldLength) * imageRect.width;
-            return (int) Math.round(x);
+        private void computeImageRect() {
+            int pw = getWidth(), ph = getHeight();
+            if (pw <= 0 || ph <= 0) { imageRect.setBounds(0, 0, 0, 0); return; }
+
+            double aspect = FieldConstants.fieldLength / FieldConstants.fieldWidth;
+            int dw = pw, dh = (int) Math.round(pw / aspect);
+            if (dh > ph) { dh = ph; dw = (int) Math.round(ph * aspect); }
+            imageRect.setBounds((pw - dw) / 2, (ph - dh) / 2, dw, dh);
         }
 
-        private int fieldToPixelY(double fieldY) {
-            double y = imageRect.y + ((FieldConstants.fieldWidth - fieldY) / FieldConstants.fieldWidth) * imageRect.height;
-            return (int) Math.round(y);
+        private int fieldToPixelX(double fx) {
+            return (int) Math.round(
+                imageRect.x + (fx / FieldConstants.fieldLength) * imageRect.width);
         }
 
-        private double clamp(double value, double min, double max) {
-            return Math.max(min, Math.min(max, value));
+        private int fieldToPixelY(double fy) {
+            return (int) Math.round(
+                imageRect.y + ((FieldConstants.fieldWidth - fy)
+                               / FieldConstants.fieldWidth) * imageRect.height);
         }
     }
 }

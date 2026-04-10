@@ -245,6 +245,8 @@ public final class Constants {
         public static final String enableKey = "Turret/Pass/TargetPickerEnabled";
         public static final String targetXKey = "Turret/Pass/TargetX";
         public static final String targetYKey = "Turret/Pass/TargetY";
+        public static final String cursorXKey = "Turret/Pass/cursorX";
+        public static final String cursorYKey = "Turret/Pass/cursorY";
         public static final String fieldClickKey = "Turret/Pass/PassTargetClick";
         public static final boolean defaultEnable = false;
         public static final double defaultTargetX = FieldConstants.Hub.topCenterPoint.getX();

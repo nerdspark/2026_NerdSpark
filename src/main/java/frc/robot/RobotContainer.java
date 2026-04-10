@@ -38,6 +38,7 @@ import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
 import frc.robot.commands.UpdateLED;
 import frc.robot.commands.IntakeJitterCommand;
+import frc.robot.commands.PassTargetCursor;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
@@ -79,6 +80,7 @@ public class RobotContainer {
         public final LEDSubsystem ledSubsystem = new LEDSubsystem();
         private final Trigger intakeHome;
         private final PassTargetSelectorSubsystem passTargetSelector;
+        private final PassTargetCursor passTargetCursor;
 
         private final PIDController gyroController = new PIDController(Constants.gyroP, Constants.gyroI,
                         Constants.gyroD);
@@ -121,6 +123,7 @@ public class RobotContainer {
 
                 poseEstimator = new PoseEstimatorSubsystem(drivetrain);
                 passTargetSelector = new PassTargetSelectorSubsystem();
+                passTargetCursor = new PassTargetCursor(joystick2, passTargetSelector);
 
                 turret = new Turret(
                                 () -> drivetrain.getState().Pose,
@@ -179,7 +182,8 @@ public class RobotContainer {
                                 .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
                 joystick.y()
-                                // .onTrue(new InstantCommand(() -> startTargeting(AutoAimConstants.defaultUseIKSolver)))
+                                // .onTrue(new InstantCommand(() ->
+                                // startTargeting(AutoAimConstants.defaultUseIKSolver)))
                                 .whileTrue(new IndexerCommand(indexer, () -> 0.9, () -> turret.turretOnTarget()))
                                 .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
 
@@ -204,6 +208,10 @@ public class RobotContainer {
                                         AutoAimConstants.useIKSolverKey,
                                         AutoAimConstants.defaultUseIKSolver);
                         SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
+                }));
+
+                joystick2.rightBumper().onTrue(new InstantCommand(() -> {
+                        passTargetCursor.toggleMaxSpeed();
                 }));
 
                 // Start-of-shift warning
@@ -374,6 +382,9 @@ public class RobotContainer {
 
                 // Automatically stop indexer when no button is pressed
                 indexer.setDefaultCommand(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+
+                passTargetSelector.setDefaultCommand(passTargetCursor);
+
         }
 
         public Command getAutonomousCommand() {
