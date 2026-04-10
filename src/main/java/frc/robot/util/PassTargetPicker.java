@@ -25,15 +25,29 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 import edu.wpi.first.networktables.DoubleArrayPublisher;
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants.PassTargetConstants;
-import frc.robot.Constants.TurretConstants;
-import frc.robot.FieldConstants;
 
 public class PassTargetPicker {
     private static final int REFRESH_MS = 200;
+
+    // 2026 field dimensions in metres
+    private static final double FIELD_LENGTH = 16.541;
+    private static final double FIELD_WIDTH  = 8.069;
+
+    // Pass target circle radius in metres
+    private static final double PASS_RADIUS_METERS = 0.075;
+
+    // NT / SmartDashboard keys (must match PassTargetConstants on the robot)
+    private static final String ENABLE_KEY      = "PassTarget/Enable";
+    private static final String TARGET_X_KEY    = "PassTarget/X";
+    private static final String TARGET_Y_KEY    = "PassTarget/Y";
+    private static final String FIELD_CLICK_KEY = "Field/PassTargetClick";
+
+    // Defaults — centre of field
+    private static final boolean DEFAULT_ENABLE   = false;
+    private static final double  DEFAULT_TARGET_X = FIELD_LENGTH / 2.0;
+    private static final double  DEFAULT_TARGET_Y = FIELD_WIDTH  / 2.0;
 
     private final DoubleArrayPublisher fieldClickPub;
     private final BufferedImage fieldImage;
@@ -43,11 +57,13 @@ public class PassTargetPicker {
     private JFrame frame;
 
     public PassTargetPicker() {
-        NetworkTable smart = NetworkTableInstance.getDefault().getTable("SmartDashboard");
-        fieldClickPub = smart.getDoubleArrayTopic(PassTargetConstants.fieldClickKey).publish();
+        fieldClickPub = NetworkTableInstance.getDefault()
+            .getTable("SmartDashboard")
+            .getDoubleArrayTopic(FIELD_CLICK_KEY)
+            .publish();
         fieldImage = loadFieldImage();
-        fieldPanel = new FieldPanel();
-        enableBox = new JCheckBox("Pass target enabled");
+        fieldPanel  = new FieldPanel();
+        enableBox   = new JCheckBox("Pass target enabled");
         coordsLabel = new JLabel();
     }
 
@@ -61,14 +77,9 @@ public class PassTargetPicker {
             frame = new JFrame("Pass Target Picker");
             frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 
-            enableBox.setSelected(SmartDashboard.getBoolean(
-                PassTargetConstants.enableKey,
-                PassTargetConstants.defaultEnable
-            ));
-            enableBox.addActionListener(event -> SmartDashboard.putBoolean(
-                PassTargetConstants.enableKey,
-                enableBox.isSelected()
-            ));
+            enableBox.setSelected(SmartDashboard.getBoolean(ENABLE_KEY, DEFAULT_ENABLE));
+            enableBox.addActionListener(event ->
+                SmartDashboard.putBoolean(ENABLE_KEY, enableBox.isSelected()));
 
             JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT));
             controls.add(enableBox);
@@ -89,18 +100,9 @@ public class PassTargetPicker {
     }
 
     private void refreshUi() {
-        enableBox.setSelected(SmartDashboard.getBoolean(
-            PassTargetConstants.enableKey,
-            PassTargetConstants.defaultEnable
-        ));
-        double targetX = SmartDashboard.getNumber(
-            PassTargetConstants.targetXKey,
-            PassTargetConstants.defaultTargetX
-        );
-        double targetY = SmartDashboard.getNumber(
-            PassTargetConstants.targetYKey,
-            PassTargetConstants.defaultTargetY
-        );
+        enableBox.setSelected(SmartDashboard.getBoolean(ENABLE_KEY, DEFAULT_ENABLE));
+        double targetX = SmartDashboard.getNumber(TARGET_X_KEY, DEFAULT_TARGET_X);
+        double targetY = SmartDashboard.getNumber(TARGET_Y_KEY, DEFAULT_TARGET_Y);
         coordsLabel.setText(String.format("Target: X %.2f, Y %.2f", targetX, targetY));
         fieldPanel.repaint();
     }
@@ -141,53 +143,43 @@ public class PassTargetPicker {
             }
 
             drawTargetOverlay(g2);
-
             g2.dispose();
         }
 
         private void computeImageRect() {
-            int panelWidth = getWidth();
+            int panelWidth  = getWidth();
             int panelHeight = getHeight();
             if (panelWidth <= 0 || panelHeight <= 0) {
                 imageRect.setBounds(0, 0, 0, 0);
                 return;
             }
 
-            double fieldAspect = FieldConstants.fieldLength / FieldConstants.fieldWidth;
-            int drawWidth = panelWidth;
+            double fieldAspect = FIELD_LENGTH / FIELD_WIDTH;
+            int drawWidth  = panelWidth;
             int drawHeight = (int) Math.round(drawWidth / fieldAspect);
             if (drawHeight > panelHeight) {
                 drawHeight = panelHeight;
-                drawWidth = (int) Math.round(drawHeight * fieldAspect);
+                drawWidth  = (int) Math.round(drawHeight * fieldAspect);
             }
 
-            int x = (panelWidth - drawWidth) / 2;
-            int y = (panelHeight - drawHeight) / 2;
-            imageRect.setBounds(x, y, drawWidth, drawHeight);
+            imageRect.setBounds(
+                (panelWidth  - drawWidth)  / 2,
+                (panelHeight - drawHeight) / 2,
+                drawWidth, drawHeight
+            );
         }
 
         private void drawTargetOverlay(Graphics2D g2) {
-            boolean enabled = SmartDashboard.getBoolean(
-                PassTargetConstants.enableKey,
-                PassTargetConstants.defaultEnable
-            );
-            if (!enabled) {
-                return;
-            }
-            double targetX = SmartDashboard.getNumber(
-                PassTargetConstants.targetXKey,
-                PassTargetConstants.defaultTargetX
-            );
-            double targetY = SmartDashboard.getNumber(
-                PassTargetConstants.targetYKey,
-                PassTargetConstants.defaultTargetY
-            );
+            if (!SmartDashboard.getBoolean(ENABLE_KEY, DEFAULT_ENABLE)) return;
+
+            double targetX = SmartDashboard.getNumber(TARGET_X_KEY, DEFAULT_TARGET_X);
+            double targetY = SmartDashboard.getNumber(TARGET_Y_KEY, DEFAULT_TARGET_Y);
             int px = fieldToPixelX(targetX);
             int py = fieldToPixelY(targetY);
 
-            double scaleX = imageRect.getWidth() / FieldConstants.fieldLength;
-            double scaleY = imageRect.getHeight() / FieldConstants.fieldWidth;
-            double radiusPixels = TurretConstants.passTargetRadiusMeters * Math.min(scaleX, scaleY);
+            double scaleX = imageRect.getWidth()  / FIELD_LENGTH;
+            double scaleY = imageRect.getHeight() / FIELD_WIDTH;
+            double radiusPixels = PASS_RADIUS_METERS * Math.min(scaleX, scaleY);
 
             g2.setColor(new Color(180, 180, 180, 200));
             g2.setStroke(new BasicStroke(2.0f));
@@ -205,27 +197,23 @@ public class PassTargetPicker {
         }
 
         private void handleClick(int x, int y) {
-            if (!imageRect.contains(x, y)) {
-                return;
-            }
-            double fieldX = ((x - imageRect.x) / (double) imageRect.width) * FieldConstants.fieldLength;
-            double fieldY = FieldConstants.fieldWidth
-                - ((y - imageRect.y) / (double) imageRect.height) * FieldConstants.fieldWidth;
+            if (!imageRect.contains(x, y)) return;
 
-            fieldX = clamp(fieldX, 0.0, FieldConstants.fieldLength);
-            fieldY = clamp(fieldY, 0.0, FieldConstants.fieldWidth);
+            double fieldX = clamp(((x - imageRect.x) / (double) imageRect.width)  * FIELD_LENGTH, 0.0, FIELD_LENGTH);
+            double fieldY = clamp(FIELD_WIDTH - ((y - imageRect.y) / (double) imageRect.height) * FIELD_WIDTH, 0.0, FIELD_WIDTH);
 
             fieldClickPub.set(new double[] { fieldX, fieldY });
+            SmartDashboard.putNumber(TARGET_X_KEY, fieldX);
+            SmartDashboard.putNumber(TARGET_Y_KEY, fieldY);
+            repaint();
         }
 
         private int fieldToPixelX(double fieldX) {
-            double x = imageRect.x + (fieldX / FieldConstants.fieldLength) * imageRect.width;
-            return (int) Math.round(x);
+            return (int) Math.round(imageRect.x + (fieldX / FIELD_LENGTH) * imageRect.width);
         }
 
         private int fieldToPixelY(double fieldY) {
-            double y = imageRect.y + ((FieldConstants.fieldWidth - fieldY) / FieldConstants.fieldWidth) * imageRect.height;
-            return (int) Math.round(y);
+            return (int) Math.round(imageRect.y + ((FIELD_WIDTH - fieldY) / FIELD_WIDTH) * imageRect.height);
         }
 
         private double clamp(double value, double min, double max) {
