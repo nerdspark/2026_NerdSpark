@@ -18,8 +18,6 @@ public class Indexer implements Subsystem {
     private final CANBus canivore;
     private final TalonFX passThroughMotor, spindexerMotor;
 
-    public boolean isIndex = false;
-
     public Indexer() {
         canivore = new CANBus(Constants.CANbus);
         passThroughMotor = new TalonFX(IndexConfig.passThroughId, canivore);
@@ -49,11 +47,6 @@ public class Indexer implements Subsystem {
     }
 
     public void spinDex(Supplier<Double> rollerSpeed) {
-        if (rollerSpeed.get() < 0.01) {
-            isIndex = false;
-        } else {
-            isIndex = true;
-        }
         passThroughMotor.set(rollerSpeed.get());
         spindexerMotor.set(rollerSpeed.get());
     }
@@ -61,6 +54,5 @@ public class Indexer implements Subsystem {
     public void stopPassThrough() {
         passThroughMotor.set(0);
         spindexerMotor.set(0);
-        isIndex = false;
     }
 }

@@ -92,7 +92,7 @@ public class RobotContainer {
         // HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
         indexer = new Indexer();
-        slowMode = new Trigger(() -> (indexer.isIndex && turret.shoot));
+        slowMode = new Trigger(() -> (joystick.y().getAsBoolean() && turret.shoot));
         intake = new Intake();
         intakeHome = new Trigger(() -> intake.intakeIsIn());
 
