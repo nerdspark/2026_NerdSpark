@@ -96,7 +96,7 @@ public final class Constants {
         public static final double spinCancoder2Teeth = 15;
 
         public static final double hoodRatio = 50;
-        public static final double shooterWheelRadius = Units.inchesToMeters(4);
+        public static final double shooterWheelRadius = Units.inchesToMeters(2);
         // Ball exit speed as a fraction of wheel surface speed.
         // Set to 1.0 for pure physics model; slippage is handled by SlippageCorrectionMap.
         public static final double shooterLaunchEfficiency = 1.0;
@@ -108,7 +108,7 @@ public final class Constants {
         public static final double hoodZeroDegrees = 22.5;
         public static final double hoodMinDegrees = 22.5;
         public static final double hoodMaxDegrees = 90.0;
-        public static final double ikEntryAngleTargetDeg = 40.0;
+        public static final double ikEntryAngleTargetDeg = 50.0;
         public static final double ikEntryAngleToleranceDeg = 2.5;
         public static final double lowHoodPreferredDegrees = hoodMinDegrees;
         public static final double passTargetRadiusMeters = Units.inchesToMeters(5.91) / 2.0;
@@ -165,11 +165,11 @@ public final class Constants {
 
     public static final class IkSolution {
         public final double hoodDegrees;
-        public final double motorRps;
+        public final double exitMps;
 
-        public IkSolution(double hoodDegrees, double motorRps) {
+        public IkSolution(double hoodDegrees, double exitMps) {
             this.hoodDegrees = hoodDegrees;
-            this.motorRps = motorRps;
+            this.exitMps = exitMps;
         }
     }
 
@@ -181,7 +181,7 @@ public final class Constants {
         public static final double spinKs = 0.4;
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
-        public static final double spinStatorCurrentLimit = 80.0; //120
+        public static final double spinStatorCurrentLimit = 100.0; //120
         public static final double spinSupplyCurrent = 30.0;
         public static final double spinVelocity = 25;
         public static final double spinAccel = 100;
@@ -270,6 +270,7 @@ public final class Constants {
     }
 
     public static final class SlippageCorrectionConstants {
+        public static final boolean useSOTM = true;
         public static final double defaultDistanceOffset = Units.feetToMeters(-1.0);
 
         public static final String enableKey = "Slippage/Enable";
@@ -287,7 +288,7 @@ public final class Constants {
         // Characterization data — HA=27 deg, floor shots.
         // X: commanded RPS   Y: observed horizontal distance (meters)
         public static final double[] defaultCommandedRpsPoints    = {25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0};
-        public static final double[] defaultObservedDistanceMeters = {0.9906, 1.3208, 1,6256, 1,905, 2.3368, 2,8956, 3.429, 4.0132, 4.6228, 5.6388, 6.0452, 7.1628, 7.239, 8.7376};
+        public static final double[] defaultObservedDistanceMeters = {0.9906, 1.3208, 1.6256, 1.905, 2.3368, 2.8956, 3.429, 4.0132, 4.6228, 5.6388, 6.0452, 7.1628, 7.239, 8.7376};
         // rps  25, 30, 35, 40, 45, 50,  55,  60,  65,  70,  75,  80,  85,  90, 
         // inch 39, 52, 64, 75, 92, 114, 135, 158, 182, 222, 238, 282, 285, 344,
         
@@ -306,7 +307,7 @@ public final class Constants {
         // >1.0 = magnifies efficiency → less correction → lower commanded RPS
         // <1.0 = shrinks efficiency → more correction → higher commanded RPS
         public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
-        public static final double defaultEfficiencyScale = 1.0;
+        public static final double defaultEfficiencyScale = 1.07;
 
         public static final double passFudge = 1.4;
     }

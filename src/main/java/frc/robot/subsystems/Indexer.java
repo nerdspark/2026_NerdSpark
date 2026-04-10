@@ -49,9 +49,13 @@ public class Indexer implements Subsystem {
     }
 
     public void spinDex(Supplier<Double> rollerSpeed) {
+        if (rollerSpeed.get() < 0.01) {
+            isIndex = false;
+        } else {
+            isIndex = true;
+        }
         passThroughMotor.set(rollerSpeed.get());
         spindexerMotor.set(rollerSpeed.get());
-        isIndex = true;
     }
 
     public void stopPassThrough() {

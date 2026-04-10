@@ -245,6 +245,7 @@ public class Turret extends SubsystemBase {
         spinMotor.setPosition(motorPositon);
 
         initMapTuneDashboard();
+        SmartDashboard.setDefaultNumber("Entry Angle", TurretConstants.ikEntryAngleTargetDeg);
     }
 
     /**
@@ -310,7 +311,7 @@ public class Turret extends SubsystemBase {
         double motorPose = spinMotor.getPosition().getValueAsDouble();
         turretAngle = (motorPose * TWO_PI) / TurretConstants.spinRatio;
 
-        neededAngle = normalizeRadians(neededAngle - Math.toRadians(120));
+        neededAngle = normalizeRadians(neededAngle - Math.toRadians(118));
         //neededAngle = Math.round(neededAngle * 100.0) / 100.0;
         double target = neededAngle;
         if (target > Math.toRadians(165) || target < -Math.toRadians(178)) {
@@ -368,11 +369,11 @@ public class Turret extends SubsystemBase {
 
     private static final class DirectIkSelection {
         private final double hoodDegrees;
-        private final double motorRps;
+        private final double exitMps;
 
-        private DirectIkSelection(double hoodDegrees, double motorRps) {
+        private DirectIkSelection(double hoodDegrees, double exitMps) {
             this.hoodDegrees = hoodDegrees;
-            this.motorRps = motorRps;
+            this.exitMps = exitMps;
         }
     }
 
@@ -388,34 +389,28 @@ public class Turret extends SubsystemBase {
             distanceMeters -= SlippageCorrectionConstants.passFudge;
         }
 
-        DirectIkSelection selection = solveMinimumSpeedIKDirect(distanceMeters, deltaHeight);
+        DirectIkSelection selection = solveMinSpeedEntryAngleIKDirect(distanceMeters, deltaHeight);
         if (selection == null) {
             return null;
         }
 
-        ShooterOffsetMap.Offsets offsets = offsetMap.sample(distanceMeters);
         double hoodDeg = Math.max(
             TurretConstants.hoodMinDegrees,
             Math.min(
                 TurretConstants.hoodMaxDegrees,
-                selection.hoodDegrees + offsets.hoodOffsetDeg
+                selection.hoodDegrees
             )
         );
-        double theoreticalMotorRps = Math.max(0.0, selection.motorRps + offsets.motorRpsOffset);
-        double motorRps = slippageMap.correctedMotorRps(theoreticalMotorRps);
-        // After slippage correction the commanded RPS can exceed the motor's physical
-        // limit even if the theoretical RPS was within bounds — reject the solution.
-        if (motorRps > TurretConstants.shooterMaxMotorRps) {
-            return null;
-        }
-        return new IkSolution(hoodDeg, motorRps);
+        double exit = Math.max(0.0, selection.exitMps);
+        return new IkSolution(hoodDeg, exit);
     }
 
     private DirectIkSelection solveMinSpeedEntryAngleIKDirect(
         double distanceMeters,
         double deltaHeightMeters
     ) {
-        double entryRad = Math.toRadians(TurretConstants.ikEntryAngleTargetDeg);
+        double entry = SmartDashboard.getNumber("Entry Angle", TurretConstants.ikEntryAngleTargetDeg);
+        double entryRad = Math.toRadians(entry);
         double tanTheta = (2 * deltaHeightMeters / distanceMeters) + Math.tan(entryRad);
         double thetaRad = Math.atan(tanTheta); // launch angle from horizontal
         double hoodDeg = 90.0 - Math.toDegrees(thetaRad); // hood = 90 − launch angle
@@ -426,61 +421,56 @@ public class Turret extends SubsystemBase {
 
         double speedMps = solveIKSpeed(distanceMeters, thetaRad, deltaHeightMeters);
         if (!Double.isFinite(speedMps) || speedMps <= 0.0) return null;
-
-        double motorRps = launchMpsToMotorRps(speedMps);
-        if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
-            return null;
-        }
-        return new DirectIkSelection(hoodDeg, motorRps);
+        return new DirectIkSelection(hoodDeg, speedMps);
     }
 
-    private DirectIkSelection solveMinimumSpeedIKDirect(
-        double distanceMeters,
-        double deltaHeightMeters
-    ) {
-        double alphaRad = Math.atan2(deltaHeightMeters, distanceMeters);
-        double thetaDeg = 90 - Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
-        double thetaSpeed = Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
-        if (thetaDeg < TurretConstants.hoodMinDegrees || thetaDeg > TurretConstants.hoodMaxDegrees) {
-            return null;
-        }
-        double speedMps = solveIKSpeed(distanceMeters, Math.toRadians(thetaSpeed), deltaHeightMeters);
-        double motorRps = launchMpsToMotorRps(speedMps);
-        if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
-            return null;
-        }
-        SmartDashboard.putNumber("Turret/TheoreticalRps", motorRps);
-        return new DirectIkSelection(thetaDeg, motorRps);
-    }
+    // private DirectIkSelection solveMinimumSpeedIKDirect(
+    //     double distanceMeters,
+    //     double deltaHeightMeters
+    // ) {
+    //     double alphaRad = Math.atan2(deltaHeightMeters, distanceMeters);
+    //     double thetaDeg = 90 - Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
+    //     double thetaSpeed = Math.toDegrees(0.5 * (alphaRad + (Math.PI / 2.0)));
+    //     if (thetaDeg < TurretConstants.hoodMinDegrees || thetaDeg > TurretConstants.hoodMaxDegrees) {
+    //         return null;
+    //     }
+    //     double speedMps = solveIKSpeed(distanceMeters, Math.toRadians(thetaSpeed), deltaHeightMeters);
+    //     double motorRps = launchMpsToMotorRps(speedMps);
+    //     if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
+    //         return null;
+    //     }
+    //     SmartDashboard.putNumber("Turret/TheoreticalRps", motorRps);
+    //     return new DirectIkSelection(thetaDeg, motorRps);
+    // }
 
-    private DirectIkSelection solveTwoPointIKDirect(
-        double d1Meters, double deltaH1Meters,
-        double d2Meters, double deltaH2Meters
-    ) {
-        double denomK = d1Meters * d2Meters * (d2Meters - d1Meters);
-        if (Math.abs(denomK) < 1e-9) return null;
+    // private DirectIkSelection solveTwoPointIKDirect(
+    //     double d1Meters, double deltaH1Meters,
+    //     double d2Meters, double deltaH2Meters
+    // ) {
+    //     double denomK = d1Meters * d2Meters * (d2Meters - d1Meters);
+    //     if (Math.abs(denomK) < 1e-9) return null;
 
-        double K = (deltaH1Meters * d2Meters - deltaH2Meters * d1Meters) / denomK;
-        if (!Double.isFinite(K) || K <= 0.0) return null;
+    //     double K = (deltaH1Meters * d2Meters - deltaH2Meters * d1Meters) / denomK;
+    //     if (!Double.isFinite(K) || K <= 0.0) return null;
 
-        double tanTheta = (deltaH1Meters + K * d1Meters * d1Meters) / d1Meters;
-        double thetaRad = Math.atan(tanTheta);              // launch angle from horizontal
-        double hoodDeg  = 90.0 - Math.toDegrees(thetaRad); // hood convention: 90 − launchAngle
+    //     double tanTheta = (deltaH1Meters + K * d1Meters * d1Meters) / d1Meters;
+    //     double thetaRad = Math.atan(tanTheta);              // launch angle from horizontal
+    //     double hoodDeg  = 90.0 - Math.toDegrees(thetaRad); // hood convention: 90 − launchAngle
 
-        if (hoodDeg < TurretConstants.hoodMinDegrees || hoodDeg > TurretConstants.hoodMaxDegrees) {
-            return null;
-        }
+    //     if (hoodDeg < TurretConstants.hoodMinDegrees || hoodDeg > TurretConstants.hoodMaxDegrees) {
+    //         return null;
+    //     }
 
-        double cosTheta = Math.cos(thetaRad);
-        double speedMps = Math.sqrt(9.80665 / (2.0 * K * cosTheta * cosTheta));
-        if (!Double.isFinite(speedMps) || speedMps <= 0.0) return null;
+    //     double cosTheta = Math.cos(thetaRad);
+    //     double speedMps = Math.sqrt(9.80665 / (2.0 * K * cosTheta * cosTheta));
+    //     if (!Double.isFinite(speedMps) || speedMps <= 0.0) return null;
 
-        double motorRps = launchMpsToMotorRps(speedMps);
-        if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
-            return null;
-        }
-        return new DirectIkSelection(hoodDeg, motorRps);
-    }
+    //     double motorRps = launchMpsToMotorRps(speedMps);
+    //     if (!Double.isFinite(motorRps) || motorRps <= 0.0 || motorRps > TurretConstants.shooterMaxMotorRps) {
+    //         return null;
+    //     }
+    //     return new DirectIkSelection(hoodDeg, motorRps);
+    // }
 
     private double solveIKSpeed(double distanceMeters, double thetaRad, double deltaHeightMeters) {
         double cos = Math.cos(thetaRad);
@@ -508,16 +498,20 @@ public class Turret extends SubsystemBase {
     * @return
     */
     private SOTM applySOTMComp(double launchMps, double launchAngle, double turretRad, ChassisSpeeds speed) {
-        double newLaunchMps = Math.sqrt(Math.pow(launchMps, 2) + Math.pow(speed.vxMetersPerSecond, 2) + Math.pow(speed.vyMetersPerSecond, 2) 
-            - 2 * launchMps * Math.cos(launchAngle) * (Math.cos(turretRad) * speed.vxMetersPerSecond + Math.sin(turretRad) * speed.vyMetersPerSecond));
-        double newTurretAngle = Math.atan2(launchMps * Math.cos(launchAngle) * Math.sin(turretRad) - speed.vyMetersPerSecond, 
-            launchMps * Math.cos(launchAngle) * Math.cos(turretRad) - speed.vxMetersPerSecond);
-        double newLaunchAngle = launchAngle;
-        if (newLaunchMps > 1e-6) {
-            newLaunchAngle = Math.asin((launchMps * Math.sin(launchAngle)) / newLaunchMps);
-        }
+        if (SlippageCorrectionConstants.useSOTM) {
+            double newLaunchMps = Math.sqrt(Math.pow(launchMps, 2) + Math.pow(speed.vxMetersPerSecond, 2) + Math.pow(speed.vyMetersPerSecond, 2) 
+                - 2 * launchMps * Math.cos(launchAngle) * (Math.cos(turretRad) * speed.vxMetersPerSecond + Math.sin(turretRad) * speed.vyMetersPerSecond));
+            double newTurretAngle = Math.atan2(launchMps * Math.cos(launchAngle) * Math.sin(turretRad) - speed.vyMetersPerSecond, 
+                launchMps * Math.cos(launchAngle) * Math.cos(turretRad) - speed.vxMetersPerSecond);
+            double newLaunchAngle = launchAngle;
+            if (newLaunchMps > 1e-6) {
+                newLaunchAngle = Math.asin((launchMps * Math.sin(launchAngle)) / newLaunchMps);
+            }
 
-        return new SOTM(newTurretAngle, newLaunchAngle, newLaunchMps);
+            return new SOTM(newTurretAngle, newLaunchAngle, newLaunchMps);
+        } else {
+            return new SOTM(turretRad, launchAngle, launchMps);
+        }
     }
 
     private void initMapTuneDashboard() {
@@ -619,27 +613,14 @@ public class Turret extends SubsystemBase {
                 IkSolution ikSolution = solveIK(distance);
                 if (ikSolution != null) {
                     double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);
-                    double deltaHeight;
-                    if (shoot) {
-                        deltaHeight = TurretConstants.targetHeightMeters - TurretConstants.shooterMuzzleHeightMeters;
-                    } else {
-                        deltaHeight = -TurretConstants.shooterMuzzleHeightMeters;
-                        distance -= SlippageCorrectionConstants.passFudge;
-                    }
-                    double exitSpeedMps = solveIKSpeed(distance, launchAngleRad, deltaHeight);
-                    sotm = applySOTMComp(exitSpeedMps, launchAngleRad, errorRad, speeds);
+                    sotm = applySOTMComp(ikSolution.exitMps, launchAngleRad, errorRad, speeds);
                     SmartDashboard.putBoolean("Turret/IK/HasSolution", true);
                     SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", ikSolution.hoodDegrees);
-                    SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", ikSolution.motorRps);
+                    SmartDashboard.putNumber("Turret/IK/RequiredExitMps", ikSolution.exitMps);
                 } else {
                     SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
-                    ShooterParams params = aimOnFly(shoot ? distance : Double.MAX_VALUE);
-                    sotm = applySOTMComp(
-                        motorRpsToLaunchSpeedMps(params.shooterSpeed), 
-                        Math.toRadians(90 - hoodRotationsToDegrees(params.hoodPose)), 
-                        errorRad, 
-                        speeds
-                    );
+                    SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", 0);
+                    SmartDashboard.putNumber("Turret/IK/RequiredExitMps", 0);
                 }
             } else {
                 SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
@@ -657,8 +638,14 @@ public class Turret extends SubsystemBase {
                 hoodPose.Position = hoodDegreesToRotations(90 - Math.toDegrees(sotm.launchAngle));
                 if (useIK) {
                     velocity = applyShooterControl(slippageMap.correctedMotorRps(launchMpsToMotorRps(sotm.launchMps)));
+                    SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", velocity);
                 } else {
                     velocity = applyShooterControl(launchMpsToMotorRps(sotm.launchMps));
+                }
+                if (velocity > TurretConstants.shooterMaxMotorRps || (90 - Math.toDegrees(sotm.launchAngle)) < TurretConstants.hoodMinDegrees
+                    || (90 - Math.toDegrees(sotm.launchAngle)) > TurretConstants.hoodMaxDegrees) {
+                    velocity = 0;
+                    hoodPose.Position = 0;
                 }
             } else {
                 turretIdle();

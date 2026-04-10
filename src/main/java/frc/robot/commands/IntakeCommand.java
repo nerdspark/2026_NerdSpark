@@ -2,8 +2,6 @@ package frc.robot.commands;
 
 import java.util.function.Supplier;
 
-import com.ctre.phoenix6.controls.VelocityVoltage;
-
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -26,21 +24,24 @@ public class IntakeCommand extends Command{
 
     public void execute() {
         double chassisSpeed = Math.hypot(speeds.get().vxMetersPerSecond, speeds.get().vyMetersPerSecond);
+        chassisSpeed = Math.abs(chassisSpeed);
         // Step 1: desired surface speed
-        double surfaceSpeed = chassisSpeed * 1.5;
+        double surfaceSpeed = chassisSpeed * 2.0;
 
         // Step 2: convert to roller RPS
-        double rollerRPS = surfaceSpeed / (Math.PI * Units.inchesToMeters(2));
+        double rollerRPS = surfaceSpeed / (Math.PI * Units.inchesToMeters(3));
+        rollerRPS *= 2.5;
 
-        // Step 3: convert to motor RPS
-        double motorRPS = rollerRPS;// * GEAR_RATIO;
+        if (rollerRPS < 35) {
+            rollerRPS = 25;
+        }
 
         // Step 4: set velocity
-        intake.setRollerPower(motorRPS);
+        intake.setRollerSpeed(rollerRPS);
     }
 
     public void end(boolean interrupted) {
-        intake.stopIntake();    
+        intake.setRollerSpeed(0);    
     }
 
     public boolean isFinished() {
