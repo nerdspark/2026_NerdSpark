@@ -247,7 +247,6 @@ public class Turret extends SubsystemBase {
 
         initMapTuneDashboard();
         SmartDashboard.setDefaultNumber("Entry Angle", TurretConstants.ikEntryAngleTargetDeg);
-
     }
 
     /**
@@ -596,11 +595,6 @@ public class Turret extends SubsystemBase {
             Translation2d targetPose = shoot ? goalPose : passPose;
             m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(), new Rotation2d());
 
-            // double predictionSeconds = SlippageCorrectionConstants.defaultSotmPredictionSeconds;
-            // Translation2d predictedTranslation = turretPose.getTranslation().plus(
-            //     new Translation2d(speeds.vxMetersPerSecond * predictionSeconds,
-            //                       speeds.vyMetersPerSecond * predictionSeconds));
-            // m_field.getObject("Prediction pose").setPose(predictedTranslation.getX(), predictedTranslation.getY(), turretPose.getRotation());
             double xError = targetPose.getX() - turretPose.getX();
             double yError = targetPose.getY() - turretPose.getY();
             double errorRad = Math.atan2(yError, xError);
