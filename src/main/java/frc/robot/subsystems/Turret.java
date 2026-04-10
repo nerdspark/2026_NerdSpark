@@ -44,6 +44,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.TurretConstants;
+import frc.robot.Constants.turretTargetConstants;
 import frc.robot.util.ShooterParams;
 import frc.robot.Constants.TurretConfig;
 import frc.robot.Constants;
@@ -584,12 +585,19 @@ public class Turret extends SubsystemBase {
             Translation2d passPose;
             if (isBlue) {
                 goalPose = FieldConstants.Hub.topCenterPoint.toTranslation2d();
-                passPose = closerPoint(turretPose, FieldConstants.BluePass.left, FieldConstants.BluePass.right) 
+                passPose = closerPoint(turretPose, FieldConstants.BluePass.left, FieldConstants.BluePass.right)
                         ? FieldConstants.BluePass.left : FieldConstants.BluePass.right;
             } else {
                 goalPose = FieldConstants.Hub.oppTopCenterPoint.toTranslation2d();
-                passPose = closerPoint(turretPose, FieldConstants.RedPass.left, FieldConstants.RedPass.right) 
+                passPose = closerPoint(turretPose, FieldConstants.RedPass.left, FieldConstants.RedPass.right)
                         ? FieldConstants.RedPass.left : FieldConstants.RedPass.right;
+            }
+
+            if (SmartDashboard.getBoolean(turretTargetConstants.enableKey, false)) {
+                passPose = new Translation2d(
+                    SmartDashboard.getNumber(turretTargetConstants.targetXKey, passPose.getX()),
+                    SmartDashboard.getNumber(turretTargetConstants.targetYKey, passPose.getY())
+                );
             }
             
             Translation2d targetPose = shoot ? goalPose : passPose;
