@@ -267,7 +267,9 @@ public class RobotContainer {
                 .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
         NamedCommands.registerCommand(
             "intake_wiggle", 
-            new IntakeJitterCommand(intake));
+            new InstantCommand(() -> intake.useFastConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
+            .andThen(new InstantCommand(() -> intake.setRollerPower(0.5), intake)));
         NamedCommands.registerCommand(
             "indexer_on", 
             new IndexerCommand(indexer, () -> 0.9, () -> turret.turretOnTarget()));

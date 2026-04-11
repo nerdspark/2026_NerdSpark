@@ -26,14 +26,14 @@ public class IntakeCommand extends Command{
         double chassisSpeed = Math.hypot(speeds.get().vxMetersPerSecond, speeds.get().vyMetersPerSecond);
         chassisSpeed = Math.abs(chassisSpeed);
         // Step 1: desired surface speed
-        double surfaceSpeed = chassisSpeed * 2.0;
+        double surfaceSpeed = chassisSpeed * 3.0;
 
         // Step 2: convert to roller RPS
         double rollerRPS = surfaceSpeed / (Math.PI * Units.inchesToMeters(3));
         rollerRPS *= 2.5;
 
-        if (rollerRPS < 35) {
-            rollerRPS = 25;
+        if (rollerRPS < 45) {
+            rollerRPS = 45;
         }
 
         // Step 4: set velocity
