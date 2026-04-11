@@ -21,12 +21,6 @@
           "data": {
             "commands": [
               {
-                "type": "named",
-                "data": {
-                  "name": "intake_wiggle"
-                }
-              },
-              {
                 "type": "wait",
                 "data": {
                   "waitTime": 4.0
@@ -50,7 +44,7 @@
         {
           "type": "named",
           "data": {
-            "name": "intake_wiggle"
+            "name": "indexer_on"
           }
         }
       ]

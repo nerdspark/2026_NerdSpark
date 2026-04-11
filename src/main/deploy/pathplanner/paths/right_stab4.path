@@ -83,17 +83,6 @@
       }
     },
     {
-      "name": "intake_wiggle",
-      "waypointRelativePos": 1.3377926421404676,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "intake_wiggle"
-        }
-      }
-    },
-    {
       "name": "indexer_on",
       "waypointRelativePos": 1.3444816053511706,
       "endWaypointRelativePos": null,
