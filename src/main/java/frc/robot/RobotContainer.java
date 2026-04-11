@@ -32,6 +32,7 @@ import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.turretTargetConstants;
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
+import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.UpdateLED;
 import frc.robot.commands.IntakeJitterCommand;
 import frc.robot.generated.TunerConstants;
@@ -41,6 +42,7 @@ import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
+import frc.robot.subsystems.PassTargetSelectorSubsystem;
 import frc.robot.subsystems.Turret;
 import frc.robot.util.HubShiftUtil;
 
@@ -67,6 +69,7 @@ public class RobotContainer {
     private final Intake intake;
     private final FuelSubsystem fuel;
     public final LEDSubsystem ledSubsystem = new LEDSubsystem();
+    private final PassTargetSelectorSubsystem passTargetSelector = new PassTargetSelectorSubsystem();
     private final Trigger intakeHome;
     private final Trigger slowMode;
 
@@ -86,12 +89,13 @@ public class RobotContainer {
                 drivetrain.getState().Speeds,
                 drivetrain.getState().Pose.getRotation()
             ),
-            () -> override
+            () -> override,
+            passTargetSelector
         );
         // HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
         indexer = new Indexer();
-        slowMode = new Trigger(() -> (indexer.isIndex && turret.shoot));
+        slowMode = new Trigger(() -> (joystick.y().getAsBoolean() && turret.shoot));
         intake = new Intake();
         intakeHome = new Trigger(() -> intake.intakeIsIn());
 
@@ -112,7 +116,7 @@ public class RobotContainer {
         joystick.rightBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake))
             .withTimeout(0.25)
-            .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
+            .andThen(new IntakeCommand(intake, () -> drivetrain.getState().Speeds)));
 
         joystick.leftBumper().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.homePos), intake))
@@ -120,17 +124,20 @@ public class RobotContainer {
         
         joystick.rightTrigger()
             .onTrue(new InstantCommand(() -> intake.setRollerPower(-1.0), intake))
-            .onFalse(new InstantCommand(() -> intake.setRollerPower(1.0), intake));
+            .onFalse(new IntakeCommand(intake, () -> drivetrain.getState().Speeds));
 
         joystick.leftTrigger()
             .whileTrue(new IndexerCommand(indexer, () -> -0.9, () -> true))
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick.y()
-            .whileTrue(new IndexerCommand(indexer, () -> 0.9, () -> true))
-            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true)); //turret.turretOnTarget()
+            .whileTrue(new IndexerCommand(indexer, () -> 0.9, () -> turret.turretOnTarget()))
+            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
         
-        joystick.b().whileTrue(new IntakeJitterCommand(intake));
+        joystick.b().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
+            .andThen(new InstantCommand(() -> intake.setRollerPower(0.5), intake)))
+            .onFalse(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
@@ -154,12 +161,12 @@ public class RobotContainer {
         }));
 
         slowMode.onTrue(new InstantCommand(() -> {
-                maxSpeed *= 0.25;
-                maxAngularRate *= 0.25;
+                maxSpeed *= 0.5;
+                maxAngularRate *= 0.5;
             }))
             .onFalse(new InstantCommand(() -> {
-                maxSpeed *= 4;
-                maxAngularRate *= 4;
+                maxSpeed *= 2;
+                maxAngularRate *= 2;
             }));
 
         // Start-of-shift warning
@@ -246,7 +253,7 @@ public class RobotContainer {
             "intake_deploy",
             new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
                 .withTimeout(0.25)
-                .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake))
+                .andThen(new IntakeCommand(intake, () -> drivetrain.getState().Speeds))
         );
         NamedCommands.registerCommand(
             "intake_home",
@@ -302,6 +309,7 @@ public class RobotContainer {
       
         // Automatically stop indexer when no button is pressed
         indexer.setDefaultCommand(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+        intake.setDefaultCommand(new IntakeCommand(intake, () -> drivetrain.getState().Speeds));
     }
 
     

@@ -2,6 +2,7 @@ package frc.robot.util;
 
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.SlippageCorrectionConstants;
 import frc.robot.Constants.TurretConstants;
 
@@ -29,16 +30,16 @@ public class SlippageCorrectionMap {
             new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), SlippageCorrectionMap::lerp);
     private boolean hasData = false;
 
-    // public SlippageCorrectionMap() {
+    public SlippageCorrectionMap() {
     //     SmartDashboard.setDefaultBoolean(
     //             SlippageCorrectionConstants.enableKey,
     //             SlippageCorrectionConstants.defaultEnable);
-    //     SmartDashboard.setDefaultNumber(
-    //             SlippageCorrectionConstants.efficiencyOffsetKey,
-    //             SlippageCorrectionConstants.defaultEfficiencyOffset);
-    //     SmartDashboard.setDefaultNumber(
-    //             SlippageCorrectionConstants.efficiencyScaleKey,
-    //             SlippageCorrectionConstants.defaultEfficiencyScale);
+        SmartDashboard.setDefaultNumber(
+                SlippageCorrectionConstants.efficiencyOffsetKey,
+                SlippageCorrectionConstants.defaultEfficiencyOffset);
+        SmartDashboard.setDefaultNumber(
+                SlippageCorrectionConstants.efficiencyScaleKey,
+                SlippageCorrectionConstants.defaultEfficiencyScale);
     //     SmartDashboard.setDefaultNumber(
     //             SlippageCorrectionConstants.charHoodDegKey,
     //             SlippageCorrectionConstants.defaultCharHoodDeg);
@@ -54,7 +55,7 @@ public class SlippageCorrectionMap {
     //     SmartDashboard.setDefaultNumber(
     //             SlippageCorrectionConstants.sotmPredictionSecondsKey,
     //             SlippageCorrectionConstants.defaultSotmPredictionSeconds);
-    // }
+    }
 
     /**
      * Returns the actual ball exit speed (m/s) for a given commanded motor RPS,
@@ -80,7 +81,9 @@ public class SlippageCorrectionMap {
         if (!enabled || !hasData) {
             return 1.0;
         }
-        double scale = SlippageCorrectionConstants.defaultEfficiencyScale;
+        double scale = SmartDashboard.getNumber(
+                SlippageCorrectionConstants.efficiencyScaleKey,
+                SlippageCorrectionConstants.defaultEfficiencyScale);;
         Double factor = efficiencyMap.get(motorRps);
         return (factor != null && factor > 0.0) ? factor * scale : 1.0;
     }
@@ -95,8 +98,9 @@ public class SlippageCorrectionMap {
         double eff = efficiencyAt(theoreticalRps);
         if (eff <= 0.0) return theoreticalRps;
         double offset =
-            SlippageCorrectionConstants.defaultEfficiencyOffset
-        ;
+            SmartDashboard.getNumber(
+                SlippageCorrectionConstants.efficiencyOffsetKey,
+                 SlippageCorrectionConstants.defaultEfficiencyOffset);
         return (theoreticalRps / eff) + offset;
     }
 
@@ -137,7 +141,7 @@ public class SlippageCorrectionMap {
             if (!Double.isFinite(vActual) || vActual <= 0.0) {
                 continue;
             }
-            double vTheoretical = rps * wheelCircumference;
+            double vTheoretical = (rps * wheelCircumference) * 0.5;
             double efficiency = vActual / vTheoretical;
             if (efficiency <= 0.0 || efficiency > 1.5) {
                 continue;

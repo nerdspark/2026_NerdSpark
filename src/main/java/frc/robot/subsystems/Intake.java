@@ -18,6 +18,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 
 public class Intake extends SubsystemBase {
     private CANBus canivore;
@@ -25,6 +26,7 @@ public class Intake extends SubsystemBase {
     
     private final TalonFXSimState intakeSim;
     private final MotionMagicTorqueCurrentFOC m_mmRequest = new MotionMagicTorqueCurrentFOC(IntakeConstants.homePos);
+    private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
     private TalonFXConfiguration deployMotorConfig = new TalonFXConfiguration();
     private TalonFXConfiguration rollerMotorConfig = new TalonFXConfiguration();
 
@@ -47,6 +49,10 @@ public class Intake extends SubsystemBase {
             .withStatorCurrentLimitEnable(true)
             .withSupplyCurrentLimit(IntakeConstants.rollerSupplyCurrentLimit)
             .withSupplyCurrentLimitEnable(true);
+        rollerMotorConfig.Slot0 = new Slot0Configs()
+            .withKP(10.0)
+            .withKI(5.0)
+            .withKD(0);
 
         deployMotorConfig.MotorOutput = new MotorOutputConfigs()
             .withInverted(InvertedValue.Clockwise_Positive)
@@ -93,6 +99,10 @@ public class Intake extends SubsystemBase {
         deployMotor.setControl(m_mmRequest.withPosition(rotations.get().doubleValue()));
     }
     
+    public void setRollerSpeed(double speed) {
+        roller1.setControl(velocityRequest.withVelocity(-speed));
+        roller2.setControl(velocityRequest.withVelocity(speed));
+    }
     public void setRollerPower(double power) {
         roller1.set(-power);
         roller2.set(power);

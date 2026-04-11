@@ -112,3 +112,42 @@ wpi.java.configureTestTasks(test)
 tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
 }
+
+// Pass Target Picker — run on driver station laptop
+task runPicker(type: JavaExec) {
+    mainClass = 'frc.robot.util.PassTargetPickerMain'
+    classpath = sourceSets.main.runtimeClasspath
+    if (project.hasProperty('team')) {
+        args project.team
+    }
+}
+
+task pickerJar(type: Jar) {
+    archiveBaseName = 'PassTargetPicker'
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    from sourceSets.main.output
+    from('src/main/java') { include 'frc/robot/resources/**' }
+    manifest { attributes 'Main-Class': 'frc.robot.util.PassTargetPickerMain' }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+task pickerDist(type: Zip, dependsOn: pickerJar) {
+    archiveBaseName = 'PassTargetPicker'
+
+    // Fat jar
+    from(pickerJar.archiveFile) { into '.' }
+
+    // Native DLLs extracted flat into native/
+    from({ configurations.nativeRelease.collect { zipTree(it) } }) {
+        include 'windows/x86-64/shared/*.dll'
+        eachFile { fcd -> fcd.relativePath = new RelativePath(true, fcd.name) }
+        into 'native'
+        includeEmptyDirs = false
+    }
+
+    // Deploy files (apriltag JSON etc.)
+    from('src/main/deploy') { into 'src/main/deploy' }
+
+    // Launch script
+    from('LaunchDS.bat') { into '.' }
+}
