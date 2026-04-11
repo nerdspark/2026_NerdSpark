@@ -44,7 +44,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.TurretConstants;
-import frc.robot.Constants.turretTargetConstants;
 import frc.robot.util.ShooterParams;
 import frc.robot.Constants.TurretConfig;
 import frc.robot.Constants;
@@ -72,6 +71,7 @@ public class Turret extends SubsystemBase {
     private Supplier<Pose2d> pose;
     private Supplier<ChassisSpeeds> speed;
     private Supplier<Boolean> manualOverride;
+    private PassTargetSelectorSubsystem passTargetSelector;
 
     private double turretAngle = 0;
     private boolean brake = false;
@@ -90,10 +90,11 @@ public class Turret extends SubsystemBase {
     private final boolean isBlue;
     private Pose2d turretPose = new Pose2d();
 
-    public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> manualOverrider) {
+    public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> manualOverrider, PassTargetSelectorSubsystem passTargetSelector) {
         pose = robotPose;
         speed = speeds;
         manualOverride = manualOverrider;
+        this.passTargetSelector = passTargetSelector;
 
         isBlue = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
 
@@ -593,11 +594,8 @@ public class Turret extends SubsystemBase {
                         ? FieldConstants.RedPass.left : FieldConstants.RedPass.right;
             }
 
-            if (SmartDashboard.getBoolean(turretTargetConstants.enableKey, false)) {
-                passPose = new Translation2d(
-                    SmartDashboard.getNumber(turretTargetConstants.targetXKey, passPose.getX()),
-                    SmartDashboard.getNumber(turretTargetConstants.targetYKey, passPose.getY())
-                );
+            if (passTargetSelector != null && passTargetSelector.isEnabled()) {
+                passPose = passTargetSelector.getTarget();
             }
             
             Translation2d targetPose = shoot ? goalPose : passPose;

@@ -89,7 +89,8 @@ public class RobotContainer {
                 drivetrain.getState().Speeds,
                 drivetrain.getState().Pose.getRotation()
             ),
-            () -> override
+            () -> override,
+            passTargetSelector
         );
         // HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
