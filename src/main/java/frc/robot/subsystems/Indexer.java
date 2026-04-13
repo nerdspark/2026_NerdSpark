@@ -5,7 +5,9 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -17,6 +19,7 @@ import frc.robot.Constants.IndexConfig;
 public class Indexer implements Subsystem {
     private final CANBus canivore;
     private final TalonFX passThroughMotor, spindexerMotor;
+    private final VelocityVoltage velocityVolatage = new VelocityVoltage(0);
 
     public Indexer() {
         canivore = new CANBus(Constants.CANbus);
@@ -32,6 +35,13 @@ public class Indexer implements Subsystem {
             .withMotorOutput(new MotorOutputConfigs()
                 .withInverted(InvertedValue.CounterClockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Coast));
+        
+        passThroughConfig.Slot0 = new Slot0Configs()              // TODO Tune these: 
+                                    .withKP(IndexConfig.passThroughKP)
+                                    .withKI(IndexConfig.passThroughKI)
+                                    .withKD(IndexConfig.passThroughKD);
+
+
         TalonFXConfiguration indexConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(IndexConfig.statorCurretLimit)
@@ -42,17 +52,30 @@ public class Indexer implements Subsystem {
                 .withInverted(InvertedValue.Clockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Coast));
         
+        // velocity voltage constants for spindexer
+        indexConfig.Slot0 = new Slot0Configs()              // TODO Tune these: 
+                                    .withKP(IndexConfig.indexerKP)
+                                    .withKI(IndexConfig.indexerKI)
+                                    .withKD(IndexConfig.indexerKD);
+        
         passThroughMotor.getConfigurator().apply(passThroughConfig);
         spindexerMotor.getConfigurator().apply(indexConfig);
     }
 
     public void spinDex(Supplier<Double> rollerSpeed) {
-        passThroughMotor.set(rollerSpeed.get());
-        spindexerMotor.set(rollerSpeed.get());
+        passThroughMotor.setControl(velocityVolatage
+                                        .withSlot(0)
+                                        .withEnableFOC(true)
+                                        .withVelocity(rollerSpeed.get()));
+
+        spindexerMotor.setControl(velocityVolatage
+                                        .withSlot(0)
+                                        .withEnableFOC(true)
+                                        .withVelocity(rollerSpeed.get()));
     }
 
     public void stopPassThrough() {
-        passThroughMotor.set(0);
-        spindexerMotor.set(0);
+        passThroughMotor.setControl(velocityVolatage.withVelocity(0));
+        spindexerMotor.setControl(velocityVolatage.withVelocity(0));
     }
 }

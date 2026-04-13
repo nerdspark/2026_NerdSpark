@@ -212,8 +212,17 @@ public final class Constants {
     public static final class IndexConfig {
         public static final int passThroughId = 32;
         public static final int indexId = 33;
-        public static final double statorCurretLimit = 40;
-        public static final double supplyCurretLimit = 40;
+
+        public static final double statorCurretLimit = 50; // both motors share these current limits
+        public static final double supplyCurretLimit = 20;
+
+        public static final double indexerKP = 0.0;
+        public static final double indexerKI = 0.0;
+        public static final double indexerKD = 0.0;
+
+        public static final double passThroughKP = 0.0;
+        public static final double passThroughKI = 0.0;
+        public static final double passThroughKD = 0.0;
     }
 
     public static final class TurretTargetConstants {
