@@ -29,7 +29,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.AutoAimConstants;
-import frc.robot.Constants.turretTargetConstants;
+import frc.robot.Constants.TurretTargetConstants;
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
 import frc.robot.commands.IntakeCommand;
@@ -127,12 +127,12 @@ public class RobotContainer {
             .onFalse(new IntakeCommand(intake, () -> drivetrain.getState().Speeds));
 
         joystick.leftTrigger()
-            .whileTrue(new IndexerCommand(indexer, () -> -0.9, () -> true))
+            .whileTrue(new IndexerCommand(indexer, () -> -1.0, () -> true))
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick.y()
-            .whileTrue(new IndexerCommand(indexer, () -> 0.9, () -> turret.turretOnTarget()))
-            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+            .whileTrue(new IndexerCommand(indexer, () -> 1.0, () -> true)) //turret.turretOnTarget()
+            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
         
         joystick.b().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
@@ -270,10 +270,10 @@ public class RobotContainer {
             new IntakeJitterCommand(intake));
         NamedCommands.registerCommand(
             "indexer_on", 
-            new IndexerCommand(indexer, () -> 0.9, () -> turret.turretOnTarget()));
+            new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()));
         NamedCommands.registerCommand(
             "indexer_off", 
-            new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+            new IndexerCommand(indexer, () -> 0.0, () -> true));
         NamedCommands.registerCommand(
             "shoot_start", 
             new InstantCommand(this::startTargeting));
@@ -340,15 +340,15 @@ public class RobotContainer {
         Translation2d target = alliance == Alliance.Red
             ? FieldConstants.Hub.oppTopCenterPoint.toTranslation2d()
             : FieldConstants.Hub.topCenterPoint.toTranslation2d();
-        SmartDashboard.putBoolean(turretTargetConstants.enableKey, true);
-        SmartDashboard.putNumber(turretTargetConstants.targetXKey, target.getX());
-        SmartDashboard.putNumber(turretTargetConstants.targetYKey, target.getY());
+        SmartDashboard.putBoolean(TurretTargetConstants.enableKey, true);
+        SmartDashboard.putNumber(TurretTargetConstants.targetXKey, target.getX());
+        SmartDashboard.putNumber(TurretTargetConstants.targetYKey, target.getY());
         fuel.enableTargeting(true);
         fuel.setTarget(target);
     }
 
     private void stopTargeting() {
-        SmartDashboard.putBoolean(turretTargetConstants.enableKey, false);
+        SmartDashboard.putBoolean(TurretTargetConstants.enableKey, false);
         fuel.enableTargeting(false);
     }
 }

@@ -114,8 +114,8 @@ public class FieldConstants {
     // Relevant reference points on the opposite side
     public static final Translation3d oppTopCenterPoint =
         new Translation3d(
-            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX() + (width / 2.0), //+ Units.inchesToMeters(3),
-            fieldWidth / 2.0,// - Units.inchesToMeters(12),
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX() + (width / 2.0),
+            fieldWidth / 2.0,
             height);
     public static final Translation2d oppNearLeftCorner =
         new Translation2d(oppTopCenterPoint.getX() - width / 2.0, fieldWidth / 2.0 + width / 2.0);
@@ -135,6 +135,20 @@ public class FieldConstants {
         AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(18).get().toPose2d();
     public static final Pose2d leftFace =
         AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(21).get().toPose2d();
+  }
+
+  /** Net related constants */
+  public static class Net {
+    public static final double height = Units.inchesToMeters(119 + 6); // 6 is for just a little tolerence
+    public static final double width = Units.inchesToMeters(57);
+    public static final Translation2d center = 
+        new Translation2d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(20).get().getX() + Units.inchesToMeters(10), 
+            fieldWidth / 2.0);
+    public static final Translation2d oppCenter = 
+        new Translation2d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX() - Units.inchesToMeters(10), 
+            fieldWidth / 2.0);
   }
 
   /** Left Bump related constants */

@@ -97,26 +97,13 @@ public final class Constants {
 
         public static final double hoodRatio = 50;
         public static final double shooterWheelRadius = Units.inchesToMeters(2);
-        // Ball exit speed as a fraction of wheel surface speed.
-        // Set to 1.0 for pure physics model; slippage is handled by SlippageCorrectionMap.
-        public static final double shooterLaunchEfficiency = 1.0;
         public static final double shooterMaxMotorRps = 5700.0 / 60.0;
         public static final double shootGearRatio = 2.0;
-        public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
-        public static final double targetHeightMeters = Units.inchesToMeters(56.5); //72
         public static final double hoodZeroDegrees = 22.5;
         public static final double hoodMinDegrees = 22.5;
-        public static final double hoodMaxDegrees = 90.0;
+        public static final double hoodMaxDegrees = 120.0;
         public static final double ikEntryAngleTargetDeg = 50.0;
-        public static final double ikEntryAngleToleranceDeg = 2.5;
-        public static final double lowHoodPreferredDegrees = hoodMinDegrees;
-        public static final double passTargetRadiusMeters = Units.inchesToMeters(5.91) / 2.0;
-        public static final int passTargetCirclePoints = 24;
-
-        // Offsets for the secondary point to get a better arc
-        public static final double secondPointHeight = Units.inchesToMeters(25); //21.5
-        public static final double secondPointDistance = Units.inchesToMeters(19);
 
         public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(6.05), -Units.inchesToMeters(0.279));
 
@@ -181,8 +168,8 @@ public final class Constants {
         public static final double spinKs = 0.4;
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
-        public static final double spinStatorCurrentLimit = 100.0; //120
-        public static final double spinSupplyCurrent = 30.0;
+        public static final double spinStatorCurrentLimit = 120.0;
+        public static final double spinSupplyCurrent = 20.0; // 30
         public static final double spinVelocity = 25;
         public static final double spinAccel = 100;
 
@@ -238,7 +225,7 @@ public final class Constants {
         public static final double passThroughKD = 0.0;
     }
 
-    public static final class turretTargetConstants {
+    public static final class TurretTargetConstants {
         public static final String enableKey = "TurretTarget/Enable";
         public static final String targetXKey = "TurretTarget/X";
         public static final String targetYKey = "TurretTarget/Y";
@@ -252,7 +239,7 @@ public final class Constants {
         public static final String targetXKey = "PassTarget/X";
         public static final String targetYKey = "PassTarget/Y";
         public static final String fieldClickKey = "Field/PassTargetClick";
-        public static final boolean defaultEnable = false;
+        public static final boolean defaultEnable = true;
         public static final double defaultTargetX = FieldConstants.Hub.topCenterPoint.getX();
         public static final double defaultTargetY = FieldConstants.Hub.topCenterPoint.getY();
     }
@@ -270,7 +257,7 @@ public final class Constants {
         public static final String spinKey = "MapTune/SpinTarget";
         public static final String hoodKey = "MapTune/HoodTarget";
         public static final String shooterKey = "MapTune/ShooterTarget";
-        public static final boolean defaultEnable = false;
+        public static final boolean defaultEnable = true;
     }
 
     public static final class AutoAimConstants {
@@ -280,7 +267,6 @@ public final class Constants {
 
     public static final class SlippageCorrectionConstants {
         public static final boolean useSOTM = true;
-        public static final double defaultDistanceOffset = Units.feetToMeters(-1.0);
 
         public static final String enableKey = "Slippage/Enable";
         public static final boolean defaultEnable = true;
