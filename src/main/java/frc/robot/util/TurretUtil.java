@@ -51,13 +51,11 @@ public final class TurretUtil {
     public static double motorRpsToLaunchSpeedMps(double motorRps) {
         double wheelRps = motorRps / TurretConstants.shootGearRatio;
         return ((Math.PI * 2) * TurretConstants.shooterWheelRadius)
-            * wheelRps
-            * TurretConstants.shooterLaunchEfficiency;
+            * wheelRps;
     }
 
     public static double launchMpsToMotorRps(double launchSpeedMps) {
-        double denominator = ((Math.PI * 2) * TurretConstants.shooterWheelRadius)
-            * TurretConstants.shooterLaunchEfficiency;
+        double denominator = ((Math.PI * 2) * TurretConstants.shooterWheelRadius);
         if (denominator <= 1e-9) {
             return 0.0;
         }
