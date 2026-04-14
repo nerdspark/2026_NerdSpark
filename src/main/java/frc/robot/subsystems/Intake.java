@@ -31,8 +31,8 @@ public class Intake extends SubsystemBase {
     private TalonFXConfiguration rollerMotorConfig = new TalonFXConfiguration();
 
 
-    private MotionMagicConfigs motionMagicFastConfigs = deployMotorConfig.MotionMagic;
-    private MotionMagicConfigs motionMagicSlowConfigs = deployMotorConfig.MotionMagic;
+    private MotionMagicConfigs motionMagicFastConfigs = new MotionMagicConfigs();
+    private MotionMagicConfigs motionMagicSlowConfigs = new MotionMagicConfigs();
 
     public Intake() {
         canivore = new CANBus(Constants.CANbus);
@@ -75,10 +75,11 @@ public class Intake extends SubsystemBase {
             .withKV(IntakeConstants.kV);
 
         motionMagicFastConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocityFast;
-        motionMagicFastConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAcceleration;
+        motionMagicFastConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAccelerationFast;
         motionMagicFastConfigs.MotionMagicJerk = IntakeConstants.motionMagicJerk;
 
         motionMagicSlowConfigs.MotionMagicCruiseVelocity = IntakeConstants.motionMagicCruiseVelocitySlow;
+        motionMagicSlowConfigs.MotionMagicAcceleration = IntakeConstants.motionMagicAccelerationSlow;
 
         deployMotor.getConfigurator().apply(deployMotorConfig);
         roller1.getConfigurator().apply(rollerMotorConfig);
@@ -88,7 +89,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Boolean intakeIsIn() {
-        return deployMotor.getPosition().getValueAsDouble() < 3;
+        return deployMotor.getPosition().getValueAsDouble() < 1;
     }
 
     public double getDeployPosition() {

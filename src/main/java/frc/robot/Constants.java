@@ -213,15 +213,20 @@ public final class Constants {
         public static final int passThroughId = 32;
         public static final int indexId = 33;
 
-        public static final double statorCurretLimit = 50; // both motors share these current limits
-        public static final double supplyCurretLimit = 20;
+        public static final double spindexerStatorCurretLimit = 60; // both motors share these current limits
+        public static final double spindexerSupplyCurretLimit = 40;
 
-        public static final double indexerKP = 0.0;
-        public static final double indexerKI = 0.0;
+        public static final double passthroughStatorCurretLimit = 40; // both motors share these current limits
+        public static final double passthroughSupplyCurretLimit = 15;
+
+        public static final double indexerKP = 20.0;
+        public static final double indexerKI = 9.0;
         public static final double indexerKD = 0.0;
 
-        public static final double passThroughKP = 0.0;
-        public static final double passThroughKI = 0.0;
+        public static final double indexerPeakReverseVoltage = -8.0;
+
+        public static final double passThroughKP = 15.0;
+        public static final double passThroughKI = 10.0;
         public static final double passThroughKD = 0.0;
     }
 
@@ -323,12 +328,13 @@ public final class Constants {
         public static final double deployStatorCurrentLimit = 60.0;
         public static final double deploySupplyCurrentLimit = 30.0;
         public static final double motionMagicCruiseVelocityFast = 25.0;
-        public static final double motionMagicCruiseVelocitySlow = 15.0;
-        public static final double motionMagicAcceleration = 50;
+        public static final double motionMagicCruiseVelocitySlow = 2.0;
+        public static final double motionMagicAccelerationFast = 50;
+        public static final double motionMagicAccelerationSlow = 30;
         public static final double motionMagicJerk = 0;
         public static final double homePos = 3.0;
         public static final double deployPos = 16.0;
-        public static final double shakePos = 5;
+        public static final double shakePos = 3;
         public static final double lowerShakePos = 10;
         public static final double upperShakePos = 6;
     }
