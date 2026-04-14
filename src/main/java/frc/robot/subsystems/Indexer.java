@@ -7,6 +7,7 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -28,13 +29,14 @@ public class Indexer implements Subsystem {
 
         TalonFXConfiguration passThroughConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(IndexConfig.statorCurretLimit)
+                .withStatorCurrentLimit(IndexConfig.passthroughStatorCurretLimit)
                 .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(IndexConfig.supplyCurretLimit)
+                .withSupplyCurrentLimit(IndexConfig.passthroughSupplyCurretLimit)
                 .withSupplyCurrentLimitEnable(true))
             .withMotorOutput(new MotorOutputConfigs()
                 .withInverted(InvertedValue.CounterClockwise_Positive)
-                .withNeutralMode(NeutralModeValue.Coast));
+                .withNeutralMode(NeutralModeValue.Coast))
+            .withVoltage(new VoltageConfigs().withPeakReverseVoltage(-8));
         
         passThroughConfig.Slot0 = new Slot0Configs()              // TODO Tune these: 
                                     .withKP(IndexConfig.passThroughKP)
@@ -44,13 +46,14 @@ public class Indexer implements Subsystem {
 
         TalonFXConfiguration indexConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(IndexConfig.statorCurretLimit)
+                .withStatorCurrentLimit(IndexConfig.spindexerStatorCurretLimit)
                 .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(IndexConfig.supplyCurretLimit)
+                .withSupplyCurrentLimit(IndexConfig.spindexerSupplyCurretLimit)
                 .withSupplyCurrentLimitEnable(true))
             .withMotorOutput(new MotorOutputConfigs()
                 .withInverted(InvertedValue.Clockwise_Positive)
-                .withNeutralMode(NeutralModeValue.Coast));
+                .withNeutralMode(NeutralModeValue.Coast))
+            .withVoltage(new VoltageConfigs().withPeakReverseVoltage(-8.0));
         
         // velocity voltage constants for spindexer
         indexConfig.Slot0 = new Slot0Configs()              // TODO Tune these: 

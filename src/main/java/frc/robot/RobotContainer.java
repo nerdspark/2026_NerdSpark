@@ -127,17 +127,18 @@ public class RobotContainer {
             .onFalse(new IntakeCommand(intake, () -> drivetrain.getState().Speeds));
 
         joystick.leftTrigger()
-            .whileTrue(new IndexerCommand(indexer, () -> -1.0, () -> true))
+            .whileTrue(new IndexerCommand(indexer, () -> -60.0, () -> true))
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick.y()
-            .whileTrue(new IndexerCommand(indexer, () -> 1.0, () -> true)) //turret.turretOnTarget()
+            .whileTrue(new IndexerCommand(indexer, () -> 85.0, () -> true)) //turret.turretOnTarget()
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
         
-        joystick.b().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
+        joystick.b().onTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.5), intake)))
-            .onFalse(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake));
+            .onFalse(new InstantCommand(() -> intake.useFastConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
@@ -270,7 +271,7 @@ public class RobotContainer {
             new IntakeJitterCommand(intake));
         NamedCommands.registerCommand(
             "indexer_on", 
-            new IndexerCommand(indexer, () -> 1.0, () -> turret.turretOnTarget()));
+            new IndexerCommand(indexer, () -> 85.0, () -> turret.turretOnTarget()));
         NamedCommands.registerCommand(
             "indexer_off", 
             new IndexerCommand(indexer, () -> 0.0, () -> true));
