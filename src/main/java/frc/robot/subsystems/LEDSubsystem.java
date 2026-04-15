@@ -74,6 +74,9 @@ public class LEDSubsystem extends SubsystemBase {
 
     // CommandXboxController joystick = new CommandXboxController(Constants.LED.testJoystickID);
 
+    m_candle.setControl(new RainbowAnimation(ledStartIndex, ledEndIndex)
+        .withSlot(Constants.LED.rainbowID)
+        .withFrameRate(Constants.LED.framerate + 25));
   }
 
   public CANdle getCandle() {
@@ -150,7 +153,7 @@ public class LEDSubsystem extends SubsystemBase {
     empty(Constants.LED.blinkID);
     m_candle.setControl(new RainbowAnimation(ledStartIndex, ledEndIndex)
         .withSlot(Constants.LED.rainbowID)
-        .withFrameRate(Constants.LED.framerate));
+        .withFrameRate(Constants.LED.framerate + 25));
   }
 
   public CANdle getM_candle() {

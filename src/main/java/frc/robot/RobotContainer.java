@@ -3,6 +3,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static frc.robot.util.TurretUtil.compareSpeeds;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -72,12 +73,16 @@ public class RobotContainer {
     private final PassTargetSelectorSubsystem passTargetSelector = new PassTargetSelectorSubsystem();
     private final Trigger intakeHome;
     private final Trigger slowMode;
+    private final Trigger lean;
+    private final Trigger disabled;
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
     private double target = drivetrain.getState().Pose.getRotation().getRadians();
 
     public RobotContainer() {
+        disabled = new Trigger(DriverStation::isDisabled);
+
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
         gyroController.setIntegratorRange(-2.0, 2.0);
 
@@ -95,6 +100,7 @@ public class RobotContainer {
         // HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
         indexer = new Indexer();
+        lean = new Trigger(() -> (joystick.y().getAsBoolean() && compareSpeeds(drivetrain.getState().Speeds)));
         slowMode = new Trigger(() -> (joystick.y().getAsBoolean() && turret.shoot));
         intake = new Intake();
         intakeHome = new Trigger(() -> intake.intakeIsIn());
@@ -131,10 +137,11 @@ public class RobotContainer {
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick.y()
-            .whileTrue(new IndexerCommand(indexer, () -> 85.0, () -> true)) //turret.turretOnTarget()
+            .whileTrue(new IndexerCommand(indexer, () -> 90.0, () -> turret.turretOnTarget())) 
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
         
-        joystick.b().onTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
+        joystick.b().or(lean)
+            .onTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.5), intake)))
             .onFalse(new InstantCommand(() -> intake.useFastConfig(), intake)
@@ -152,6 +159,9 @@ public class RobotContainer {
         joystick2.b().or(intakeHome)
             .onTrue(new InstantCommand(() -> override = true))
             .onFalse(new InstantCommand(() -> override = false));
+        joystick2.y()
+            .whileTrue(new IndexerCommand(indexer, () -> 88.0, () -> true)) 
+            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick2.y().onTrue(new InstantCommand(() -> {
             boolean useIK = SmartDashboard.getBoolean(
@@ -271,7 +281,7 @@ public class RobotContainer {
             new IntakeJitterCommand(intake));
         NamedCommands.registerCommand(
             "indexer_on", 
-            new IndexerCommand(indexer, () -> 85.0, () -> turret.turretOnTarget()));
+            new IndexerCommand(indexer, () -> 88.0, () -> turret.turretOnTarget()));
         NamedCommands.registerCommand(
             "indexer_off", 
             new IndexerCommand(indexer, () -> 0.0, () -> true));
@@ -307,10 +317,13 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
 
         ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, poseEstimator, turret)); // startup
+        disabled.onTrue(
+            new InstantCommand(() -> ledSubsystem.rainbow(), ledSubsystem).ignoringDisable(true)
+        );
       
         // Automatically stop indexer when no button is pressed
-        indexer.setDefaultCommand(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
-        intake.setDefaultCommand(new IntakeCommand(intake, () -> drivetrain.getState().Speeds));
+        indexer.setDefaultCommand(new IndexerCommand(indexer, () -> 0.0, () -> true));
+        // intake.setDefaultCommand(new IntakeCommand(intake, () -> drivetrain.getState().Speeds));
     }
 
     

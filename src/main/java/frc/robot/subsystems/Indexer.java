@@ -38,10 +38,10 @@ public class Indexer implements Subsystem {
                 .withNeutralMode(NeutralModeValue.Coast))
             .withVoltage(new VoltageConfigs().withPeakReverseVoltage(-8));
         
-        passThroughConfig.Slot0 = new Slot0Configs()              // TODO Tune these: 
-                                    .withKP(IndexConfig.passThroughKP)
-                                    .withKI(IndexConfig.passThroughKI)
-                                    .withKD(IndexConfig.passThroughKD);
+        passThroughConfig.Slot0 = new Slot0Configs() 
+            .withKP(IndexConfig.passThroughKP)
+            .withKI(IndexConfig.passThroughKI)
+            .withKD(IndexConfig.passThroughKD);
 
 
         TalonFXConfiguration indexConfig = new TalonFXConfiguration()
@@ -56,25 +56,23 @@ public class Indexer implements Subsystem {
             .withVoltage(new VoltageConfigs().withPeakReverseVoltage(-8.0));
         
         // velocity voltage constants for spindexer
-        indexConfig.Slot0 = new Slot0Configs()              // TODO Tune these: 
-                                    .withKP(IndexConfig.indexerKP)
-                                    .withKI(IndexConfig.indexerKI)
-                                    .withKD(IndexConfig.indexerKD);
+        indexConfig.Slot0 = new Slot0Configs()               
+            .withKP(IndexConfig.indexerKP)
+            .withKI(IndexConfig.indexerKI)
+            .withKD(IndexConfig.indexerKD);
         
         passThroughMotor.getConfigurator().apply(passThroughConfig);
         spindexerMotor.getConfigurator().apply(indexConfig);
     }
 
     public void spinDex(Supplier<Double> rollerSpeed) {
-        passThroughMotor.setControl(velocityVolatage
-                                        .withSlot(0)
-                                        .withEnableFOC(true)
-                                        .withVelocity(rollerSpeed.get()));
-
-        spindexerMotor.setControl(velocityVolatage
-                                        .withSlot(0)
-                                        .withEnableFOC(true)
-                                        .withVelocity(rollerSpeed.get()));
+        if (rollerSpeed.get() < 0.01) {
+            passThroughMotor.set(0);
+            spindexerMotor.set(0);
+        } else {
+            passThroughMotor.setControl(velocityVolatage.withVelocity(rollerSpeed.get()));
+            spindexerMotor.setControl(velocityVolatage.withVelocity(rollerSpeed.get() + 2));
+        }
     }
 
     public void stopPassThrough() {

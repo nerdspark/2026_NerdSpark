@@ -141,14 +141,24 @@ public class FieldConstants {
   public static class Net {
     public static final double height = Units.inchesToMeters(119 + 6); // 6 is for just a little tolerence
     public static final double width = Units.inchesToMeters(57);
-    public static final Translation2d center = 
-        new Translation2d(
-            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(20).get().getX() + Units.inchesToMeters(10), 
-            fieldWidth / 2.0);
-    public static final Translation2d oppCenter = 
-        new Translation2d(
-            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX() - Units.inchesToMeters(10), 
-            fieldWidth / 2.0);
+    public static final Translation2d center = new Translation2d(
+        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(20).get().getX() + Units.inchesToMeters(10), 
+        fieldWidth / 2.0);
+    public static final Translation2d oppCenter = new Translation2d(
+        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX() - Units.inchesToMeters(10), 
+        fieldWidth / 2.0);
+    public static Translation2d nearCorner = new Translation2d(
+        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(20).get().getX() + Units.inchesToMeters(10),
+        fieldWidth / 2.0 - width / 2.0);
+    public static Translation2d farCorner = new Translation2d(
+        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(20).get().getX() + Units.inchesToMeters(10),
+        fieldWidth / 2.0 + width / 2.0);
+    public static Translation2d oppNearCorner = new Translation2d(
+        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX() - Units.inchesToMeters(10),
+        fieldWidth / 2.0 - width / 2.0 - Units.inchesToMeters(6));
+    public static Translation2d oppFarCorner = new Translation2d(
+        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX() - Units.inchesToMeters(10),
+        fieldWidth / 2.0 + width / 2.0 + Units.inchesToMeters(6));
   }
 
   /** Left Bump related constants */

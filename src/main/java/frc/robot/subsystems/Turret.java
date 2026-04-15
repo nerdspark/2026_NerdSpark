@@ -77,6 +77,7 @@ public class Turret extends SubsystemBase {
     public boolean shoot = false;
     private boolean pass = false;
     private boolean onOppSide = false;
+    private boolean hubInTheWay = false;
 
     private Debouncer torqueCurrentDebouncer = new Debouncer(0.02, DebounceType.kFalling);
     private ShootMode mode = ShootMode.COAST;
@@ -272,7 +273,7 @@ public class Turret extends SubsystemBase {
      */
     private void turretIdle() {
         hoodPose.Position = -0.001;
-        velocity = applyShooterControl(0);
+        velocity = applyShooterControl(45);
         brake = true;
     }
 
@@ -324,6 +325,7 @@ public class Turret extends SubsystemBase {
         boolean climb = inX && inY;
         return Math.abs(spinPose.Position - spinMotor.getPosition().getValueAsDouble()) < (pass ? 0.2778 : 0.1389)
                 && Math.abs(hoodPose.Position - hoodMotor1.getPosition().getValueAsDouble()) < (pass ? 1.3889 : 0.6944)
+                && Math.abs(velocity - shootMotor1.getVelocity().getValueAsDouble()) < (pass ? 15 : 2)
                 && (shoot || pass)
                 && !climb;
     }
@@ -352,20 +354,14 @@ public class Turret extends SubsystemBase {
         }
     }
 
-    private IkSolution solveIK(double distanceMeters, Translation2d translation) {
+    private IkSolution solveIK(double distanceMeters) {
         if (distanceMeters <= 0.0) {
             return null;
         }
-        double deltaHeight;
-        if (shoot) {
-            deltaHeight = FieldConstants.Hub.innerHeight - TurretConstants.shooterMuzzleHeightMeters;
-        } else {
-            deltaHeight = -TurretConstants.shooterMuzzleHeightMeters;
-            //distanceMeters -= SlippageCorrectionConstants.passFudge;
-        }
+        double deltaHeight = FieldConstants.Hub.innerHeight - TurretConstants.shooterMuzzleHeightMeters;
 
         DirectIkSelection selection = pass
-            ? solveTwoPointIKDirect(distanceMeters, deltaHeight, translation)
+            ? solvePassing(distanceMeters, deltaHeight)
             : solveMinSpeedEntryAngleIKDirect(distanceMeters, deltaHeight);
         if (selection == null) {
             return null;
@@ -399,28 +395,33 @@ public class Turret extends SubsystemBase {
         return new DirectIkSelection(hoodDeg, speedMps);
     }
 
-    // private DirectIkSelection solveMinimumSpeedIKDirect(
-    //     double distanceMeters,
-    //     double deltaHeightMeters
-    // ) {
-    //     double alphaRad = Math.atan2(deltaHeightMeters, distanceMeters);
-    //     double launchRad = 0.5 * (alphaRad + (Math.PI / 2.0));
-    //     double hoodDeg = 90 - Math.toDegrees(launchRad);
-    //     if (hoodDeg < TurretConstants.hoodMinDegrees || hoodDeg > TurretConstants.hoodMaxDegrees) {
-    //         return null;
-    //     }
-    //     double speedMps = solveIKSpeed(distanceMeters, launchRad, deltaHeightMeters);
-    //     if (!Double.isFinite(speedMps) || speedMps <= 0.0) {
-    //         return null;
-    //     }
-    //     return new DirectIkSelection(hoodDeg, speedMps);
-    // }
+    private DirectIkSelection solvePassing(double distanceMeters, double deltaHeightMeters) {
+        deltaHeightMeters = -TurretConstants.shooterMuzzleHeightMeters;
+        return hubInTheWay ? solveTwoPointIKDirect(distanceMeters, deltaHeightMeters) 
+                           : solveMinimumSpeedIKDirect(distanceMeters, deltaHeightMeters);
+    }
+
+    private DirectIkSelection solveMinimumSpeedIKDirect(
+        double distanceMeters,
+        double deltaHeightMeters
+    ) {
+        double alphaRad = Math.atan2(deltaHeightMeters, distanceMeters);
+        double launchRad = 0.5 * (alphaRad + (Math.PI / 2.0));
+        double hoodDeg = 90 - Math.toDegrees(launchRad);
+        if (hoodDeg < TurretConstants.hoodMinDegrees || hoodDeg > TurretConstants.hoodMaxDegrees) {
+            return null;
+        }
+        double speedMps = solveIKSpeed(distanceMeters, launchRad, deltaHeightMeters);
+        if (!Double.isFinite(speedMps) || speedMps <= 0.0) {
+            return null;
+        }
+        return new DirectIkSelection(hoodDeg, speedMps);
+    }
 
     private DirectIkSelection solveTwoPointIKDirect(
-        double d1Meters, double deltaH1Meters,
-        Translation2d translation
+        double d1Meters, double deltaH1Meters
     ) {
-        double d2Meters = translation.getDistance(isBlue ? FieldConstants.Net.center : FieldConstants.Net.oppCenter);
+        double d2Meters = getDis2();
         double deltaH2Meters = FieldConstants.Net.height - TurretConstants.shooterMuzzleHeightMeters;
 
         double denomK = d1Meters * d2Meters * (d2Meters - d1Meters);
@@ -441,6 +442,29 @@ public class Turret extends SubsystemBase {
         double speedMps = Math.sqrt(9.80665 / (2.0 * K * cosTheta * cosTheta));
         if (!Double.isFinite(speedMps) || speedMps <= 0.0) return null;
         return new DirectIkSelection(hoodDeg, speedMps);
+    }
+
+    private double getDis2() {
+        Translation2d target = new Translation2d();
+        if (passTargetSelector != null && passTargetSelector.isEnabled()) {
+            target = passTargetSelector.getTarget();
+        }
+
+        Translation2d robot = turretPose.getTranslation();
+        Translation2d direction = target.minus(robot);
+        double dist = direction.getNorm();
+        direction = direction.div(dist);
+
+        double netX = isBlue ? FieldConstants.Net.center.getX() : FieldConstants.Net.oppCenter.getX();
+
+        // Solve for t
+        double dx = direction.getX();
+        if (Math.abs(dx) < 1e-6) {
+            // Shot is parallel to net plane → no intersection
+            return Double.NaN;
+        }
+
+        return (netX - robot.getX()) / dx;
     }
 
     private double solveIKSpeed(double distanceMeters, double thetaRad, double deltaHeightMeters) {
@@ -508,27 +532,18 @@ public class Turret extends SubsystemBase {
     }
 
     private boolean isNetInTheWay(double targetX, double targetY) {
-        // Best approximations
-        Translation2d blueNearCorner = new Translation2d(Units.inchesToMeters(215),
-                FieldConstants.fieldWidth / 2.0 - FieldConstants.Net.width / 2.0);
-        Translation2d blueFarCorner = new Translation2d(Units.inchesToMeters(215),
-                FieldConstants.fieldWidth / 2.0 + FieldConstants.Net.width / 2.0);
-        Translation2d redNearCorner = new Translation2d(Units.inchesToMeters(436.2),
-                FieldConstants.fieldWidth / 2.0 - FieldConstants.Net.width / 2.0);
-        Translation2d redFarCorner = new Translation2d(Units.inchesToMeters(436.2),
-                FieldConstants.fieldWidth / 2.0 + FieldConstants.Net.width / 2.0);
-
         double turretX = turretPose.getX();
         double turretY = turretPose.getY();
         double dx = targetX - turretX;
 
         // Guard against vertical path
-        if (Math.abs(dx) < 1e-9)
+        if (Math.abs(dx) < 1e-9) {
             return false;
+        }
 
-        double[] netXs = { blueNearCorner.getX(), redNearCorner.getX() };
-        double[] netMinYs = { blueNearCorner.getY(), redNearCorner.getY() };
-        double[] netMaxYs = { blueFarCorner.getY(), redFarCorner.getY() };
+        double[] netXs = { FieldConstants.Net.nearCorner.getX(), FieldConstants.Net.oppNearCorner.getX() };
+        double[] netMinYs = { FieldConstants.Net.nearCorner.getY(), FieldConstants.Net.oppNearCorner.getY() };
+        double[] netMaxYs = { FieldConstants.Net.farCorner.getY(), FieldConstants.Net.oppFarCorner.getY() };
 
         for (int i = 0; i < 2; i++) {
             double t = (netXs[i] - turretX) / dx;
@@ -606,7 +621,7 @@ public class Turret extends SubsystemBase {
 
             if (passTargetSelector != null && passTargetSelector.isEnabled()) {
                 passPose = passTargetSelector.getTarget();
-                boolean hubInTheWay = isNetInTheWay(passPose.getX(), passPose.getY());
+                hubInTheWay = isNetInTheWay(passPose.getX(), passPose.getY());
                 SmartDashboard.putBoolean("PassTarget/HubInTheWay", hubInTheWay);
             }
 
@@ -626,7 +641,7 @@ public class Turret extends SubsystemBase {
 
             SOTM sotm = null;
             if (useIK) {
-                IkSolution ikSolution = solveIK(distance, turretPose.getTranslation());
+                IkSolution ikSolution = solveIK(distance);
                 if (ikSolution != null) {
                     double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);
                     sotm = applySOTMComp(ikSolution.exitMps, launchAngleRad, errorRad, speeds);
@@ -680,9 +695,6 @@ public class Turret extends SubsystemBase {
             SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
             SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
             SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
-            // SmartDashboard.putNumber("Turret/IK/RequiredCompMotorRps", Double.NaN);
-            // SmartDashboard.putNumber("Turret/IK/PredictedEntryDeg", Double.NaN);
-            // SmartDashboard.putBoolean("Turret/IK/UsingEntryBand", false);
         }
 
         if (manualOverride.get()) {
@@ -699,19 +711,13 @@ public class Turret extends SubsystemBase {
             applyLiveMap();
         }
 
-        // if (brake) {
-        //     spinMotor.setControl(new StaticBrake());
-        // } else {
-        //     spinMotor.setControl(spinPose);
-        // }
+        if (brake) {
+            spinMotor.setControl(new StaticBrake());
+        } else {
+            spinMotor.setControl(spinPose);
+        }
 
-        // SmartDashboard.putNumber("Turret/SpinAmps",
-        // spinMotor.getStatorCurrent().getValueAsDouble());
-        // SmartDashboard.putNumber("Turret/SpinSupply",
-        // spinMotor.getSupplyCurrent().getValueAsDouble());
         hoodMotor1.setControl(hoodPose);
-        // SmartDashboard.putNumber("Turret/HoodCurrentDeg",
-        // hoodRotationsToDegrees(hoodMotor1.getPosition().getValueAsDouble()));
         SmartDashboard.putNumber("Turret/ShooterCurrentRps", shootMotor1.getVelocity().getValueAsDouble());
         SmartDashboard.putNumber("Turret/ShooterAmps", shootMotor1.getStatorCurrent().getValueAsDouble());
         switch (mode) {

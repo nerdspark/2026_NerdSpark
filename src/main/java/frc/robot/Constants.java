@@ -213,10 +213,10 @@ public final class Constants {
         public static final int passThroughId = 32;
         public static final int indexId = 33;
 
-        public static final double spindexerStatorCurretLimit = 60; // both motors share these current limits
-        public static final double spindexerSupplyCurretLimit = 40;
+        public static final double spindexerStatorCurretLimit = 40;
+        public static final double spindexerSupplyCurretLimit = 30;
 
-        public static final double passthroughStatorCurretLimit = 40; // both motors share these current limits
+        public static final double passthroughStatorCurretLimit = 40;
         public static final double passthroughSupplyCurretLimit = 15;
 
         public static final double indexerKP = 20.0;
@@ -262,7 +262,7 @@ public final class Constants {
         public static final String spinKey = "MapTune/SpinTarget";
         public static final String hoodKey = "MapTune/HoodTarget";
         public static final String shooterKey = "MapTune/ShooterTarget";
-        public static final boolean defaultEnable = true;
+        public static final boolean defaultEnable = false;
     }
 
     public static final class AutoAimConstants {
@@ -307,9 +307,9 @@ public final class Constants {
         // >1.0 = magnifies efficiency → less correction → lower commanded RPS
         // <1.0 = shrinks efficiency → more correction → higher commanded RPS
         public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
-        public static final double defaultEfficiencyScale = 1.08;
+        public static final double defaultEfficiencyScale = 1.11;
 
-        public static final double passFudge = 1.4;
+        // public static final double passFudge = 1.4;
     }
 
     public static final class IntakeConstants {
@@ -345,7 +345,7 @@ public final class Constants {
         public static final int blinkID = 1;
         public static final int pulseID = 2;
         public static final int rainbowID = 3;
-        public static final int framerate = 16; //fps
+        public static final int framerate = 10; //fps was 16
         public static final int totalLEDs = 100;
         public static final int testJoystickID = 0;
         public static final double hubDistanceLimitFeet = 8.0;
