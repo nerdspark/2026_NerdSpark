@@ -451,20 +451,11 @@ public class Turret extends SubsystemBase {
         }
 
         Translation2d robot = turretPose.getTranslation();
-        Translation2d direction = target.minus(robot);
-        double dist = direction.getNorm();
-        direction = direction.div(dist);
-
         double netX = isBlue ? FieldConstants.Net.center.getX() : FieldConstants.Net.oppCenter.getX();
 
-        // Solve for t
-        double dx = direction.getX();
-        if (Math.abs(dx) < 1e-6) {
-            // Shot is parallel to net plane → no intersection
-            return Double.NaN;
-        }
+        double netY = (robot.getY() - target.getY() / robot.getX() - target.getX()) * (netX - target.getX()) - target.getY();
 
-        return (netX - robot.getX()) / dx;
+        return robot.getDistance(new Translation2d(netX, netY));
     }
 
     private double solveIKSpeed(double distanceMeters, double thetaRad, double deltaHeightMeters) {
@@ -541,19 +532,15 @@ public class Turret extends SubsystemBase {
             return false;
         }
 
-        double[] netXs = { FieldConstants.Net.nearCorner.getX(), FieldConstants.Net.oppNearCorner.getX() };
-        double[] netMinYs = { FieldConstants.Net.nearCorner.getY(), FieldConstants.Net.oppNearCorner.getY() };
-        double[] netMaxYs = { FieldConstants.Net.farCorner.getY(), FieldConstants.Net.oppFarCorner.getY() };
-
         for (int i = 0; i < 2; i++) {
-            double t = (netXs[i] - turretX) / dx;
+            double t = (FieldConstants.Net.netXs[i] - turretX) / dx;
 
             if (t < 0.0 || t > 1.0)
                 continue;
 
             double yAtNet = turretY + t * (targetY - turretY);
 
-            if (yAtNet >= netMinYs[i] && yAtNet <= netMaxYs[i]) {
+            if (yAtNet >= FieldConstants.Net.netMinYs[i] && yAtNet <= FieldConstants.Net.netMaxYs[i]) {
                 return true;
             }
         }

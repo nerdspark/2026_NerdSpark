@@ -159,6 +159,9 @@ public class FieldConstants {
     public static Translation2d oppFarCorner = new Translation2d(
         AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX() - Units.inchesToMeters(10),
         fieldWidth / 2.0 + width / 2.0 + Units.inchesToMeters(6));
+    public static double[] netXs = { nearCorner.getX(), oppNearCorner.getX() };
+    public static double[] netMinYs = { nearCorner.getY(), oppNearCorner.getY() };
+    public static double[] netMaxYs = { farCorner.getY(), oppFarCorner.getY() };
   }
 
   /** Left Bump related constants */
