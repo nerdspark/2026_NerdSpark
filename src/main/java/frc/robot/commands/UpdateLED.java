@@ -111,6 +111,7 @@ public class UpdateLED extends Command {
     // safe = leftBSupplier.get();
     // startup = rightBSupplier.get();
     status = Constants.LED.startup;
+    led.setStatus(status);
   }
 
   // Called every time the scheduler runs while the command is scheduled.

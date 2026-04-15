@@ -97,26 +97,13 @@ public final class Constants {
 
         public static final double hoodRatio = 50;
         public static final double shooterWheelRadius = Units.inchesToMeters(2);
-        // Ball exit speed as a fraction of wheel surface speed.
-        // Set to 1.0 for pure physics model; slippage is handled by SlippageCorrectionMap.
-        public static final double shooterLaunchEfficiency = 1.0;
         public static final double shooterMaxMotorRps = 5700.0 / 60.0;
         public static final double shootGearRatio = 2.0;
-        public static final double shotAngleStepDeg = 0.5;
         public static final double shooterMuzzleHeightMeters = Units.inchesToMeters(17);
-        public static final double targetHeightMeters = Units.inchesToMeters(56.5); //72
         public static final double hoodZeroDegrees = 22.5;
         public static final double hoodMinDegrees = 22.5;
-        public static final double hoodMaxDegrees = 90.0;
+        public static final double hoodMaxDegrees = 120.0;
         public static final double ikEntryAngleTargetDeg = 50.0;
-        public static final double ikEntryAngleToleranceDeg = 2.5;
-        public static final double lowHoodPreferredDegrees = hoodMinDegrees;
-        public static final double passTargetRadiusMeters = Units.inchesToMeters(5.91) / 2.0;
-        public static final int passTargetCirclePoints = 24;
-
-        // Offsets for the secondary point to get a better arc
-        public static final double secondPointHeight = Units.inchesToMeters(25); //21.5
-        public static final double secondPointDistance = Units.inchesToMeters(19);
 
         public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(6.05), -Units.inchesToMeters(0.279));
 
@@ -181,8 +168,8 @@ public final class Constants {
         public static final double spinKs = 0.4;
         public static final double spinKv = 0.0;
         public static final double spinKa = 0.0;
-        public static final double spinStatorCurrentLimit = 100.0; //120
-        public static final double spinSupplyCurrent = 30.0;
+        public static final double spinStatorCurrentLimit = 120.0;
+        public static final double spinSupplyCurrent = 20.0; // 30
         public static final double spinVelocity = 25;
         public static final double spinAccel = 100;
 
@@ -225,11 +212,25 @@ public final class Constants {
     public static final class IndexConfig {
         public static final int passThroughId = 32;
         public static final int indexId = 33;
-        public static final double statorCurretLimit = 50;
-        public static final double supplyCurretLimit = 20;
+
+        public static final double spindexerStatorCurretLimit = 40;
+        public static final double spindexerSupplyCurretLimit = 30;
+
+        public static final double passthroughStatorCurretLimit = 40;
+        public static final double passthroughSupplyCurretLimit = 15;
+
+        public static final double indexerKP = 20.0;
+        public static final double indexerKI = 9.0;
+        public static final double indexerKD = 0.0;
+
+        public static final double indexerPeakReverseVoltage = -8.0;
+
+        public static final double passThroughKP = 15.0;
+        public static final double passThroughKI = 10.0;
+        public static final double passThroughKD = 0.0;
     }
 
-    public static final class turretTargetConstants {
+    public static final class TurretTargetConstants {
         public static final String enableKey = "TurretTarget/Enable";
         public static final String targetXKey = "TurretTarget/X";
         public static final String targetYKey = "TurretTarget/Y";
@@ -243,7 +244,7 @@ public final class Constants {
         public static final String targetXKey = "PassTarget/X";
         public static final String targetYKey = "PassTarget/Y";
         public static final String fieldClickKey = "Field/PassTargetClick";
-        public static final boolean defaultEnable = false;
+        public static final boolean defaultEnable = true;
         public static final double defaultTargetX = FieldConstants.Hub.topCenterPoint.getX();
         public static final double defaultTargetY = FieldConstants.Hub.topCenterPoint.getY();
     }
@@ -271,7 +272,6 @@ public final class Constants {
 
     public static final class SlippageCorrectionConstants {
         public static final boolean useSOTM = true;
-        public static final double defaultDistanceOffset = Units.feetToMeters(-1.0);
 
         public static final String enableKey = "Slippage/Enable";
         public static final boolean defaultEnable = true;
@@ -307,9 +307,9 @@ public final class Constants {
         // >1.0 = magnifies efficiency → less correction → lower commanded RPS
         // <1.0 = shrinks efficiency → more correction → higher commanded RPS
         public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
-        public static final double defaultEfficiencyScale = 1.08;
+        public static final double defaultEfficiencyScale = 1.11;
 
-        public static final double passFudge = 1.4;
+        // public static final double passFudge = 1.4;
     }
 
     public static final class IntakeConstants {
@@ -328,12 +328,13 @@ public final class Constants {
         public static final double deployStatorCurrentLimit = 60.0;
         public static final double deploySupplyCurrentLimit = 30.0;
         public static final double motionMagicCruiseVelocityFast = 25.0;
-        public static final double motionMagicCruiseVelocitySlow = 15.0;
-        public static final double motionMagicAcceleration = 50;
+        public static final double motionMagicCruiseVelocitySlow = 2.0;
+        public static final double motionMagicAccelerationFast = 50;
+        public static final double motionMagicAccelerationSlow = 30;
         public static final double motionMagicJerk = 0;
         public static final double homePos = 3.0;
         public static final double deployPos = 16.0;
-        public static final double shakePos = 5;
+        public static final double shakePos = 3;
         public static final double lowerShakePos = 10;
         public static final double upperShakePos = 6;
     }
@@ -344,7 +345,7 @@ public final class Constants {
         public static final int blinkID = 1;
         public static final int pulseID = 2;
         public static final int rainbowID = 3;
-        public static final int framerate = 16; //fps
+        public static final int framerate = 10; //fps was 16
         public static final int totalLEDs = 100;
         public static final int testJoystickID = 0;
         public static final double hubDistanceLimitFeet = 8.0;

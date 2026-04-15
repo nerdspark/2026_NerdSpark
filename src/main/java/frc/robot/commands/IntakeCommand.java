@@ -30,7 +30,7 @@ public class IntakeCommand extends Command{
 
         // Step 2: convert to roller RPS
         double rollerRPS = surfaceSpeed / (Math.PI * Units.inchesToMeters(3));
-        rollerRPS *= 2.5;
+        rollerRPS *= 3.0;
 
         if (rollerRPS < 45) {
             rollerRPS = 45;

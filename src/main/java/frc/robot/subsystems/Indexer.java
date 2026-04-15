@@ -5,7 +5,10 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.VoltageConfigs;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -17,6 +20,7 @@ import frc.robot.Constants.IndexConfig;
 public class Indexer implements Subsystem {
     private final CANBus canivore;
     private final TalonFX passThroughMotor, spindexerMotor;
+    private final VelocityVoltage velocityVolatage = new VelocityVoltage(0);
 
     public Indexer() {
         canivore = new CANBus(Constants.CANbus);
@@ -25,34 +29,54 @@ public class Indexer implements Subsystem {
 
         TalonFXConfiguration passThroughConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(IndexConfig.statorCurretLimit)
+                .withStatorCurrentLimit(IndexConfig.passthroughStatorCurretLimit)
                 .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(IndexConfig.supplyCurretLimit)
+                .withSupplyCurrentLimit(IndexConfig.passthroughSupplyCurretLimit)
                 .withSupplyCurrentLimitEnable(true))
             .withMotorOutput(new MotorOutputConfigs()
                 .withInverted(InvertedValue.CounterClockwise_Positive)
-                .withNeutralMode(NeutralModeValue.Coast));
+                .withNeutralMode(NeutralModeValue.Coast))
+            .withVoltage(new VoltageConfigs().withPeakReverseVoltage(-8));
+        
+        passThroughConfig.Slot0 = new Slot0Configs() 
+            .withKP(IndexConfig.passThroughKP)
+            .withKI(IndexConfig.passThroughKI)
+            .withKD(IndexConfig.passThroughKD);
+
+
         TalonFXConfiguration indexConfig = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(IndexConfig.statorCurretLimit)
+                .withStatorCurrentLimit(IndexConfig.spindexerStatorCurretLimit)
                 .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(IndexConfig.supplyCurretLimit)
+                .withSupplyCurrentLimit(IndexConfig.spindexerSupplyCurretLimit)
                 .withSupplyCurrentLimitEnable(true))
             .withMotorOutput(new MotorOutputConfigs()
                 .withInverted(InvertedValue.Clockwise_Positive)
-                .withNeutralMode(NeutralModeValue.Coast));
+                .withNeutralMode(NeutralModeValue.Coast))
+            .withVoltage(new VoltageConfigs().withPeakReverseVoltage(-8.0));
+        
+        // velocity voltage constants for spindexer
+        indexConfig.Slot0 = new Slot0Configs()               
+            .withKP(IndexConfig.indexerKP)
+            .withKI(IndexConfig.indexerKI)
+            .withKD(IndexConfig.indexerKD);
         
         passThroughMotor.getConfigurator().apply(passThroughConfig);
         spindexerMotor.getConfigurator().apply(indexConfig);
     }
 
     public void spinDex(Supplier<Double> rollerSpeed) {
-        passThroughMotor.set(rollerSpeed.get());
-        spindexerMotor.set(rollerSpeed.get());
+        if (rollerSpeed.get() < 0.01) {
+            passThroughMotor.set(0);
+            spindexerMotor.set(0);
+        } else {
+            passThroughMotor.setControl(velocityVolatage.withVelocity(rollerSpeed.get()));
+            spindexerMotor.setControl(velocityVolatage.withVelocity(rollerSpeed.get() + 2));
+        }
     }
 
     public void stopPassThrough() {
-        passThroughMotor.set(0);
-        spindexerMotor.set(0);
+        passThroughMotor.setControl(velocityVolatage.withVelocity(0));
+        spindexerMotor.setControl(velocityVolatage.withVelocity(0));
     }
 }

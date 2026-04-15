@@ -3,6 +3,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static frc.robot.util.TurretUtil.compareSpeeds;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -29,7 +30,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.AutoAimConstants;
-import frc.robot.Constants.turretTargetConstants;
+import frc.robot.Constants.TurretTargetConstants;
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
 import frc.robot.commands.IntakeCommand;
@@ -72,12 +73,16 @@ public class RobotContainer {
     private final PassTargetSelectorSubsystem passTargetSelector = new PassTargetSelectorSubsystem();
     private final Trigger intakeHome;
     private final Trigger slowMode;
+    private final Trigger lean;
+    private final Trigger disabled;
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
     private double target = drivetrain.getState().Pose.getRotation().getRadians();
 
     public RobotContainer() {
+        disabled = new Trigger(DriverStation::isDisabled);
+
         gyroController.enableContinuousInput(-Math.PI, Math.PI);
         gyroController.setIntegratorRange(-2.0, 2.0);
 
@@ -95,6 +100,7 @@ public class RobotContainer {
         // HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
         indexer = new Indexer();
+        lean = new Trigger(() -> (joystick.y().getAsBoolean() && compareSpeeds(drivetrain.getState().Speeds)));
         slowMode = new Trigger(() -> (joystick.y().getAsBoolean() && turret.shoot));
         intake = new Intake();
         intakeHome = new Trigger(() -> intake.intakeIsIn());
@@ -127,17 +133,19 @@ public class RobotContainer {
             .onFalse(new IntakeCommand(intake, () -> drivetrain.getState().Speeds));
 
         joystick.leftTrigger()
-            .whileTrue(new IndexerCommand(indexer, () -> -0.9, () -> true))
+            .whileTrue(new IndexerCommand(indexer, () -> -60.0, () -> true))
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick.y()
-            .whileTrue(new IndexerCommand(indexer, () -> 0.9, () -> turret.turretOnTarget()))
-            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+            .whileTrue(new IndexerCommand(indexer, () -> 90.0, () -> turret.turretOnTarget())) 
+            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
         
-        joystick.b().onTrue(new InstantCommand(() -> intake.useFastConfig(), intake)
+        joystick.b().or(lean)
+            .onTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.5), intake)))
-            .onFalse(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake));
+            .onFalse(new InstantCommand(() -> intake.useFastConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)));
 
         joystick.povUp().onTrue(new InstantCommand(() -> target = Math.PI));
         joystick.povLeft().onTrue(new InstantCommand(() -> target = -(Math.PI / 2.0)));
@@ -151,6 +159,9 @@ public class RobotContainer {
         joystick2.b().or(intakeHome)
             .onTrue(new InstantCommand(() -> override = true))
             .onFalse(new InstantCommand(() -> override = false));
+        joystick2.y()
+            .whileTrue(new IndexerCommand(indexer, () -> 88.0, () -> true)) 
+            .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
         joystick2.y().onTrue(new InstantCommand(() -> {
             boolean useIK = SmartDashboard.getBoolean(
@@ -272,10 +283,10 @@ public class RobotContainer {
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.5), intake)));
         NamedCommands.registerCommand(
             "indexer_on", 
-            new IndexerCommand(indexer, () -> 0.9, () -> turret.turretOnTarget()));
+            new IndexerCommand(indexer, () -> 88.0, () -> turret.turretOnTarget()));
         NamedCommands.registerCommand(
             "indexer_off", 
-            new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
+            new IndexerCommand(indexer, () -> 0.0, () -> true));
         NamedCommands.registerCommand(
             "shoot_start", 
             new InstantCommand(this::startTargeting));
@@ -308,10 +319,13 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
 
         ledSubsystem.setDefaultCommand(new UpdateLED(ledSubsystem, poseEstimator, turret)); // startup
+        disabled.onTrue(
+            new InstantCommand(() -> ledSubsystem.rainbow(), ledSubsystem).ignoringDisable(true)
+        );
       
         // Automatically stop indexer when no button is pressed
-        indexer.setDefaultCommand(new IndexerCommand(indexer, () -> 0.0, () -> turret.turretOnTarget()));
-        intake.setDefaultCommand(new IntakeCommand(intake, () -> drivetrain.getState().Speeds));
+        indexer.setDefaultCommand(new IndexerCommand(indexer, () -> 0.0, () -> true));
+        // intake.setDefaultCommand(new IntakeCommand(intake, () -> drivetrain.getState().Speeds));
     }
 
     
@@ -342,15 +356,15 @@ public class RobotContainer {
         Translation2d target = alliance == Alliance.Red
             ? FieldConstants.Hub.oppTopCenterPoint.toTranslation2d()
             : FieldConstants.Hub.topCenterPoint.toTranslation2d();
-        SmartDashboard.putBoolean(turretTargetConstants.enableKey, true);
-        SmartDashboard.putNumber(turretTargetConstants.targetXKey, target.getX());
-        SmartDashboard.putNumber(turretTargetConstants.targetYKey, target.getY());
+        SmartDashboard.putBoolean(TurretTargetConstants.enableKey, true);
+        SmartDashboard.putNumber(TurretTargetConstants.targetXKey, target.getX());
+        SmartDashboard.putNumber(TurretTargetConstants.targetYKey, target.getY());
         fuel.enableTargeting(true);
         fuel.setTarget(target);
     }
 
     private void stopTargeting() {
-        SmartDashboard.putBoolean(turretTargetConstants.enableKey, false);
+        SmartDashboard.putBoolean(TurretTargetConstants.enableKey, false);
         fuel.enableTargeting(false);
     }
 }

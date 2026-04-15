@@ -4,6 +4,7 @@ import java.math.BigInteger;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants.TurretConstants;
 
 public final class TurretUtil {
@@ -51,13 +52,11 @@ public final class TurretUtil {
     public static double motorRpsToLaunchSpeedMps(double motorRps) {
         double wheelRps = motorRps / TurretConstants.shootGearRatio;
         return ((Math.PI * 2) * TurretConstants.shooterWheelRadius)
-            * wheelRps
-            * TurretConstants.shooterLaunchEfficiency;
+            * wheelRps;
     }
 
     public static double launchMpsToMotorRps(double launchSpeedMps) {
-        double denominator = ((Math.PI * 2) * TurretConstants.shooterWheelRadius)
-            * TurretConstants.shooterLaunchEfficiency;
+        double denominator = ((Math.PI * 2) * TurretConstants.shooterWheelRadius);
         if (denominator <= 1e-9) {
             return 0.0;
         }
@@ -86,5 +85,12 @@ public final class TurretUtil {
     public static double tofFromIK(double motorRps, double hoodDeg, double distanceMeters) {
         double hoodRadians = Math.toRadians(90.0 - hoodDeg);
         return timeOfFlight(motorRps, hoodRadians, distanceMeters);
+    }
+
+    public static boolean compareSpeeds(ChassisSpeeds speed1) {
+        return speed1.vxMetersPerSecond < 0.001 
+                && speed1.vyMetersPerSecond < 0.001
+                && speed1.omegaRadiansPerSecond < 0.001;
+
     }
 }
