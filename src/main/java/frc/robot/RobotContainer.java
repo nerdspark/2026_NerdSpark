@@ -262,9 +262,10 @@ public class RobotContainer {
     private void configureNamedCommands() {
         NamedCommands.registerCommand(
             "intake_deploy",
-            new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake)
-                .withTimeout(0.25)
-                .andThen(new IntakeCommand(intake, () -> drivetrain.getState().Speeds))
+            new InstantCommand(() -> intake.useFastConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.deployPos), intake))
+            .withTimeout(0.25)
+            .andThen(new IntakeCommand(intake, () -> drivetrain.getState().Speeds))
         );
         NamedCommands.registerCommand(
             "intake_home",
@@ -273,12 +274,12 @@ public class RobotContainer {
         );
         NamedCommands.registerCommand(
             "intake_shake",  
-            new InstantCommand( () -> intake.useSlowConfig(), intake)
-                .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos),intake))
-                .andThen(new InstantCommand(() -> intake.setRollerPower(1), intake)));
+            new InstantCommand(() -> intake.useSlowConfig(), intake)
+            .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
+            .andThen(new InstantCommand(() -> intake.setRollerPower(0.5), intake)));
         NamedCommands.registerCommand(
             "intake_wiggle", 
-            new InstantCommand(() -> intake.useFastConfig(), intake)
+            new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.5), intake)));
         NamedCommands.registerCommand(

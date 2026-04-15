@@ -4,56 +4,56 @@
     {
       "anchor": {
         "x": 7.711,
-        "y": 2.8
+        "y": 3.487
       },
       "prevControl": null,
       "nextControl": {
         "x": 7.478435092724678,
-        "y": 1.519283880171185
+        "y": 2.2062838801711853
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.3938944365192585,
-        "y": 0.342
+        "x": 6.322404614019521,
+        "y": 0.6830434782608688
       },
       "prevControl": {
-        "x": 7.131398002853067,
-        "y": 0.4422660315195976
+        "x": 7.05990818035333,
+        "y": 0.7833095097804663
       },
       "nextControl": {
-        "x": 6.146173305887154,
-        "y": 0.3083214988701672
+        "x": 6.074683483387417,
+        "y": 0.6493649771310359
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.534450784593438,
-        "y": 0.342
+        "x": 3.5217302573203195,
+        "y": 0.6830434782608688
       },
       "prevControl": {
-        "x": 4.405697426275196,
-        "y": 0.25048716393389353
+        "x": 4.392976899002077,
+        "y": 0.5915306421947623
       },
       "nextControl": {
-        "x": 3.285818564668245,
-        "y": 0.36811549760334966
+        "x": 3.2730980373951266,
+        "y": 0.7091589758642183
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.15,
-        "y": 1.894
+        "x": 2.315,
+        "y": 1.609
       },
       "prevControl": {
-        "x": 2.6750474075717343,
-        "y": 1.075946364996787
+        "x": 2.8400474075717344,
+        "y": 0.7909463649967872
       },
       "nextControl": null,
       "isLocked": false,
@@ -99,6 +99,12 @@
       }
     },
     {
+      "name": "intake_wiggle",
+      "waypointRelativePos": 2.33,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
       "name": "indexer_on",
       "waypointRelativePos": 2.3352080989876276,
       "endWaypointRelativePos": null,
@@ -108,12 +114,6 @@
           "name": "indexer_on"
         }
       }
-    },
-    {
-      "name": "intake_wiggle",
-      "waypointRelativePos": 2.342809364548495,
-      "endWaypointRelativePos": null,
-      "command": null
     }
   ],
   "globalConstraints": {
@@ -131,7 +131,7 @@
   "reversed": false,
   "folder": "right_jab",
   "idealStartingState": {
-    "velocity": 1.0,
+    "velocity": 0.75,
     "rotation": -90.0
   },
   "useDefaultConstraints": false

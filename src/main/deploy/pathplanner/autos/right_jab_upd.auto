@@ -23,7 +23,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 6.0
+                  "waitTime": 7.0
                 }
               },
               {
@@ -48,12 +48,6 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "2right_jab4"
-          }
-        },
-        {
           "type": "deadline",
           "data": {
             "commands": [
@@ -61,18 +55,6 @@
                 "type": "wait",
                 "data": {
                   "waitTime": 20.0
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "intake_wiggle"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "indexer_on"
                 }
               }
             ]
