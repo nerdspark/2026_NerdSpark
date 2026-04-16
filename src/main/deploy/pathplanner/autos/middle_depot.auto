@@ -7,13 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "left_jab1"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "left_jab2"
+            "pathName": "middle_depot1"
           }
         },
         {
@@ -23,7 +17,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 9.53
+                  "waitTime": 6.41
                 }
               },
               {
@@ -51,6 +45,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "left",
+  "folder": "middle",
   "choreoAuto": false
 }

@@ -213,7 +213,7 @@ public final class Constants {
         public static final int passThroughId = 32;
         public static final int indexId = 33;
 
-        public static final double spindexerStatorCurretLimit = 40;
+        public static final double spindexerStatorCurretLimit = 60;
         public static final double spindexerSupplyCurretLimit = 30;
 
         public static final double passthroughStatorCurretLimit = 40;
@@ -333,7 +333,7 @@ public final class Constants {
         public static final double motionMagicAccelerationSlow = 30;
         public static final double motionMagicJerk = 0;
         public static final double homePos = 3.0;
-        public static final double deployPos = 16.0;
+        public static final double deployPos = 16.5;
         public static final double shakePos = 3;
         public static final double lowerShakePos = 10;
         public static final double upperShakePos = 6;

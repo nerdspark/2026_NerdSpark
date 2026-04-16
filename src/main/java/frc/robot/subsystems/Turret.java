@@ -29,6 +29,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
+import com.fasterxml.jackson.databind.module.SimpleAbstractTypeResolver;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -421,7 +422,8 @@ public class Turret extends SubsystemBase {
     private DirectIkSelection solveTwoPointIKDirect(
         double d1Meters, double deltaH1Meters
     ) {
-        double d2Meters = getDis2();
+        Translation2d net = isBlue ? FieldConstants.Net.center : FieldConstants.Net.oppCenter;
+        double d2Meters = turretPose.getTranslation().getDistance(net);
         double deltaH2Meters = FieldConstants.Net.height - TurretConstants.shooterMuzzleHeightMeters;
 
         double denomK = d1Meters * d2Meters * (d2Meters - d1Meters);
@@ -444,19 +446,20 @@ public class Turret extends SubsystemBase {
         return new DirectIkSelection(hoodDeg, speedMps);
     }
 
-    private double getDis2() {
-        Translation2d target = new Translation2d();
-        if (passTargetSelector != null && passTargetSelector.isEnabled()) {
-            target = passTargetSelector.getTarget();
-        }
+    // private double getDis2() {
+    //     Translation2d target = new Translation2d();
+    //     if (passTargetSelector != null && passTargetSelector.isEnabled()) {
+    //         target = passTargetSelector.getTarget();
+    //     }
 
-        Translation2d robot = turretPose.getTranslation();
-        double netX = isBlue ? FieldConstants.Net.center.getX() : FieldConstants.Net.oppCenter.getX();
+    //     Translation2d robot = turretPose.getTranslation();
+    //     double netX = isBlue ? FieldConstants.Net.center.getX() : FieldConstants.Net.oppCenter.getX();
 
-        double netY = (robot.getY() - target.getY() / robot.getX() - target.getX()) * (netX - target.getX()) - target.getY();
-
-        return robot.getDistance(new Translation2d(netX, netY));
-    }
+    //     double netY = ((robot.getY() - target.getY()) / (robot.getX() - target.getX())) * (netX - target.getX()) - target.getY();
+    //     SmartDashboard.putNumber("Net Y", netY);
+    //     SmartDashboard.putNumber("DistanceToNet", robot.getDistance(new Translation2d(netX, netY)));
+    //     return robot.getDistance(new Translation2d(netX, netY));
+    // }
 
     private double solveIKSpeed(double distanceMeters, double thetaRad, double deltaHeightMeters) {
         double cos = Math.cos(thetaRad);

@@ -4,7 +4,6 @@ import java.math.BigInteger;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants.TurretConstants;
 
 public final class TurretUtil {
@@ -85,12 +84,5 @@ public final class TurretUtil {
     public static double tofFromIK(double motorRps, double hoodDeg, double distanceMeters) {
         double hoodRadians = Math.toRadians(90.0 - hoodDeg);
         return timeOfFlight(motorRps, hoodRadians, distanceMeters);
-    }
-
-    public static boolean compareSpeeds(ChassisSpeeds speed1) {
-        return speed1.vxMetersPerSecond < 0.001 
-                && speed1.vyMetersPerSecond < 0.001
-                && speed1.omegaRadiansPerSecond < 0.001;
-
     }
 }

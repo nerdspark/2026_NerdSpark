@@ -50,8 +50,8 @@ public class Intake extends SubsystemBase {
             .withSupplyCurrentLimit(IntakeConstants.rollerSupplyCurrentLimit)
             .withSupplyCurrentLimitEnable(true);
         rollerMotorConfig.Slot0 = new Slot0Configs()
-            .withKP(10.0)
-            .withKI(5.0)
+            .withKP(20.0)
+            .withKI(10.0)
             .withKD(0);
 
         deployMotorConfig.MotorOutput = new MotorOutputConfigs()

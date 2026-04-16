@@ -3,7 +3,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static frc.robot.util.TurretUtil.compareSpeeds;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -35,7 +34,6 @@ import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.UpdateLED;
-import frc.robot.commands.IntakeJitterCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FuelSubsystem;
@@ -73,7 +71,6 @@ public class RobotContainer {
     private final PassTargetSelectorSubsystem passTargetSelector = new PassTargetSelectorSubsystem();
     private final Trigger intakeHome;
     private final Trigger slowMode;
-    private final Trigger lean;
     private final Trigger disabled;
 
     private final PIDController gyroController =
@@ -100,7 +97,6 @@ public class RobotContainer {
         // HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
         indexer = new Indexer();
-        lean = new Trigger(() -> (joystick.y().getAsBoolean() && compareSpeeds(drivetrain.getState().Speeds)));
         slowMode = new Trigger(() -> (joystick.y().getAsBoolean() && turret.shoot));
         intake = new Intake();
         intakeHome = new Trigger(() -> intake.intakeIsIn());
@@ -140,7 +136,7 @@ public class RobotContainer {
             .whileTrue(new IndexerCommand(indexer, () -> 90.0, () -> turret.turretOnTarget())) 
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
         
-        joystick.b().or(lean)
+        joystick.b()
             .onTrue(new InstantCommand(() -> intake.useSlowConfig(), intake)
             .andThen(new InstantCommand(() -> intake.setDeployPosition(() -> IntakeConstants.shakePos), intake))
             .andThen(new InstantCommand(() -> intake.setRollerPower(0.5), intake)))

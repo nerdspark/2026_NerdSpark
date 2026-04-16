@@ -7,13 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "left_jab1"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "left_jab2"
+            "pathName": "middle_depot1"
           }
         },
         {
@@ -23,13 +17,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 9.53
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "intake_wiggle"
+                  "waitTime": 20.0
                 }
               },
               {
@@ -40,17 +28,11 @@
               }
             ]
           }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "intake_deploy"
-          }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "left",
+  "folder": "middle",
   "choreoAuto": false
 }

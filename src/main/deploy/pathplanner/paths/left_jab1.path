@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 4.338,
-        "y": 7.409
+        "y": 7.426
       },
       "prevControl": null,
       "nextControl": {
         "x": 5.3379999999999965,
-        "y": 7.409
+        "y": 7.426
       },
       "isLocked": false,
       "linkedName": null
@@ -17,27 +17,27 @@
     {
       "anchor": {
         "x": 7.506540178571427,
-        "y": 7.0898
+        "y": 7.107
       },
       "prevControl": {
-        "x": 7.121549817410159,
-        "y": 7.57267377654985
+        "x": 7.096870292663562,
+        "y": 7.569120381336766
       },
       "nextControl": {
-        "x": 8.116939706801835,
-        "y": 6.324207000445922
+        "x": 7.775079526928299,
+        "y": 6.804079257384045
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.957,
-        "y": 5.0548
+        "x": 7.711,
+        "y": 4.582
       },
       "prevControl": {
-        "x": 7.957,
-        "y": 6.060055931344841
+        "x": 7.711,
+        "y": 5.023651454492498
       },
       "nextControl": null,
       "isLocked": false,
@@ -51,16 +51,16 @@
     },
     {
       "waypointRelativePos": 1.1283783783783785,
-      "rotationDegrees": 119.99999999999999
+      "rotationDegrees": 90.0
     }
   ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 1.0,
+      "minWaypointRelativePos": 0.8329493087557633,
       "maxWaypointRelativePos": 2.0,
       "constraints": {
-        "maxVelocity": 0.75,
+        "maxVelocity": 0.7,
         "maxAcceleration": 1.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -96,15 +96,15 @@
   ],
   "globalConstraints": {
     "maxVelocity": 5.0,
-    "maxAcceleration": 7.0,
+    "maxAcceleration": 4.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
-    "rotation": 119.99999999999999
+    "velocity": 0.7,
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "left_jab",
