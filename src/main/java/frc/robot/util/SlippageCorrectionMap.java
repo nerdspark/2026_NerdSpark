@@ -94,14 +94,14 @@ public class SlippageCorrectionMap {
      *
      * <p>{@code correctedRps = theoreticalRps / efficiency(theoreticalRps)}
      */
-    public double correctedMotorRps(double theoreticalRps) {
+    public double correctedMotorRps(double theoreticalRps, double effOffset) {
         double eff = efficiencyAt(theoreticalRps);
         if (eff <= 0.0) return theoreticalRps;
         double offset =
             SmartDashboard.getNumber(
                 SlippageCorrectionConstants.efficiencyOffsetKey,
                  SlippageCorrectionConstants.defaultEfficiencyOffset);
-        return (theoreticalRps / eff) + offset;
+        return (theoreticalRps / (eff - effOffset)) + offset;
     }
 
     private void refresh() {

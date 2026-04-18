@@ -16,7 +16,7 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.util.ShooterParams;
 
 public final class Constants {
-    public static final double gyroP = 8.3;
+    public static final double gyroP = 7.0;
     public static final double gyroI = 0.0;
     public static final double gyroD = 0.22;
 
@@ -103,7 +103,8 @@ public final class Constants {
         public static final double hoodZeroDegrees = 22.5;
         public static final double hoodMinDegrees = 22.5;
         public static final double hoodMaxDegrees = 120.0;
-        public static final double ikEntryAngleTargetDeg = 50.0;
+        public static final double ikEntryAngleTargetDeg = 55.0;
+        public static final double turretOffset = Math.toRadians(117);
 
         public static final Translation2d robotToTurret = new Translation2d(Units.inchesToMeters(6.05), -Units.inchesToMeters(0.279));
 
@@ -213,10 +214,10 @@ public final class Constants {
         public static final int passThroughId = 32;
         public static final int indexId = 33;
 
-        public static final double spindexerStatorCurretLimit = 60;
+        public static final double spindexerStatorCurretLimit = 80;
         public static final double spindexerSupplyCurretLimit = 30;
 
-        public static final double passthroughStatorCurretLimit = 40;
+        public static final double passthroughStatorCurretLimit = 45;
         public static final double passthroughSupplyCurretLimit = 15;
 
         public static final double indexerKP = 20.0;
@@ -307,7 +308,7 @@ public final class Constants {
         // >1.0 = magnifies efficiency → less correction → lower commanded RPS
         // <1.0 = shrinks efficiency → more correction → higher commanded RPS
         public static final String efficiencyScaleKey = "Slippage/EfficiencyScale";
-        public static final double defaultEfficiencyScale = 1.11;
+        public static final double defaultEfficiencyScale = 1.12;
 
         // public static final double passFudge = 1.4;
     }
@@ -327,12 +328,12 @@ public final class Constants {
         public static final double rollerSupplyCurrentLimit = 25.0;
         public static final double deployStatorCurrentLimit = 60.0;
         public static final double deploySupplyCurrentLimit = 30.0;
-        public static final double motionMagicCruiseVelocityFast = 25.0;
-        public static final double motionMagicCruiseVelocitySlow = 2.0;
+        public static final double motionMagicCruiseVelocityFast = 30.0;
+        public static final double motionMagicCruiseVelocitySlow = 15.0;
         public static final double motionMagicAccelerationFast = 50;
-        public static final double motionMagicAccelerationSlow = 30;
+        public static final double motionMagicAccelerationSlow = 40;
         public static final double motionMagicJerk = 0;
-        public static final double homePos = 3.0;
+        public static final double homePos = 0.0;
         public static final double deployPos = 16.5;
         public static final double shakePos = 3;
         public static final double lowerShakePos = 10;

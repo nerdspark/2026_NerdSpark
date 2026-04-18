@@ -28,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.IntakeConstants;
-import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.TurretTargetConstants;
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.IndexerCommand;
@@ -51,7 +50,7 @@ public class RobotContainer {
     private SlewRateLimiter zLimiter = new SlewRateLimiter(25);
 
     private double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-    private double maxAngularRate = RotationsPerSecond.of(1.2).in(RadiansPerSecond);
+    private double maxAngularRate = RotationsPerSecond.of(1).in(RadiansPerSecond);
 
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
@@ -72,6 +71,10 @@ public class RobotContainer {
     private final Trigger intakeHome;
     private final Trigger slowMode;
     private final Trigger disabled;
+    private Trigger joystickRightX;
+
+
+    private boolean isFollowingJoystickHeading = false; 
 
     private final PIDController gyroController =
         new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
@@ -100,6 +103,8 @@ public class RobotContainer {
         slowMode = new Trigger(() -> (joystick.y().getAsBoolean() && turret.shoot));
         intake = new Intake();
         intakeHome = new Trigger(() -> intake.intakeIsIn());
+        joystickRightX = new Trigger(() -> joystick.leftTrigger().getAsBoolean());
+
 
         fuel = new FuelSubsystem();
 
@@ -128,10 +133,12 @@ public class RobotContainer {
             .onTrue(new InstantCommand(() -> intake.setRollerPower(-1.0), intake))
             .onFalse(new IntakeCommand(intake, () -> drivetrain.getState().Speeds));
 
-        joystick.leftTrigger()
+        joystick.a()
             .whileTrue(new IndexerCommand(indexer, () -> -60.0, () -> true))
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
+        joystick.leftTrigger().whileTrue(new InstantCommand(() -> isFollowingJoystickHeading = true))
+                              .onFalse(new InstantCommand(() -> isFollowingJoystickHeading = false));
         joystick.y()
             .whileTrue(new IndexerCommand(indexer, () -> 90.0, () -> turret.turretOnTarget())) 
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
@@ -159,13 +166,13 @@ public class RobotContainer {
             .whileTrue(new IndexerCommand(indexer, () -> 88.0, () -> true)) 
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
 
-        joystick2.y().onTrue(new InstantCommand(() -> {
-            boolean useIK = SmartDashboard.getBoolean(
-                AutoAimConstants.useIKSolverKey,
-                AutoAimConstants.defaultUseIKSolver
-            );
-            SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
-        }));
+        // joystick2.y().onTrue(new InstantCommand(() -> {
+        //     boolean useIK = SmartDashboard.getBoolean(
+        //         AutoAimConstants.useIKSolverKey,
+        //         AutoAimConstants.defaultUseIKSolver
+        //     );
+        //     SmartDashboard.putBoolean(AutoAimConstants.useIKSolverKey, !useIK);
+        // }));
 
         slowMode.onTrue(new InstantCommand(() -> {
                 maxSpeed *= 0.5;
@@ -175,6 +182,8 @@ public class RobotContainer {
                 maxSpeed *= 2;
                 maxAngularRate *= 2;
             }));
+
+        // joystickRightX.whileTrue(new InstantCommand(() -> target = Math.atan2(-joystick.getRightY(), joystick.getRightX()) + (Math.PI/2) + (Math.PI)));
 
         // Start-of-shift warning
         for (int i = 1; i <= 5; i++) {
@@ -241,6 +250,20 @@ public class RobotContainer {
         SmartDashboard.putBoolean("Shifts/Active First?",
             DriverStation.getAlliance().orElse(Alliance.Red) == HubShiftUtil.getFirstActiveAlliance()
         );
+    }
+
+    private double getJoystickTranslationHeading() {
+        double rightX = joystick.getRightX();
+        double rightY = joystick.getRightY();
+
+        if(Math.abs(rightX) < 0.1 && Math.abs(rightY) < 0.1) {
+            return target;
+        }
+
+        if(turret.isBlue) {
+            return Math.atan2(rightX, rightY);
+        }
+        return Math.atan2(-rightX, -rightY);
     }
 
     // private void configureSysid() {
@@ -322,7 +345,7 @@ public class RobotContainer {
       
         // Automatically stop indexer when no button is pressed
         indexer.setDefaultCommand(new IndexerCommand(indexer, () -> 0.0, () -> true));
-        // intake.setDefaultCommand(new IntakeCommand(intake, () -> drivetrain.getState().Speeds));
+        intake.setDefaultCommand(new IntakeCommand(intake, () -> drivetrain.getState().Speeds));
     }
 
     
@@ -332,7 +355,15 @@ public class RobotContainer {
     }
 
     private double calcAutoTurn() {
-        if (Math.abs(joystick.getLeftX()) > 0.01) {
+        
+        // if (Math.abs(joystick.getLeftX()) > 0.01) {
+        //     target -= joystick.getLeftX() * Math.toRadians(2.5);
+        // }
+
+        if(isFollowingJoystickHeading) {
+            target = getJoystickTranslationHeading();
+        }
+        else if(Math.abs(joystick.getLeftX()) > 0.01) {
             target -= joystick.getLeftX() * Math.toRadians(5);
         }
 

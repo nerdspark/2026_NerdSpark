@@ -29,7 +29,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
-import com.fasterxml.jackson.databind.module.SimpleAbstractTypeResolver;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -87,8 +86,11 @@ public class Turret extends SubsystemBase {
     private final Field2d m_field = new Field2d();
     private final SlippageCorrectionMap slippageMap = new SlippageCorrectionMap();
 
-    private final boolean isBlue;
+    private Alliance alliance;
+    private Alliance lastAlliance = null;
+    public boolean isBlue = false;
     private Pose2d turretPose = new Pose2d();
+    private double target;
 
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> manualOverrider,
             PassTargetSelectorSubsystem passTargetSelector) {
@@ -97,7 +99,7 @@ public class Turret extends SubsystemBase {
         manualOverride = manualOverrider;
         this.passTargetSelector = passTargetSelector;
 
-        isBlue = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
+        alliance = DriverStation.getAlliance().orElse(Alliance.Red);
 
         canivore = new CANBus(Constants.CANbus);
         spinMotor = new TalonFX(TurretConfig.spinMotorId, canivore);
@@ -288,9 +290,9 @@ public class Turret extends SubsystemBase {
         double motorPose = spinMotor.getPosition().getValueAsDouble();
         turretAngle = (motorPose * TWO_PI) / TurretConstants.spinRatio;
 
-        neededAngle = normalizeRadians(neededAngle - Math.toRadians(118));
+        neededAngle = normalizeRadians(neededAngle - TurretConstants.turretOffset);
         // neededAngle = Math.round(neededAngle * 100.0) / 100.0;
-        double target = neededAngle;
+        target = neededAngle;
         if (target > Math.toRadians(165) || target < -Math.toRadians(178)) {
             double err1 = turretAngle - neededAngle;
             double err2 = 0;
@@ -308,10 +310,12 @@ public class Turret extends SubsystemBase {
             }
         }
         SmartDashboard.putNumber("Target Angle", Math.toDegrees(target));
+        double turretOffset = Math.toRadians(2) * Math.sin(target + TurretConstants.turretOffset);
+        target += turretOffset;
 
         double motorRots = (target * TurretConstants.spinRatio) / TWO_PI;
 
-        brake = Math.abs(target - turretAngle) < Math.toRadians(0.15);
+        brake = Math.abs(target - turretAngle) < Math.toRadians(0.05);
 
         spinPose.Position = motorRots;
     }
@@ -324,9 +328,10 @@ public class Turret extends SubsystemBase {
         boolean inY = isBlue ? y >= FieldConstants.Tower.minY && y <= FieldConstants.Tower.maxY
                 : y >= FieldConstants.Tower.oppMinY && y <= FieldConstants.Tower.oppMaxY;
         boolean climb = inX && inY;
+        boolean shouldShoot = pass ? true : Math.abs(velocity - shootMotor1.getVelocity().getValueAsDouble()) < 2;
         return Math.abs(spinPose.Position - spinMotor.getPosition().getValueAsDouble()) < (pass ? 0.2778 : 0.1389)
                 && Math.abs(hoodPose.Position - hoodMotor1.getPosition().getValueAsDouble()) < (pass ? 1.3889 : 0.6944)
-                && Math.abs(velocity - shootMotor1.getVelocity().getValueAsDouble()) < (pass ? 15 : 2)
+                && shouldShoot
                 && (shoot || pass)
                 && !climb;
     }
@@ -553,11 +558,18 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
+        alliance = DriverStation.getAlliance().orElse(Alliance.Red);
+        if (alliance != lastAlliance) {
+            isBlue = alliance == Alliance.Blue;
+        }
+        lastAlliance = alliance;
+
         ChassisSpeeds speeds = speed.get();
         Pose2d currPose = pose.get();
         m_field.setRobotPose(currPose);
         Translation2d rotationOffset = TurretConstants.robotToTurret.rotateBy(currPose.getRotation());
         turretPose = new Pose2d(currPose.getTranslation().plus(rotationOffset), currPose.getRotation());
+        m_field.getObject("turret pose").setPose(turretPose);
 
         SmartDashboard.putBoolean("Is Blue", isBlue);
         double shootLine = calcTriggerLine(
@@ -593,6 +605,7 @@ public class Turret extends SubsystemBase {
         SmartDashboard.putBoolean("Pass", pass);
         onOppSide = isBlue ? turretPose.getX() > oppPassLine : turretPose.getX() < oppPassLine;
         SmartDashboard.putBoolean("Turret/IsOnOppSide", onOppSide);
+
 
         if (shoot || pass) {
             Translation2d goalPose;
@@ -656,8 +669,9 @@ public class Turret extends SubsystemBase {
             if (sotm != null) {
                 aimTurret(sotm.turretAngle - turretPose.getRotation().getRadians());
                 hoodPose.Position = hoodDegreesToRotations(90 - Math.toDegrees(sotm.launchAngle));
+                double effOffset = Math.abs(((target + TurretConstants.turretOffset) / Math.PI)) * 0.005;
                 if (useIK) {
-                    velocity = applyShooterControl(slippageMap.correctedMotorRps(launchMpsToMotorRps(sotm.launchMps)));
+                    velocity = applyShooterControl(slippageMap.correctedMotorRps(launchMpsToMotorRps(sotm.launchMps), effOffset));
                     SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", velocity);
                 } else {
                     velocity = applyShooterControl(launchMpsToMotorRps(sotm.launchMps));

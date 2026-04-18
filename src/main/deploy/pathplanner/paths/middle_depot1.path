@@ -20,8 +20,8 @@
         "y": 7.2
       },
       "prevControl": {
-        "x": 0.9410633394739958,
-        "y": 7.266245500689794
+        "x": 0.9410633394740027,
+        "y": 7.266245500689796
       },
       "nextControl": {
         "x": 0.4589366605259897,
@@ -36,7 +36,7 @@
         "y": 4.0
       },
       "prevControl": {
-        "x": 0.45207854806915077,
+        "x": 0.4520785480691509,
         "y": 5.365726597724882
       },
       "nextControl": {
@@ -72,11 +72,11 @@
   ],
   "constraintZones": [
     {
-      "name": "Shoot",
+      "name": "Grab",
       "minWaypointRelativePos": 0.7,
       "maxWaypointRelativePos": 2.2,
       "constraints": {
-        "maxVelocity": 0.5,
+        "maxVelocity": 0.75,
         "maxAcceleration": 1.5,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -85,11 +85,11 @@
       }
     },
     {
-      "name": "Constraints Zone",
+      "name": "Shots",
       "minWaypointRelativePos": 2.2,
       "maxWaypointRelativePos": 3.0,
       "constraints": {
-        "maxVelocity": 1.0,
+        "maxVelocity": 0.9,
         "maxAcceleration": 2.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -113,7 +113,7 @@
     },
     {
       "name": "indexer_on",
-      "waypointRelativePos": 0.15,
+      "waypointRelativePos": 0.09504608294930875,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -135,7 +135,7 @@
     },
     {
       "name": "indexer_on",
-      "waypointRelativePos": 1.95,
+      "waypointRelativePos": 1.65,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
