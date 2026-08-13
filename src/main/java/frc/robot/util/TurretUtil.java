@@ -41,6 +41,11 @@ public final class TurretUtil {
     }
 
     public static double hoodDegreesToRotations(double hoodDegrees) {
+        if (hoodDegrees < 0) {
+            hoodDegrees = 0;
+        } else if (hoodDegrees > 120) {
+            hoodDegrees = 120;
+        }
         return ((hoodDegrees - TurretConstants.hoodZeroDegrees) / 360.0) * TurretConstants.hoodRatio;
     }
 

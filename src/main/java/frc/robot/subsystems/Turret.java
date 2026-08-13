@@ -42,6 +42,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.AutoAimConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.util.ShooterParams;
@@ -71,6 +72,10 @@ public class Turret extends SubsystemBase {
     private Supplier<ChassisSpeeds> speed;
     private Supplier<Boolean> manualOverride;
     private PassTargetSelectorSubsystem passTargetSelector;
+    private Supplier<CommandXboxController> controller;
+    private double hoodControl = 0;
+    private double veloControl = 0;
+    private double turretControl = 0;
 
     private double turretAngle = 0;
     private boolean brake = false;
@@ -93,11 +98,12 @@ public class Turret extends SubsystemBase {
     private double target;
 
     public Turret(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> speeds, Supplier<Boolean> manualOverrider,
-            PassTargetSelectorSubsystem passTargetSelector) {
+            PassTargetSelectorSubsystem passTargetSelector, Supplier<CommandXboxController> controller) {
         pose = robotPose;
         speed = speeds;
         manualOverride = manualOverrider;
         this.passTargetSelector = passTargetSelector;
+        this.controller = controller;
 
         alliance = DriverStation.getAlliance().orElse(Alliance.Red);
 
@@ -606,107 +612,116 @@ public class Turret extends SubsystemBase {
         onOppSide = isBlue ? turretPose.getX() > oppPassLine : turretPose.getX() < oppPassLine;
         SmartDashboard.putBoolean("Turret/IsOnOppSide", onOppSide);
 
+        if (true) {
+            brake = false;
+            aimTurret(normalizeRadians(Math.toRadians(turretControl + controller.get().getRightX() * -5)) - turretPose.getRotation().getRadians());
+            turretControl += controller.get().getRightX() * -5;
+            hoodPose.Position = hoodDegreesToRotations(hoodControl + controller.get().getRightY() * -2.5);
+            hoodControl += Math.min(controller.get().getRightY() * -2.5, 120);
+            velocity = applyShooterControl(Math.min(veloControl + controller.get().getLeftY() * -5, 60));
+            veloControl += Math.min(controller.get().getLeftY() * -5, 60);
+        } else {
+            if (shoot || pass) {
+                Translation2d goalPose;
+                Translation2d passPose;
+                if (isBlue) {
+                    goalPose = FieldConstants.Hub.topCenterPoint.toTranslation2d();
+                    passPose = closerPoint(turretPose, FieldConstants.BluePass.left, FieldConstants.BluePass.right)
+                            ? FieldConstants.BluePass.left
+                            : FieldConstants.BluePass.right;
+                } else {
+                    goalPose = FieldConstants.Hub.oppTopCenterPoint.toTranslation2d();
+                    passPose = closerPoint(turretPose, FieldConstants.RedPass.left, FieldConstants.RedPass.right)
+                            ? FieldConstants.RedPass.left
+                            : FieldConstants.RedPass.right;
+                }
 
-        if (shoot || pass) {
-            Translation2d goalPose;
-            Translation2d passPose;
-            if (isBlue) {
-                goalPose = FieldConstants.Hub.topCenterPoint.toTranslation2d();
-                passPose = closerPoint(turretPose, FieldConstants.BluePass.left, FieldConstants.BluePass.right)
-                        ? FieldConstants.BluePass.left
-                        : FieldConstants.BluePass.right;
-            } else {
-                goalPose = FieldConstants.Hub.oppTopCenterPoint.toTranslation2d();
-                passPose = closerPoint(turretPose, FieldConstants.RedPass.left, FieldConstants.RedPass.right)
-                        ? FieldConstants.RedPass.left
-                        : FieldConstants.RedPass.right;
-            }
+                if (passTargetSelector != null && passTargetSelector.isEnabled()) {
+                    passPose = passTargetSelector.getTarget();
+                    hubInTheWay = isNetInTheWay(passPose.getX(), passPose.getY());
+                    SmartDashboard.putBoolean("PassTarget/HubInTheWay", hubInTheWay);
+                }
 
-            if (passTargetSelector != null && passTargetSelector.isEnabled()) {
-                passPose = passTargetSelector.getTarget();
-                hubInTheWay = isNetInTheWay(passPose.getX(), passPose.getY());
-                SmartDashboard.putBoolean("PassTarget/HubInTheWay", hubInTheWay);
-            }
+                Translation2d targetPose = shoot ? goalPose : passPose;
+                m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(),
+                        new Rotation2d());
 
-            Translation2d targetPose = shoot ? goalPose : passPose;
-            m_field.getObject("Target Pose").setPose(targetPose.getMeasureX(), targetPose.getMeasureY(),
-                    new Rotation2d());
+                double xError = targetPose.getX() - turretPose.getX();
+                double yError = targetPose.getY() - turretPose.getY();
+                double errorRad = Math.atan2(yError, xError);
+                double distance = turretPose.getTranslation().getDistance(targetPose);
+                SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
 
-            double xError = targetPose.getX() - turretPose.getX();
-            double yError = targetPose.getY() - turretPose.getY();
-            double errorRad = Math.atan2(yError, xError);
-            double distance = turretPose.getTranslation().getDistance(targetPose);
-            SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
+                boolean useIK = SmartDashboard.getBoolean(
+                        AutoAimConstants.useIKSolverKey,
+                        AutoAimConstants.defaultUseIKSolver);
 
-            boolean useIK = SmartDashboard.getBoolean(
-                    AutoAimConstants.useIKSolverKey,
-                    AutoAimConstants.defaultUseIKSolver);
-
-            SOTM sotm = null;
-            if (useIK) {
-                IkSolution ikSolution = solveIK(distance);
-                if (ikSolution != null) {
-                    double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);
-                    sotm = applySOTMComp(ikSolution.exitMps, launchAngleRad, errorRad, speeds);
-                    SmartDashboard.putBoolean("Turret/IK/HasSolution", true);
-                    SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", ikSolution.hoodDegrees);
-                    SmartDashboard.putNumber("Turret/IK/RequiredExitMps", ikSolution.exitMps);
+                SOTM sotm = null;
+                if (useIK) {
+                    IkSolution ikSolution = solveIK(distance);
+                    if (ikSolution != null) {
+                        double launchAngleRad = Math.toRadians(90.0 - ikSolution.hoodDegrees);
+                        sotm = applySOTMComp(ikSolution.exitMps, launchAngleRad, errorRad, speeds);
+                        SmartDashboard.putBoolean("Turret/IK/HasSolution", true);
+                        SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", ikSolution.hoodDegrees);
+                        SmartDashboard.putNumber("Turret/IK/RequiredExitMps", ikSolution.exitMps);
+                    } else {
+                        SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
+                        SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", 0);
+                        SmartDashboard.putNumber("Turret/IK/RequiredExitMps", 0);
+                    }
                 } else {
                     SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
-                    SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", 0);
-                    SmartDashboard.putNumber("Turret/IK/RequiredExitMps", 0);
+                    ShooterParams params = aimOnFly(shoot ? distance : Double.MAX_VALUE);
+                    sotm = applySOTMComp(
+                            motorRpsToLaunchSpeedMps(params.shooterSpeed),
+                            Math.toRadians(90 - hoodRotationsToDegrees(params.hoodPose)),
+                            errorRad,
+                            speeds);
                 }
-            } else {
-                SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
-                ShooterParams params = aimOnFly(shoot ? distance : Double.MAX_VALUE);
-                sotm = applySOTMComp(
-                        motorRpsToLaunchSpeedMps(params.shooterSpeed),
-                        Math.toRadians(90 - hoodRotationsToDegrees(params.hoodPose)),
-                        errorRad,
-                        speeds);
-            }
 
-            if (sotm != null) {
-                aimTurret(sotm.turretAngle - turretPose.getRotation().getRadians());
-                hoodPose.Position = hoodDegreesToRotations(90 - Math.toDegrees(sotm.launchAngle));
-                double effOffset = Math.abs(((target + TurretConstants.turretOffset) / Math.PI)) * 0.005;
-                if (useIK) {
-                    velocity = applyShooterControl(slippageMap.correctedMotorRps(launchMpsToMotorRps(sotm.launchMps), effOffset));
-                    SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", velocity);
-                } else {
-                    velocity = applyShooterControl(launchMpsToMotorRps(sotm.launchMps));
-                }
-                double hoodAngleCheck = 90 - Math.toDegrees(sotm.launchAngle);
-                if (onOppSide) {
-                    velocity = Math.min(velocity, TurretConstants.shooterMaxMotorRps);
-                    if (hoodAngleCheck < TurretConstants.hoodMinDegrees
+                if (sotm != null) {
+                    aimTurret(sotm.turretAngle - turretPose.getRotation().getRadians());
+                    hoodPose.Position = hoodDegreesToRotations(90 - Math.toDegrees(sotm.launchAngle));
+                    double effOffset = Math.abs(((target + TurretConstants.turretOffset) / Math.PI)) * 0.005;
+                    if (useIK) {
+                        velocity = applyShooterControl(slippageMap.correctedMotorRps(launchMpsToMotorRps(sotm.launchMps), effOffset));
+                        SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", velocity);
+                    } else {
+                        velocity = applyShooterControl(launchMpsToMotorRps(sotm.launchMps));
+                    }
+                    double hoodAngleCheck = 90 - Math.toDegrees(sotm.launchAngle);
+                    if (onOppSide) {
+                        velocity = Math.min(velocity, TurretConstants.shooterMaxMotorRps);
+                        if (hoodAngleCheck < TurretConstants.hoodMinDegrees
+                                || hoodAngleCheck > TurretConstants.hoodMaxDegrees) {
+                            velocity = 0;
+                            hoodPose.Position = 0;
+                        }
+                    } else if (velocity > TurretConstants.shooterMaxMotorRps
+                            || hoodAngleCheck < TurretConstants.hoodMinDegrees
                             || hoodAngleCheck > TurretConstants.hoodMaxDegrees) {
                         velocity = 0;
                         hoodPose.Position = 0;
                     }
-                } else if (velocity > TurretConstants.shooterMaxMotorRps
-                        || hoodAngleCheck < TurretConstants.hoodMinDegrees
-                        || hoodAngleCheck > TurretConstants.hoodMaxDegrees) {
-                    velocity = 0;
-                    hoodPose.Position = 0;
+                } else {
+                    turretIdle();
                 }
             } else {
                 turretIdle();
+                SmartDashboard.putNumber("Turret/DistanceToTarget", 0.0);
+                SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
+                SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
+                SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
             }
-        } else {
-            turretIdle();
-            SmartDashboard.putNumber("Turret/DistanceToTarget", 0.0);
-            SmartDashboard.putBoolean("Turret/IK/HasSolution", false);
-            SmartDashboard.putNumber("Turret/IK/RequiredHoodDeg", Double.NaN);
-            SmartDashboard.putNumber("Turret/IK/RequiredMotorRps", Double.NaN);
         }
 
-        if (manualOverride.get()) {
-            hoodPose.Position = 0;
-            velocity = 0;
-            mode = ShootMode.COAST;
-            brake = true;
-        }
+        // if (manualOverride.get()) {
+        //     hoodPose.Position = 0;
+        //     velocity = 0;
+        //     mode = ShootMode.COAST;
+        //     brake = true;
+        // }
 
         boolean mapTuneEnabled = SmartDashboard.getBoolean(
                 MapTuneConstants.enableKey,

@@ -95,7 +95,8 @@ public class RobotContainer {
                 drivetrain.getState().Pose.getRotation()
             ),
             () -> override,
-            passTargetSelector
+            passTargetSelector,
+            () -> joystick2
         );
         // HubShiftUtil.setTurretSupplier(() -> Optional.of(turret));
 
@@ -140,7 +141,7 @@ public class RobotContainer {
         joystick.leftTrigger().whileTrue(new InstantCommand(() -> isFollowingJoystickHeading = true))
                               .onFalse(new InstantCommand(() -> isFollowingJoystickHeading = false));
         joystick.y()
-            .whileTrue(new IndexerCommand(indexer, () -> 90.0, () -> turret.turretOnTarget())) 
+            .whileTrue(new IndexerCommand(indexer, () -> 90.0, () -> true)) //turret.turretOnTarget()
             .onFalse(new IndexerCommand(indexer, () -> 0.0, () -> true));
         
         joystick.b()
